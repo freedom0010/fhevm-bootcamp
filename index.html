@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FHEVM Developer Bootcamp — Complete 20-Day Training</title>
+<meta name="description" content="Master confidential smart contracts with FHEVM. 20 days of hands-on training from FHE math to production deployment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#09090e; --bg2:#0f0f18; --bg3:#14141f; --surface:#1a1a28; --s2:#20202f;
+  --border:#2a2a3f; --b2:#353550;
+  --amber:#f59e0b; --amber2:#fbbf24; --rust:#ef4444; --green:#22c55e;
+  --blue:#60a5fa; --purple:#a78bfa; --teal:#2dd4bf; --orange:#fb923c;
+  --text:#e2dff5; --text2:#9490b8; --text3:#5a567a;
+  --mono:'IBM Plex Mono',monospace;
+  --serif:'Fraunces',serif;
+  --sans:'DM Sans',sans-serif;
+  /* week accent colors */
+  --w1:#f59e0b; --w1r:245,158,11;
+  --w2:#22c55e; --w2r:34,197,94;
+  --w3:#a78bfa; --w3r:167,139,250;
+  --w4:#fb923c; --w4r:251,146,60;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+
+/* GRID */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.18;pointer-events:none;z-index:0}
+
+/* ── TOP NAV ── */
+.topnav{position:sticky;top:0;z-index:200;height:54px;background:rgba(9,9,14,.97);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:20px}
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+.logo-box{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--amber),var(--purple));display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-name{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.logo-name span{color:var(--amber)}
+.nav-spacer{flex:1}
+.nav-pills{display:flex;gap:8px}
+.nav-pill{font-family:var(--mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;padding:4px 11px;border-radius:3px;border:1px solid;cursor:default}
+.np1{color:var(--w1);border-color:rgba(245,158,11,.22);background:rgba(245,158,11,.06)}
+.np2{color:var(--w2);border-color:rgba(34,197,94,.22);background:rgba(34,197,94,.06)}
+.np3{color:var(--w3);border-color:rgba(167,139,250,.22);background:rgba(167,139,250,.06)}
+.np4{color:var(--w4);border-color:rgba(251,146,60,.22);background:rgba(251,146,60,.06)}
+.nav-gh{display:flex;align-items:center;gap:6px;padding:5px 13px;border-radius:6px;border:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;transition:all .15s}
+.nav-gh:hover{border-color:var(--amber);color:var(--amber)}
+
+/* ── PAGE ── */
+.page{max-width:1100px;margin:0 auto;padding:0 28px 120px;position:relative;z-index:1}
+
+/* ── HERO ── */
+.hero{padding:80px 0 68px;display:grid;grid-template-columns:1fr 400px;gap:64px;align-items:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);padding:5px 13px;border-radius:3px;margin-bottom:24px}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.hero h1{font-family:var(--serif);font-size:clamp(38px,4.2vw,62px);font-weight:800;line-height:1.06;letter-spacing:-.5px;margin-bottom:20px;color:var(--text)}
+.hero h1 em{font-style:italic;color:var(--amber)}
+.hero-lead{font-size:15.5px;color:var(--text2);line-height:1.84;max-width:520px;margin-bottom:32px}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.cta-main{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--amber);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;text-decoration:none;transition:all .16s;font-weight:600}
+.cta-main:hover{background:rgba(245,158,11,.22);transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,.15)}
+.cta-sec{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;border:1px solid var(--border);color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;text-decoration:none;transition:all .16s}
+.cta-sec:hover{border-color:var(--b2);color:var(--text2);background:rgba(255,255,255,.02)}
+
+/* Hero card */
+.hero-card{background:var(--surface);border:1px solid var(--b2);border-radius:14px;padding:26px;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--amber),var(--purple),var(--orange))}
+.hc-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.hc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.hc-stat{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px 16px;border-top-width:2px}
+.hc-stat.s1{border-top-color:var(--w1)}.hc-stat.s2{border-top-color:var(--w2)}.hc-stat.s3{border-top-color:var(--w3)}.hc-stat.s4{border-top-color:var(--w4)}
+.hc-num{font-family:var(--serif);font-size:28px;font-weight:800;line-height:1;margin-bottom:4px}
+.s1 .hc-num{color:var(--w1)}.s2 .hc-num{color:var(--w2)}.s3 .hc-num{color:var(--w3)}.s4 .hc-num{color:var(--w4)}
+.hc-unit{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+.hc-bar-wrap{margin-bottom:16px}
+.hc-bar-top{font-family:var(--mono);font-size:9.5px;color:var(--text3);display:flex;justify-content:space-between;margin-bottom:7px}
+.hc-bar-top span{color:var(--green)}
+.hc-bar{height:4px;background:var(--border);border-radius:2px}
+.hc-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--green))}
+.hc-tags{display:flex;flex-wrap:wrap;gap:5px}
+.hc-tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid var(--border);color:var(--text3);letter-spacing:.4px}
+
+/* ── WEEK HEADER ── */
+.week-hdr{display:flex;align-items:flex-start;gap:20px;padding:28px 24px;border-radius:12px;margin:64px 0 18px;border:1px solid}
+.week-hdr.w1{background:linear-gradient(135deg,rgba(245,158,11,.05),rgba(245,158,11,.01));border-color:rgba(245,158,11,.18)}
+.week-hdr.w2{background:linear-gradient(135deg,rgba(34,197,94,.05),rgba(34,197,94,.01));border-color:rgba(34,197,94,.18)}
+.week-hdr.w3{background:linear-gradient(135deg,rgba(167,139,250,.05),rgba(167,139,250,.01));border-color:rgba(167,139,250,.18)}
+.week-hdr.w4{background:linear-gradient(135deg,rgba(251,146,60,.05),rgba(251,146,60,.01));border-color:rgba(251,146,60,.18)}
+.week-num-box{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:600;flex-shrink:0;letter-spacing:.5px}
+.w1 .week-num-box{background:rgba(245,158,11,.1);color:var(--w1);border:1px solid rgba(245,158,11,.22)}
+.w2 .week-num-box{background:rgba(34,197,94,.1);color:var(--w2);border:1px solid rgba(34,197,94,.22)}
+.w3 .week-num-box{background:rgba(167,139,250,.1);color:var(--w3);border:1px solid rgba(167,139,250,.22)}
+.w4 .week-num-box{background:rgba(251,146,60,.1);color:var(--w4);border:1px solid rgba(251,146,60,.22)}
+.week-info{}
+.week-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.w1 .week-sub{color:var(--w1)}.w2 .week-sub{color:var(--w2)}.w3 .week-sub{color:var(--w3)}.w4 .week-sub{color:var(--w4)}
+.week-title{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.2px;margin-bottom:6px}
+.week-desc{font-size:13.5px;color:var(--text2);line-height:1.7;max-width:640px}
+
+/* ── DAY GRID ── */
+.day-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+
+/* ── DAY CARD ── */
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px 18px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:all .16s}
+.day-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.day-card.w1::after{background:linear-gradient(90deg,var(--w1),transparent)}
+.day-card.w2::after{background:linear-gradient(90deg,var(--w2),transparent)}
+.day-card.w3::after{background:linear-gradient(90deg,var(--w3),transparent)}
+.day-card.w4::after{background:linear-gradient(90deg,var(--w4),transparent)}
+.day-card.live:hover{background:var(--s2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.day-card.w1.live:hover{border-color:rgba(245,158,11,.35)}
+.day-card.w2.live:hover{border-color:rgba(34,197,94,.35)}
+.day-card.w3.live:hover{border-color:rgba(167,139,250,.35)}
+.day-card.w4.live:hover{border-color:rgba(251,146,60,.35)}
+.day-card.dim{opacity:.5}
+.day-card.dim:hover{transform:none;box-shadow:none}
+
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.day-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.w1 .day-tag{color:var(--w1);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18)}
+.w2 .day-tag{color:var(--w2);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18)}
+.w3 .day-tag{color:var(--w3);background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.18)}
+.w4 .day-tag{color:var(--w4);background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.18)}
+.status{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.st-live{color:var(--green);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2)}
+.st-soon{color:var(--text3);background:rgba(255,255,255,.03);border:1px solid var(--border)}
+
+.card-title{font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:7px;line-height:1.26;letter-spacing:-.15px}
+.card-desc{font-size:12.5px;color:var(--text2);line-height:1.72;flex:1;margin-bottom:14px}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tag{font-family:var(--mono);font-size:9px;color:var(--text3);background:rgba(255,255,255,.03);border:1px solid var(--border);padding:2px 7px;border-radius:2px;letter-spacing:.3px}
+.card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.card-hrs{font-family:var(--mono);font-size:9.5px;color:var(--text3)}
+.card-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:all .14s;border:1px solid;font-weight:600}
+.w1 .card-btn.live{color:var(--w1);border-color:rgba(245,158,11,.28);background:rgba(245,158,11,.07)}
+.w2 .card-btn.live{color:var(--w2);border-color:rgba(34,197,94,.28);background:rgba(34,197,94,.07)}
+.w3 .card-btn.live{color:var(--w3);border-color:rgba(167,139,250,.28);background:rgba(167,139,250,.07)}
+.w4 .card-btn.live{color:var(--w4);border-color:rgba(251,146,60,.28);background:rgba(251,146,60,.07)}
+.w1 .card-btn.live:hover{background:rgba(245,158,11,.16);box-shadow:0 0 16px rgba(245,158,11,.15)}
+.w2 .card-btn.live:hover{background:rgba(34,197,94,.16);box-shadow:0 0 16px rgba(34,197,94,.15)}
+.w3 .card-btn.live:hover{background:rgba(167,139,250,.16);box-shadow:0 0 16px rgba(167,139,250,.15)}
+.w4 .card-btn.live:hover{background:rgba(251,146,60,.16);box-shadow:0 0 16px rgba(251,146,60,.15)}
+.card-btn.soon{color:var(--text3);border-color:var(--border);background:transparent;cursor:not-allowed}
+
+/* ── FOOTER ── */
+.footer{margin-top:100px;padding:32px 0 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-l{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.footer-r{display:flex;align-items:center;gap:16px}
+.footer-link{font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;transition:color .13s}
+.footer-link:hover{color:var(--amber)}
+.footer-ver{padding:2px 9px;border-radius:2px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.15);font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase}
+
+@media(max-width:900px){.hero{grid-template-columns:1fr}.hero-card{display:none}.page{padding:0 16px 80px}.week-hdr{flex-direction:column;gap:12px}.nav-pills{display:none}}
+@media(max-width:600px){.day-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="logo" href="#">
+    <div class="logo-box">🔐</div>
+    <div>
+      <div class="logo-name">FHEVM <span>Bootcamp</span></div>
+    </div>
+  </a>
+  <div class="nav-spacer"></div>
+  <div class="nav-pills">
+    <span class="nav-pill np1">W1 · Foundations</span>
+    <span class="nav-pill np2">W2 · Applied</span>
+    <span class="nav-pill np3">W3 · DApp</span>
+    <span class="nav-pill np4">W4 · Production</span>
+  </div>
+  <a class="nav-gh" href="https://github.com/zama-ai/fhevm" target="_blank">★ GitHub</a>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow">Zama FHEVM · Complete Developer Training</div>
+    <h1>Build <em>Confidential</em><br>Smart Contracts</h1>
+    <p class="hero-lead">A complete 20-day hands-on bootcamp — from FHE math foundations to production-grade deployment. Every day ships with full Solidity contracts, TypeScript test suites, and interactive quizzes.</p>
+    <div class="hero-ctas">
+      <a class="cta-main" href="day01.html">Start Day 1 — FHE Foundations →</a>
+      <a class="cta-sec" href="https://docs.zama.ai/fhevm" target="_blank">Zama Docs ↗</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <div class="hc-label">Course at a glance</div>
+    <div class="hc-grid">
+      <div class="hc-stat s1"><div class="hc-num">20</div><div class="hc-unit">Total Days</div></div>
+      <div class="hc-stat s2"><div class="hc-num">18</div><div class="hc-unit">Live Now</div></div>
+      <div class="hc-stat s3"><div class="hc-num">160+</div><div class="hc-unit">Code Examples</div></div>
+      <div class="hc-stat s4"><div class="hc-num">144</div><div class="hc-unit">Quiz Questions</div></div>
+    </div>
+    <div class="hc-bar-wrap">
+      <div class="hc-bar-top"><span>Course progress</span><span>18 / 20 days live</span></div>
+      <div class="hc-bar"><div class="hc-bar-fill" style="width:90%"></div></div>
+    </div>
+    <div class="hc-tags">
+      <span class="hc-tag">Solidity</span><span class="hc-tag">TFHE</span><span class="hc-tag">fhevmjs</span>
+      <span class="hc-tag">Hardhat</span><span class="hc-tag">TypeScript</span><span class="hc-tag">Gateway</span>
+      <span class="hc-tag">ACL</span><span class="hc-tag">Zama DevNet</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ WEEK 1 ══ -->
+<div class="week-hdr w1" id="week1">
+  <div class="week-num-box">W1</div>
+  <div class="week-info">
+    <div class="week-sub">Week 1 · Days 1–5 · Foundations</div>
+    <div class="week-title">FHE Fundamentals &amp; FHEVM Core</div>
+    <div class="week-desc">From Ring-LWE math to the five-component FHEVM architecture. Build your first encrypted contracts, master the euint type system, understand ACL permission model, and ship a production-ready Encrypted ERC-20.</div>
+  </div>
+</div>
+
+<div class="day-grid">
+
+  <div class="day-card w1 live">
+    <div class="card-top"><span class="day-tag">Day 01</span><span class="status st-live">Live</span></div>
+    <div class="card-title">FHE Mathematical Foundations</div>
+    <div class="card-desc">Ring-LWE security, FHE scheme comparison (BGV / BFV / CKKS / TFHE), bootstrapping mechanics, euintX cost model, Python TFHE simulation lab.</div>
+    <div class="card-tags"><span class="tag">Ring-LWE</span><span class="tag">TFHE</span><span class="tag">Bootstrapping</span><span class="tag">Post-Quantum</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 3–4 hrs · 8 quiz Qs</span><a class="card-btn live" href="day01.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w1 live">
+    <div class="card-top"><span class="day-tag">Day 02</span><span class="status st-live">Live</span></div>
+    <div class="card-title">FHEVM System Architecture</div>
+    <div class="card-desc">Five-component model (Contract / Coprocessor / ACL / KMS / Gateway), handle vs ciphertext deep dive, ACL function reference, async decryption flow diagram.</div>
+    <div class="card-tags"><span class="tag">Architecture</span><span class="tag">ACL</span><span class="tag">Handle</span><span class="tag">Gateway</span><span class="tag">KMS</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day02.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w1 live">
+    <div class="card-top"><span class="day-tag">Day 03</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Your First Encrypted Contract</div>
+    <div class="card-desc">euint vs externalEuint type system, fromExternal() ZK proof mechanics, Counter → FHECounter refactor, TypeScript test suite with re-encryption, FHE.select() conditional pattern.</div>
+    <div class="card-tags"><span class="tag">euint</span><span class="tag">fromExternal</span><span class="tag">ZK Proof</span><span class="tag">FHE.select</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day03.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w1 live">
+    <div class="card-top"><span class="day-tag">Day 04</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Encrypted ERC-20 Token</div>
+    <div class="card-desc">Full ConfidentialERC20 — mint(), cap-not-revert transfer(), encrypted allowances, transferFrom() dual cap, overflow safety, ACL grant patterns, complete TypeScript tests.</div>
+    <div class="card-tags"><span class="tag">ERC-20</span><span class="tag">Cap Pattern</span><span class="tag">Allowance</span><span class="tag">ACL</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day04.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w1 dim">
+    <div class="card-top"><span class="day-tag">Day 05</span><span class="status st-soon">Soon</span></div>
+    <div class="card-title">Encrypted Vault Contract</div>
+    <div class="card-desc">Multi-user encrypted storage vault, role-based ACL, timelock withdrawal, permission revocation lifecycle.</div>
+    <div class="card-tags"><span class="tag">Vault</span><span class="tag">Role ACL</span><span class="tag">Timelock</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><span class="card-btn soon">Coming Soon</span></div>
+  </div>
+
+</div>
+
+<!-- ══ WEEK 2 ══ -->
+<div class="week-hdr w2" id="week2">
+  <div class="week-num-box">W2</div>
+  <div class="week-info">
+    <div class="week-sub">Week 2 · Days 6–10 · Applied Patterns</div>
+    <div class="week-title">Encrypted DeFi &amp; DAO Contracts</div>
+    <div class="week-desc">Build three production contract patterns — private voting, sealed-bid auctions, confidential tokens — while mastering Gas optimization, advanced ACL architectures, and a complete test/debug toolkit.</div>
+  </div>
+</div>
+
+<div class="day-grid">
+
+  <div class="day-card w2 live">
+    <div class="card-top"><span class="day-tag">Day 06</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Encrypted Voting Contract</div>
+    <div class="card-desc">PrivateVoting four-phase lifecycle, FHE.select(vote,ONE,ZERO) anti-oracle pattern, requestTally() + Gateway async callback, anti-double-vote design, Hardhat time-travel tests.</div>
+    <div class="card-tags"><span class="tag">Voting</span><span class="tag">FHE.select</span><span class="tag">Gateway</span><span class="tag">DAO</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day05.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w2 live">
+    <div class="card-top"><span class="day-tag">Day 07</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Sealed-Bid Auction</div>
+    <div class="card-desc">SealedBidAuction with ETH collateral, linear FHE max scan, winnerCallback() settlement, re-entrancy protection, eaddress type usage, full TypeScript test suite.</div>
+    <div class="card-tags"><span class="tag">Auction</span><span class="tag">eaddress</span><span class="tag">FHE max</span><span class="tag">Re-entrancy</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day06.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w2 live">
+    <div class="card-top"><span class="day-tag">Day 08</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Gas Optimization</div>
+    <div class="card-desc">FHE op cost model, type-minimization strategy, batch multi-input in one encrypt call, eliminate redundant ACL grants, off-chain precomputation patterns, comparison tables.</div>
+    <div class="card-tags"><span class="tag">Gas</span><span class="tag">Optimization</span><span class="tag">Type Sizing</span><span class="tag">Batching</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 3–4 hrs · 8 quiz Qs</span><a class="card-btn live" href="day07.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w2 live">
+    <div class="card-top"><span class="day-tag">Day 09</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Access Control Patterns</div>
+    <div class="card-desc">Role-based ACL with mapping(address→Role), time-locked grants, delegated access, multi-sig approval, revoking and rotating handles, audit trail via events.</div>
+    <div class="card-tags"><span class="tag">ACL</span><span class="tag">Roles</span><span class="tag">Delegation</span><span class="tag">Multisig</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day08.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w2 live">
+    <div class="card-top"><span class="day-tag">Day 10</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Testing &amp; Debugging</div>
+    <div class="card-desc">Mock vs real-FHE mode comparison, fhevm-test-helpers full library, ACL error reference, handle inspection tools, invariant fuzz tests, GitHub Actions CI pipeline.</div>
+    <div class="card-tags"><span class="tag">Testing</span><span class="tag">Mock Mode</span><span class="tag">Debugging</span><span class="tag">CI/CD</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day10.html">Open →</a></div>
+  </div>
+
+</div>
+
+<!-- ══ WEEK 3 ══ -->
+<div class="week-hdr w3" id="week3">
+  <div class="week-num-box">W3</div>
+  <div class="week-info">
+    <div class="week-sub">Week 3 · Days 11–15 · DApp Architecture</div>
+    <div class="week-title">Full-Stack FHE Integration</div>
+    <div class="week-desc">Frontend SDK integration, Gateway deep-dive, cross-contract encrypted handle passing, on-chain identity patterns, and full privacy-preserving DeFi application design — dark pools, private lending, on-chain payroll.</div>
+  </div>
+</div>
+
+<div class="day-grid">
+
+  <div class="day-card w3 live">
+    <div class="card-top"><span class="day-tag">Day 11</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Gateway &amp; Async Decryption</div>
+    <div class="card-desc">Full Gateway architecture, requestDecryption() lifecycle, onlyGateway modifier deep-dive, requestId→entityId mapping, batching handles, timeout and fallback patterns.</div>
+    <div class="card-tags"><span class="tag">Gateway</span><span class="tag">Async</span><span class="tag">onlyGateway</span><span class="tag">RequestId</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day09.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w3 live">
+    <div class="card-top"><span class="day-tag">Day 12</span><span class="status st-live">Live</span></div>
+    <div class="card-title">fhevmjs SDK Deep Dive</div>
+    <div class="card-desc">React frontend integration, createFhevmInstance() best practices, encrypt → submit → re-encrypt → local-decrypt full flow, EIP-712 re-encryption signatures.</div>
+    <div class="card-tags"><span class="tag">fhevmjs</span><span class="tag">React</span><span class="tag">EIP-712</span><span class="tag">Re-encryption</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day11.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w3 live">
+    <div class="card-top"><span class="day-tag">Day 13</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Cross-Contract FHE Patterns</div>
+    <div class="card-desc">allowTransient() vs allow() — when to use each, cross-contract handle passing full flow, ACL chain maintenance across contract boundaries, composable confidential DeFi protocols.</div>
+    <div class="card-tags"><span class="tag">allowTransient</span><span class="tag">Cross-Contract</span><span class="tag">Composability</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day12.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w3 live">
+    <div class="card-top"><span class="day-tag">Day 14</span><span class="status st-live">Live</span></div>
+    <div class="card-title">On-Chain Privacy Identity</div>
+    <div class="card-desc">eaddress type deep-dive, encrypted address whitelists, KYC compliance with privacy, identity credential on-chain storage, authorized query patterns for regulated environments.</div>
+    <div class="card-tags"><span class="tag">eaddress</span><span class="tag">Identity</span><span class="tag">KYC</span><span class="tag">Compliance</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day13.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w3 live">
+    <div class="card-top"><span class="day-tag">Day 15</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Privacy-Preserving DeFi</div>
+    <div class="card-desc">Dark pool AMM with encrypted reserves (x·y=k in FHE), private lending with FHE health-factor checks, on-chain payroll with batch allowTransient() disbursement.</div>
+    <div class="card-tags"><span class="tag">Dark Pool</span><span class="tag">AMM</span><span class="tag">Lending</span><span class="tag">Payroll</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 5–6 hrs · 8 quiz Qs</span><a class="card-btn live" href="day15.html">Open →</a></div>
+  </div>
+
+</div>
+
+<!-- ══ WEEK 4 ══ -->
+<div class="week-hdr w4" id="week4">
+  <div class="week-num-box">W4</div>
+  <div class="week-info">
+    <div class="week-sub">Week 4 · Days 16–20 · Production</div>
+    <div class="week-title">Security, Auditing &amp; Deployment</div>
+    <div class="week-desc">FHEVM-specific vulnerability taxonomy, 30-item audit checklist, advanced Gas optimization targeting 30% cost reduction, complete CI/CD pipeline, and mainnet deployment strategy with monitoring.</div>
+  </div>
+</div>
+
+<div class="day-grid">
+
+  <div class="day-card w4 live">
+    <div class="card-top"><span class="day-tag">Day 16</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Security Audit Framework</div>
+    <div class="card-desc">10-class FHEVM vulnerability taxonomy (CRITICAL→INFO), 5 vulnerable code patterns with fixes, binary-search oracle walkthrough, 30-item checklist, static analysis script.</div>
+    <div class="card-tags"><span class="tag">Security</span><span class="tag">Audit</span><span class="tag">Vulnerabilities</span><span class="tag">Oracle Attack</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 5–6 hrs · 8 quiz Qs</span><a class="card-btn live" href="day16.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w4 live">
+    <div class="card-top"><span class="day-tag">Day 17</span><span class="status st-live">Live</span></div>
+    <div class="card-title">Advanced Gas Optimization</div>
+    <div class="card-desc">Target 30% cost reduction. FHE.div() avoidance, cross-multiply trick, storage packing, batch ACL grants, off-chain compute + on-chain verify hybrid architecture.</div>
+    <div class="card-tags"><span class="tag">Gas</span><span class="tag">Advanced</span><span class="tag">Storage Packing</span><span class="tag">Off-chain</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day17.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w4 live">
+    <div class="card-top"><span class="day-tag">Day 18</span><span class="status st-live">Live</span></div>
+    <div class="card-title">CI/CD Deployment Pipeline</div>
+    <div class="card-desc">GitHub Actions config, Docker FHEVM node integration tests, Hardhat Ignition deployment scripts, upgradeable proxy for encrypted state, environment key management.</div>
+    <div class="card-tags"><span class="tag">CI/CD</span><span class="tag">GitHub Actions</span><span class="tag">Ignition</span><span class="tag">Upgradeable</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><a class="card-btn live" href="day18.html">Open →</a></div>
+  </div>
+
+  <div class="day-card w4 dim">
+    <div class="card-top"><span class="day-tag">Day 19</span><span class="status st-soon">Soon</span></div>
+    <div class="card-title">Mainnet Deployment Strategy</div>
+    <div class="card-desc">Zama Devnet → Sepolia → mainnet checklist, network config management, hardware wallet key security, contract verification strategy.</div>
+    <div class="card-tags"><span class="tag">Mainnet</span><span class="tag">Devnet</span><span class="tag">Key Security</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 4–5 hrs · 8 quiz Qs</span><span class="card-btn soon">Coming Soon</span></div>
+  </div>
+
+  <div class="day-card w4 dim">
+    <div class="card-top"><span class="day-tag">Day 20</span><span class="status st-soon">Soon</span></div>
+    <div class="card-title">Monitoring &amp; Operations</div>
+    <div class="card-desc">On-chain event monitoring, ACL health checks, Gateway latency alerting, encrypted state archival, emergency pause and recovery mechanisms.</div>
+    <div class="card-tags"><span class="tag">Monitoring</span><span class="tag">Operations</span><span class="tag">Alerting</span><span class="tag">Emergency Pause</span></div>
+    <div class="card-foot"><span class="card-hrs">⏱ 3–4 hrs · 8 quiz Qs</span><span class="card-btn soon">Coming Soon</span></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-l">FHEVM Bootcamp · Built for Zama FHEVM developers · TFHE on Ethereum</div>
+  <div class="footer-r">
+    <a class="footer-link" href="https://docs.zama.ai/fhevm" target="_blank">Zama Docs</a>
+    <a class="footer-link" href="https://github.com/zama-ai/fhevm" target="_blank">GitHub</a>
+    <a class="footer-link" href="https://community.zama.ai" target="_blank">Community</a>
+    <span class="footer-ver">FHEVM v0.6</span>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
