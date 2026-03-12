@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 18 — Mainnet Deployment & CI/CD | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711; --ink2: #0d0d1a; --ink3: #141426;
+  --plate:  #1a1a2e; --plate2: #20203a;
+  --wire:   #2a2a45; --wire2: #383860;
+  --cyan:   #00e5ff; --cyan2: #00b8d4;
+  --lime:   #69ff47; --amber: #ffb300;
+  --rose:   #ff4d6d; --violet: #bf5af2;
+  --sky:    #4db8ff; --dim:   #6b6b95;
+  --mid:    #9898be; --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+  --body: 'Instrument Sans', sans-serif;
+  --acc: #ffb300; --acc2: rgba(255,179,0,.10); --accb: rgba(255,179,0,.22);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body); font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--lime), var(--amber)); z-index: 1000; transition: width .1s linear; }
+.topbar { position: sticky; top: 0; z-index: 100; height: 52px; background: rgba(7,7,17,.96);
+  backdrop-filter: blur(20px); border-bottom: 1px solid var(--wire); display: flex; align-items: center; }
+.tb-home { display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 22px;
+  border-right: 1px solid var(--wire); font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; transition: color .15s; letter-spacing: .5px; }
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb { display: flex; align-items: center; gap: 8px; padding: 0 20px; font-family: var(--mono); font-size: 11px; }
+.tb-crumb .sep { color: var(--wire2); } .tb-crumb .cur { color: var(--mid); }
+.tb-badge { margin-left: auto; margin-right: 18px; padding: 3px 11px; border-radius: 20px;
+  background: var(--acc2); border: 1px solid var(--accb);
+  font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 1.5px; text-transform: uppercase; }
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto;
+  background: var(--ink2); border-right: 1px solid var(--wire); padding: 22px 0 50px; }
+.sb-section { margin-bottom: 4px; }
+.sb-head { font-family: var(--mono); font-size: 9px; color: var(--dim);
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 14px 18px 5px; }
+.sb-a { display: block; padding: 6px 18px; font-family: var(--body); font-size: 12px; color: var(--mid);
+  border-left: 2px solid transparent; cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45; }
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--amber); border-left-color: var(--amber); background: var(--acc2); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+.main { padding: 56px 70px 120px; max-width: 900px; }
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill { display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px; border-radius: 3px;
+  margin-bottom: 24px; background: var(--acc2); border: 1px solid var(--accb);
+  font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-family: var(--head); font-size: clamp(34px,4vw,52px); font-weight: 800;
+  line-height: 1.08; letter-spacing: -1px; margin-bottom: 20px; color: var(--white); }
+.hero h1 em { font-style: italic; color: var(--amber); font-weight: 600; }
+.hero .lead { font-size: 15.5px; color: var(--mid); line-height: 1.84; max-width: 640px; margin-bottom: 32px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700; color: var(--white);
+  margin: 56px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--wire);
+  scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600; color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code { font-family: var(--mono); font-size: 12px; color: var(--amber);
+  background: var(--acc2); padding: 2px 6px; border-radius: 3px; }
+.code { background: #040408; border: 1px solid var(--wire); border-radius: 10px; margin: 20px 0;
+  overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.code-top { display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  background: var(--ink3); border-bottom: 1px solid var(--wire); }
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang { font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 1.5px; text-transform: uppercase; }
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy { background: none; border: 1px solid var(--wire); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: all .14s; letter-spacing: .8px; }
+.copy:hover { border-color: var(--amber); color: var(--amber); }
+pre { padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0; tab-size: 2; }
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}
+.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}.v{color:#f8f8f2}
+.box { border-radius: 8px; padding: 15px 20px; margin: 20px 0; border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start; }
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title { font-family: var(--mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code { font-family: var(--mono); font-size: 11.5px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); } .tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); } .warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); } .alert .box-title{ color: var(--rose); }
+.info { background: var(--acc2); border-color: var(--amber); } .info .box-title { color: var(--amber); }
+.key  { background: rgba(0,229,255,.05); border-color: var(--cyan); border-width: 2px; } .key .box-title { color: var(--cyan); }
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--ink3); padding: 9px 14px; text-align: left; font-family: var(--mono);
+  font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.2px; border: 1px solid var(--wire); }
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code { font-family: var(--mono); font-size: 11px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+td strong { color: var(--bright); }
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 36px; bottom: -6px; width: 1px; background: var(--wire2); }
+.step-num { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: var(--acc2); border: 1px solid var(--accb);
+  color: var(--amber); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 18px; margin-top: 1px; z-index: 1; }
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code { font-family: var(--mono); font-size: 11.5px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+.quiz { background: var(--ink2); border: 1px solid var(--wire2); border-radius: 14px; margin: 52px 0; overflow: hidden; }
+.quiz-head { padding: 20px 24px; background: var(--acc2); border-bottom: 1px solid var(--wire2); display: flex; align-items: flex-start; gap: 14px; }
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--amber); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code { font-family: var(--mono); font-size: 12px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px;
+  cursor: pointer; border: 1px solid var(--wire); font-size: 13px; color: var(--mid);
+  transition: all .14s; user-select: none; line-height: 1.58; }
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr { width: 22px; height: 22px; border-radius: 50%; background: var(--plate); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp { margin-top: 10px; padding: 11px 14px; background: var(--acc2); border: 1px solid var(--accb);
+  border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68; display: none; }
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--amber); }
+.quiz-submit { display: block; margin: 2px 24px 24px; padding: 11px 24px; border-radius: 8px;
+  background: var(--acc2); border: 1px solid var(--accb); color: var(--amber);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+  cursor: pointer; transition: all .14s; }
+.quiz-submit:hover { background: rgba(255,179,0,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score { margin: 0 24px 24px; padding: 16px 20px; background: var(--ink3); border: 1px solid var(--wire);
+  border-radius: 9px; display: none; align-items: center; gap: 20px; }
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--amber); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.pnav { display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire); }
+.pnav a { display: flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 8px;
+  text-decoration: none; font-family: var(--mono); font-size: 11px; color: var(--mid);
+  border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px; }
+.pnav a:hover { border-color: var(--amber); color: var(--amber); }
+.pnav .next { background: var(--acc2); border-color: var(--accb); color: var(--amber); }
+.pnav .next:hover { background: rgba(255,179,0,.2); }
+@media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 4</span><span class="sep">/</span><span class="cur">Day 18</span>
+  </div>
+  <div class="tb-badge">Week 4 — Production</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="networks">Network Reference</a>
+    <a class="sb-a sub" data-id="devnet">Zama Devnet</a>
+    <a class="sb-a sub" data-id="mainnet">Zama Mainnet</a>
+    <a class="sb-a" data-id="pre-deploy">Pre-Deploy Checklist</a>
+    <a class="sb-a" data-id="deploy-script">Deployment Script</a>
+    <a class="sb-a sub" data-id="hardhat-deploy">hardhat-deploy Setup</a>
+    <a class="sb-a sub" data-id="deploy-code">Full Deploy Script</a>
+    <a class="sb-a sub" data-id="verify">Contract Verification</a>
+    <a class="sb-a" data-id="env">Environment & Secrets</a>
+    <a class="sb-a sub" data-id="env-files">.env Structure</a>
+    <a class="sb-a sub" data-id="secrets-ci">CI Secrets</a>
+    <a class="sb-a" data-id="cicd">CI/CD Pipeline</a>
+    <a class="sb-a sub" data-id="github-actions">GitHub Actions</a>
+    <a class="sb-a sub" data-id="pipeline-stages">Pipeline Stages</a>
+    <a class="sb-a" data-id="monitoring">Monitoring & Alerts</a>
+    <a class="sb-a sub" data-id="event-indexer">Event Indexer</a>
+    <a class="sb-a sub" data-id="alerts">Alert Setup</a>
+    <a class="sb-a" data-id="upgrade">Upgradeable Contracts</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128640; Day 18 of 20</div>
+  <h1>Mainnet Deployment<br><em>&amp; CI/CD Pipeline</em></h1>
+  <p class="lead">
+    Writing a correct FHEVM contract is only half the job. Deploying safely to
+    production — with reproducible scripts, verified source code, protected secrets,
+    automated test pipelines, and live monitoring — is what separates a prototype
+    from a production system. Today you build the complete deployment infrastructure:
+    Hardhat Deploy scripts, GitHub Actions CI/CD, environment management,
+    contract verification on the Zama block explorer, and an event-driven monitoring setup.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#128640; Full deploy pipeline</div>
+    <div class="stat">&#9881; GitHub Actions CI/CD</div>
+    <div class="stat">&#9989; 6-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- NETWORK REFERENCE -->
+<h2 class="sec" id="networks">Network Reference</h2>
+<h3 class="sub" id="devnet">Zama Devnet</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Chain ID</td><td><code>9000</code></td></tr>
+      <tr><td>RPC URL</td><td><code>https://devnet.zama.ai</code></td></tr>
+      <tr><td>Explorer</td><td><code>https://explorer.devnet.zama.ai</code></td></tr>
+      <tr><td>Native Token</td><td>ZAMA (faucet available)</td></tr>
+      <tr><td>KMS Contract</td><td><code>0x904Be...‌</code> (check docs.zama.ai for latest)</td></tr>
+      <tr><td>ACL Contract</td><td><code>0xFee8C...‌</code> (check docs.zama.ai for latest)</td></tr>
+      <tr><td>Gateway Contract</td><td><code>0x096b...‌</code> (check docs.zama.ai for latest)</td></tr>
+      <tr><td>Block Time</td><td>~12 seconds</td></tr>
+      <tr><td>KMS Latency</td><td>2–6 seconds (1–2 blocks)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 class="sub" id="mainnet">Zama Mainnet (when available)</h3>
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">Check Current Network Status</div>
+    <div class="box-text">
+      FHEVM mainnet parameters change during the Zama network evolution. Always verify
+      contract addresses at <code>docs.zama.ai/fhevm/configuration</code> before deployment.
+      Never hardcode KMS, ACL, or Gateway addresses — read them from a network config file.
+    </div>
+  </div>
+</div>
+
+<!-- PRE-DEPLOY CHECKLIST -->
+<h2 class="sec" id="pre-deploy">Pre-Deployment Checklist</h2>
+<p>
+  Before any mainnet deployment, every item on this checklist must be confirmed.
+  Create a <code>DEPLOY_CHECKLIST.md</code> in your repo and check each item.
+</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th>How to Verify</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td><strong>All tests passing</strong> on the target network config</td><td><code>npx hardhat test --network devnet</code></td></tr>
+      <tr><td>02</td><td><strong>Gas limits verified</strong> — no function exceeds 8M gas</td><td><code>REPORT_GAS=true npx hardhat test</code></td></tr>
+      <tr><td>03</td><td><strong>Security audit complete</strong> — all 12 checklist items pass</td><td>Manual review + Slither output clean</td></tr>
+      <tr><td>04</td><td><strong>Network addresses correct</strong> — KMS, ACL, Gateway from docs</td><td>Cross-check docs.zama.ai before deployment</td></tr>
+      <tr><td>05</td><td><strong>Constructor args finalized</strong> and documented</td><td>Review deploy script; no placeholder values</td></tr>
+      <tr><td>06</td><td><strong>Deployer key secured</strong> — hardware wallet or encrypted keystore</td><td>Never use a raw private key in .env on mainnet</td></tr>
+      <tr><td>07</td><td><strong>Source code ready to verify</strong> — all imports resolved</td><td><code>npx hardhat verify --list-networks</code></td></tr>
+      <tr><td>08</td><td><strong>Post-deploy initialization plan</strong> documented</td><td>List every setup call required after deployment</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DEPLOY SCRIPT -->
+<h2 class="sec" id="deploy-script">Deployment Script</h2>
+
+<h3 class="sub" id="hardhat-deploy">hardhat-deploy Setup</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">terminal</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>npm install --save-dev hardhat-deploy @nomicfoundation/hardhat-verify</pre>
+</div>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">hardhat.config.ts (network config)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> <span class="s">'hardhat-deploy'</span>
+<span class="k">import</span> <span class="s">'@nomicfoundation/hardhat-verify'</span>
+<span class="k">import</span> <span class="s">'hardhat-fhevm'</span>
+
+<span class="k">const</span> config: HardhatUserConfig = {
+  solidity: { version: <span class="s">'0.8.24'</span>, settings: { optimizer: { enabled: <span class="n">true</span>, runs: <span class="n">200</span> } } },
+
+  networks: {
+    <span class="c">// Local mock — no real FHE</span>
+    hardhat: { fhevm: { mode: <span class="s">'mock'</span> } },
+
+    <span class="c">// Zama Devnet</span>
+    devnet: {
+      url: process.env.DEVNET_RPC_URL ?? <span class="s">'https://devnet.zama.ai'</span>,
+      chainId: <span class="n">9000</span>,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY
+        ? [process.env.DEPLOYER_PRIVATE_KEY]
+        : [],
+      fhevm: { mode: <span class="s">'devnet'</span> },
+    },
+  },
+
+  namedAccounts: {
+    deployer: { default: <span class="n">0</span> },
+  },
+
+  etherscan: {
+    apiKey: { devnet: <span class="s">'no-api-key-needed'</span> },
+    customChains: [{
+      network: <span class="s">'devnet'</span>,
+      chainId: <span class="n">9000</span>,
+      urls: {
+        apiURL:     <span class="s">'https://explorer.devnet.zama.ai/api'</span>,
+        browserURL: <span class="s">'https://explorer.devnet.zama.ai'</span>,
+      },
+    }],
+  },
+}</pre>
+</div>
+
+<h3 class="sub" id="deploy-code">Full Deployment Script</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">deploy/01_deploy_token.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { HardhatRuntimeEnvironment } <span class="k">from</span> <span class="s">'hardhat/types'</span>
+<span class="k">import</span> { DeployFunction } <span class="k">from</span> <span class="s">'hardhat-deploy/types'</span>
+<span class="k">import</span> { network } <span class="k">from</span> <span class="s">'hardhat'</span>
+
+<span class="k">const</span> func: DeployFunction = <span class="k">async</span> (hre: HardhatRuntimeEnvironment) => {
+  <span class="k">const</span> { deployments, getNamedAccounts, ethers } = hre
+  <span class="k">const</span> { deploy, log } = deployments
+  <span class="k">const</span> { deployer } = <span class="k">await</span> getNamedAccounts()
+
+  log(<span class="s">`\n── Deploying ConfidentialERC20 on ${network.name} ──`</span>)
+  log(<span class="s">`   Deployer: ${deployer}`</span>)
+
+  <span class="c">// Check deployer balance before proceeding</span>
+  <span class="k">const</span> balance = <span class="k">await</span> ethers.provider.getBalance(deployer)
+  <span class="k">if</span> (balance < ethers.parseEther(<span class="s">'0.05'</span>)) {
+    <span class="k">throw new</span> Error(<span class="s">`Insufficient balance: ${ethers.formatEther(balance)} ZAMA. Need at least 0.05.`</span>)
+  }
+
+  <span class="k">const</span> result = <span class="k">await</span> deploy(<span class="s">'ConfidentialERC20'</span>, {
+    from: deployer,
+    args: [
+      <span class="s">'PrivateToken'</span>,   <span class="c">// name</span>
+      <span class="s">'PRIV'</span>,            <span class="c">// symbol</span>
+    ],
+    log: <span class="n">true</span>,
+    waitConfirmations: network.name === <span class="s">'hardhat'</span> ? <span class="n">1</span> : <span class="n">3</span>,
+  })
+
+  log(<span class="s">`\n✓ ConfidentialERC20 deployed at: ${result.address}`</span>)
+  log(<span class="s">`  tx: ${result.transactionHash}`</span>)
+  log(<span class="s">`  gas used: ${result.receipt?.gasUsed}`</span>)
+
+  <span class="c">// Write deployment info for frontend use</span>
+  <span class="k">const</span> fs = <span class="k">await import</span>(<span class="s">'fs'</span>)
+  fs.writeFileSync(
+    <span class="s">'./frontend/src/lib/deployment.json'</span>,
+    JSON.stringify({
+      network:  network.name,
+      chainId:  network.config.chainId,
+      address:  result.address,
+      deployedAt: <span class="k">new</span> Date().toISOString(),
+    }, <span class="n">null</span>, <span class="n">2</span>)
+  )
+}
+
+func.tags = [<span class="s">'ConfidentialERC20'</span>]
+<span class="k">export default</span> func</pre>
+</div>
+
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">Run deployment</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c"># Deploy to devnet</span>
+npx hardhat deploy --network devnet --tags ConfidentialERC20
+
+<span class="c"># Deploy specific script only</span>
+npx hardhat deploy --network devnet --script deploy/01_deploy_token.ts</pre>
+</div>
+
+<h3 class="sub" id="verify">Contract Verification</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">Verify on Zama block explorer</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c"># Verify with constructor args</span>
+npx hardhat verify --network devnet \
+  0xYOUR_CONTRACT_ADDRESS \
+  "PrivateToken" "PRIV"
+
+<span class="c"># For contracts with complex args, use --constructor-args</span>
+npx hardhat verify --network devnet \
+  --constructor-args scripts/args.ts \
+  0xYOUR_CONTRACT_ADDRESS</pre>
+</div>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">scripts/args.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Constructor arguments for verification</span>
+<span class="k">export default</span> [
+  <span class="s">"PrivateToken"</span>,
+  <span class="s">"PRIV"</span>,
+]</pre>
+</div>
+
+<!-- ENV & SECRETS -->
+<h2 class="sec" id="env">Environment & Secrets Management</h2>
+
+<h3 class="sub" id="env-files">.env Structure</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">.env.example (commit this; never commit .env)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c"># ── Network ──────────────────────────────────────</span>
+DEVNET_RPC_URL=https://devnet.zama.ai
+
+<span class="c"># ── Deployer (NEVER commit real values) ──────────</span>
+<span class="c"># For local dev/devnet only: raw private key</span>
+DEPLOYER_PRIVATE_KEY=0x_YOUR_PRIVATE_KEY_HERE
+
+<span class="c"># For mainnet: use hardware wallet or encrypted keystore</span>
+<span class="c"># DEPLOYER_LEDGER_ADDRESS=0x...</span>
+
+<span class="c"># ── Verification ─────────────────────────────────</span>
+ETHERSCAN_API_KEY=optional_for_explorer
+
+<span class="c"># ── Gas Reporter ─────────────────────────────────</span>
+REPORT_GAS=false
+CMC_API_KEY=optional_for_usd_pricing
+
+<span class="c"># ── Frontend ─────────────────────────────────────</span>
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x_DEPLOYED_CONTRACT_ADDRESS</pre>
+</div>
+
+<div class="box alert">
+  <div class="box-ico">&#128683;</div>
+  <div class="box-inner">
+    <div class="box-title">Never Commit Private Keys</div>
+    <div class="box-text">
+      Add <code>.env</code> to <code>.gitignore</code> immediately. For mainnet deployments,
+      use a hardware wallet (Ledger/Trezor) via <code>@nomicfoundation/hardhat-ledger</code>
+      or an encrypted keystore (<code>npx hardhat keystore</code>) — never a raw private
+      key in any file that could be committed or logged.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="secrets-ci">CI Secrets Setup (GitHub)</h3>
+<p>
+  In your GitHub repository: <strong>Settings → Secrets and variables → Actions → New repository secret</strong>.
+  Add these secrets (never put them in workflow YAML files directly):
+</p>
+<ul>
+  <li><code>DEPLOYER_PRIVATE_KEY</code> — devnet-only deployer key (use a dedicated wallet with minimal funds)</li>
+  <li><code>DEVNET_RPC_URL</code> — the RPC endpoint</li>
+  <li><code>CMC_API_KEY</code> — optional, for gas USD pricing in reports</li>
+</ul>
+
+<!-- CI/CD PIPELINE -->
+<h2 class="sec" id="cicd">CI/CD Pipeline</h2>
+
+<h3 class="sub" id="github-actions">GitHub Actions Workflow</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">yaml</div><div class="fname">.github/workflows/ci.yml</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>name: FHEVM CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  <span class="c"># ── Stage 1: Fast checks ─────────────────────────</span>
+  lint-and-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Lint (Solhint)
+        run: npx solhint 'contracts/**/*.sol'
+      - name: Compile
+        run: npx hardhat compile
+
+  <span class="c"># ── Stage 2: Unit tests (mock mode, fast) ────────</span>
+  test-mock:
+    needs: lint-and-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Run tests (mock FHE)
+        run: npx hardhat test --network hardhat
+      - name: Gas report
+        run: REPORT_GAS=true npx hardhat test --network hardhat
+        env:
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+      - name: Upload gas report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gas-report
+          path: gas-report.txt
+
+  <span class="c"># ── Stage 3: Slither static analysis ────────────</span>
+  slither:
+    needs: lint-and-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install slither-analyzer
+      - run: npm ci && npx hardhat compile
+      - name: Run Slither
+        run: slither contracts/ --exclude-dependencies
+        continue-on-error: false
+
+  <span class="c"># ── Stage 4: Devnet integration tests ────────────</span>
+  <span class="c"># Only runs on push to main (not on every PR)</span>
+  test-devnet:
+    needs: [test-mock, slither]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: devnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Run integration tests on devnet
+        run: npx hardhat test --network devnet
+        env:
+          DEVNET_RPC_URL:       ${{ secrets.DEVNET_RPC_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+
+  <span class="c"># ── Stage 5: Deploy (only on tagged release) ─────</span>
+  deploy:
+    needs: test-devnet
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: devnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Deploy to devnet
+        run: npx hardhat deploy --network devnet
+        env:
+          DEVNET_RPC_URL:       ${{ secrets.DEVNET_RPC_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      - name: Verify contracts
+        run: npx hardhat etherscan-verify --network devnet
+        env:
+          DEVNET_RPC_URL: ${{ secrets.DEVNET_RPC_URL }}</pre>
+</div>
+
+<h3 class="sub" id="pipeline-stages">Pipeline Stage Summary</h3>
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Lint + Compile (~1 min)</h4>
+      <p>Solhint checks code style; <code>hardhat compile</code> validates Solidity. Runs on every push and PR.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Mock Tests + Gas Report (~3 min)</h4>
+      <p>Full test suite against mock FHE — fast, no RPC needed. Uploads gas report as artifact for review.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Slither Analysis (~2 min)</h4>
+      <p>Static analysis for common vulnerabilities. Fails the pipeline on high-severity findings.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Devnet Integration (~8 min)</h4>
+      <p>Tests against real FHEVM network — Gateway callbacks, real KMS latency. Only runs on <code>main</code> branch.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Deploy + Verify (on tag)</h4>
+      <p>Triggered by <code>git tag v1.0.0 && git push --tags</code>. Deploys and verifies source on the explorer.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MONITORING -->
+<h2 class="sec" id="monitoring">Monitoring & Observability</h2>
+<p>
+  After deployment, you need visibility into: Gateway callback latency, failed transactions,
+  unusual usage patterns (e.g., a flood of bids suggesting a spam attack), and contract
+  state changes.
+</p>
+
+<h3 class="sub" id="event-indexer">Event Indexer with viem</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">monitor/indexer.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { createPublicClient, http, parseAbiItem } <span class="k">from</span> <span class="s">'viem'</span>
+
+<span class="k">const</span> client = createPublicClient({
+  transport: http(<span class="s">'https://devnet.zama.ai'</span>),
+})
+
+<span class="k">const</span> CONTRACT = <span class="s">'0xYOUR_CONTRACT_ADDRESS'</span> <span class="k">as const</span>
+
+<span class="c">// Watch BidPlaced events in real time</span>
+client.watchContractEvent({
+  address: CONTRACT,
+  abi: [parseAbiItem(<span class="s">'event BidPlaced(address indexed bidder)'</span>)],
+  eventName: <span class="s">'BidPlaced'</span>,
+  onLogs: (logs) => {
+    logs.forEach(log => {
+      console.log(<span class="s">`[${new Date().toISOString()}] Bid placed by ${log.args.bidder}`</span>)
+      <span class="c">// Send to your monitoring dashboard / Slack webhook</span>
+      sendAlert(<span class="s">`New bid from ${log.args.bidder}`</span>)
+    })
+  },
+})
+
+<span class="c">// Track callback latency</span>
+<span class="k">const</span> pendingRequests = <span class="k">new</span> Map&lt;<span class="t">bigint</span>, <span class="t">number</span>&gt;()
+
+client.watchContractEvent({
+  address: CONTRACT,
+  abi: [parseAbiItem(<span class="s">'event AuctionEnded(uint256 indexed requestId)'</span>)],
+  eventName: <span class="s">'AuctionEnded'</span>,
+  onLogs: (logs) => {
+    logs.forEach(log => pendingRequests.set(log.args.requestId!, Date.now()))
+  },
+})
+
+client.watchContractEvent({
+  address: CONTRACT,
+  abi: [parseAbiItem(<span class="s">'event WinnerRevealed(address indexed winner, uint64 amount)'</span>)],
+  eventName: <span class="s">'WinnerRevealed'</span>,
+  onLogs: (logs) => {
+    logs.forEach(log => {
+      <span class="k">const</span> reqId = <span class="n">0n</span>  <span class="c">// correlate via requestId if tracked</span>
+      <span class="k">const</span> latencyMs = Date.now() - (pendingRequests.get(reqId) ?? Date.now())
+      console.log(<span class="s">`[KMS latency] ${latencyMs}ms — winner: ${log.args.winner}`</span>)
+    })
+  },
+})
+
+<span class="k">async function</span> <span class="f">sendAlert</span>(msg: <span class="t">string</span>) {
+  <span class="k">await</span> fetch(process.env.SLACK_WEBHOOK_URL!, {
+    method: <span class="s">'POST'</span>,
+    headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> },
+    body: JSON.stringify({ text: <span class="s">`🔒 FHEVM Monitor: ${msg}`</span> }),
+  })
+}</pre>
+</div>
+
+<h3 class="sub" id="alerts">Key Metrics to Alert On</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Metric</th><th>Alert Threshold</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>Gateway callback latency</td><td>&gt; 60 seconds</td><td>Check KMS node health; alert on-call</td></tr>
+      <tr><td>Failed transactions (reverts)</td><td>&gt; 5% of txs</td><td>Investigate ACL or input proof failures</td></tr>
+      <tr><td>Bid rate (auctions)</td><td>&gt; 50 bids/minute</td><td>Possible spam — consider rate limiting</td></tr>
+      <tr><td>Deployer balance</td><td>&lt; 0.1 ZAMA</td><td>Top up before automated scripts fail</td></tr>
+      <tr><td>Contract balance (escrow)</td><td>Unexpected change</td><td>Immediate investigation — potential exploit</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- UPGRADEABLE -->
+<h2 class="sec" id="upgrade">Upgradeability Considerations</h2>
+<p>
+  FHEVM contracts can use the standard OpenZeppelin proxy upgrade pattern
+  (<code>TransparentUpgradeableProxy</code> or UUPS). However, there are FHEVM-specific
+  constraints to be aware of:
+</p>
+<ul>
+  <li><strong>ACL handles are permanent</strong> — existing ciphertext handles survive an upgrade, but new logic versions must be compatible with the old ACL grants</li>
+  <li><strong>Storage layout must be preserved</strong> — if you change where <code>_balances</code> is stored, existing encrypted values will be read as wrong handles</li>
+  <li><strong>Gateway requestIds are external</strong> — outstanding decryption requests from the old implementation will callback to the proxy, which must still route them correctly after upgrade</li>
+  <li><strong>Use OpenZeppelin's storage gap pattern</strong> — add <code>uint256[50] private __gap;</code> at the end of each upgradeable contract to reserve space for future variables</li>
+</ul>
+
+<div class="box tip">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">When in Doubt — Don't Upgrade</div>
+    <div class="box-text">
+      FHEVM encrypted state is harder to migrate than plaintext state. For most
+      production contracts, deploying a new version and migrating via a plaintext
+      snapshot + re-encryption ceremony is safer than in-place upgrade logic.
+      Reserve upgrade proxies for contracts with very active user state that makes
+      migration impractical.
+    </div>
+  </div>
+</div>
+
+<!-- LAB -->
+<h2 class="sec" id="lab">Lab 4C — Production Deployment Pipeline</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Set up a complete production deployment pipeline for your ConfidentialERC20.
+      The pipeline must: lint → compile → test (mock) → static analysis → deploy to devnet → verify.
+    </div>
+  </div>
+</div>
+<ul>
+  <li>Create <code>.github/workflows/ci.yml</code> with all 5 stages as shown above</li>
+  <li>Write <code>deploy/01_deploy_token.ts</code> using hardhat-deploy — checks deployer balance, logs gas used, writes <code>deployment.json</code></li>
+  <li>Add <code>.env.example</code> and verify <code>.env</code> is in <code>.gitignore</code></li>
+  <li>Deploy to Zama Devnet and verify source code on the block explorer</li>
+  <li>Write <code>monitor/indexer.ts</code> that logs Transfer events and measures block confirmation time</li>
+  <li>Create <code>DEPLOY_CHECKLIST.md</code> with all 8 pre-deploy items checked</li>
+</ul>
+<p><strong>Extension:</strong> Add a <code>deploy/02_initialize_token.ts</code> script that mints an initial supply to a treasury address and sets up ACL grants for a designated admin contract. Integrate this as an automatic post-deploy step in the CI pipeline.</p>
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 18 Quiz</div>
+      <div class="quiz-subtitle">6 questions · deployment & CI/CD</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 06</div>
+      <div class="q-q">Why should KMS, ACL, and Gateway contract addresses never be hardcoded in your Solidity contract?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Hardcoding wastes gas due to extra bytes in bytecode</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Solidity compiler rejects hardcoded addresses</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>These system contract addresses change between network versions — hardcoding breaks the contract on every network upgrade without redeployment</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>They must be kept private to prevent front-running</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Zama's system contracts are upgraded and redeployed as the FHEVM evolves. A contract with hardcoded addresses would break silently after a network upgrade. Always read addresses from a configuration file or constructor argument and verify against the current documentation.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 06</div>
+      <div class="q-q">In the CI/CD pipeline, why do integration tests against the real devnet only run on pushes to <code>main</code>, not on every PR?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>GitHub Actions does not support devnet RPC connections on PR builds</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Devnet tests take ~8 minutes (real KMS latency), cost real tokens, and require production secrets — running them on every PR would be slow and wasteful. Mock tests catch 95% of bugs faster.</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>PR branches cannot access environment secrets</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Devnet has a rate limit of one connection per repository</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The tiered pipeline design runs fast mock tests on every PR (catching logic bugs in seconds) and reserves expensive devnet tests for code that's already been reviewed and is ready to merge. This balances developer velocity with thorough testing.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 06</div>
+      <div class="q-q">What is the correct way to trigger the deploy stage in the GitHub Actions pipeline shown today?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Push any commit to <code>main</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Open a pull request to <code>main</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Manually trigger via the Actions tab</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Create and push a tag starting with <code>v</code> — for example <code>git tag v1.0.0 &amp;&amp; git push --tags</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The pipeline uses <code>if: startsWith(github.ref, 'refs/tags/v')</code> to gate the deploy stage. This ensures deploys are intentional, versioned, and traceable — not triggered by every merge to main.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 06</div>
+      <div class="q-q">When upgrading a FHEVM contract using a proxy, what is the most critical constraint to maintain?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The storage layout must be preserved — changing where encrypted mappings are stored would cause existing handles to be read from wrong storage slots, corrupting all encrypted state</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>All ACL grants must be re-issued after every upgrade</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The contract address must remain the same as the KMS address</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The new implementation must re-encrypt all stored ciphertexts</td></tr></div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> FHEVM handles are <code>uint256</code> values stored at specific storage slots. If you reorder state variables, the handle stored at slot N now refers to a different ciphertext. This silently corrupts all encrypted balances. Use OpenZeppelin's storage gap pattern to safely add variables in future upgrades.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 06</div>
+      <div class="q-q">What does the <code>waitConfirmations: 3</code> parameter in the deployment script accomplish?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It retries the deployment transaction up to 3 times on failure</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It sets the gas price to 3× the base fee</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It waits for 3 blocks to be mined after deployment before proceeding — ensuring the deployment is deeply confirmed and the contract is safely indexed by the explorer before any subsequent setup transactions</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It requests 3 validator signatures for the deployment transaction</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> On live networks, <code>waitConfirmations</code> adds safety margin. A single confirmation could be orphaned in a chain reorg. 3 confirmations ensures the deployment is stable before any subsequent transactions (like minting initial supply or setting permissions) that depend on the deployed address.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 06</div>
+      <div class="q-q">You want to monitor KMS callback latency in production. What is the correct approach using on-chain events?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Poll the Gateway contract's <code>getPendingRequests()</code> view function every second</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Record the timestamp when <code>AuctionEnded</code> (requestDecryption) is emitted, then compute the delta when <code>WinnerRevealed</code> (callback) fires — the difference is the KMS round-trip latency</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Subscribe to the KMS contract's internal events directly</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Use block timestamps from the two transactions — subtract them in Solidity and emit the result</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Record <code>Date.now()</code> off-chain when the request event fires, then subtract it from <code>Date.now()</code> when the callback event fires. This gives you wall-clock KMS latency with millisecond precision — more useful than block timestamps which have 12-second granularity.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/6</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day17.html">&#8592; Day 17 — Gas Optimization</a>
+  <a class="next" href="day19.html">Day 19 — Observability & Scaling &#8594;</a>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = ['intro','networks','devnet','mainnet','pre-deploy',
+  'deploy-script','hardhat-deploy','deploy-code','verify',
+  'env','env-files','secrets-ci',
+  'cicd','github-actions','pipeline-stages',
+  'monitoring','event-indexer','alerts',
+  'upgrade','lab','quiz'];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const TOTAL = 6;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! Production-ready engineer.' :
+    pct >= 83   ? 'Excellent work!'                     :
+    pct >= 50   ? 'Review the CI/CD pipeline section.'  :
+                  'Re-read from the top.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
