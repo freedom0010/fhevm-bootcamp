@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 15 — Privacy-Preserving DeFi Patterns | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#07060f;--ink2:#0d0b1a;--ink3:#121020;--plate:#181528;--wire:#262240;--wire2:#343058;--acc:#a78bfa;--acc2:#7c3aed;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--teal:#2dd4bf;--sky:#60a5fa;--pink:#f472b6;--dim:#666090;--mid:#9490c0;--bright:#dcd8f8;--white:#f0eeff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--pink));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,6,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-sep{color:var(--wire2)}.tb-cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(167,139,250,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:920px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(32px,4vw,50px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(167,139,250,.09);padding:2px 6px;border-radius:3px}
+.code{background:#030308;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 28px rgba(0,0,0,.5)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.82;color:#ccc8f0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#484470;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(167,139,250,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(167,139,250,.06);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(45,212,191,.06);border-color:var(--teal);border-width:2px}.key .box-title{color:var(--teal)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(167,139,250,.07);padding:1px 5px;border-radius:3px}
+.arch{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.arch-node{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;padding:16px 18px;text-align:center}
+.arch-node .ico{font-size:24px;margin-bottom:8px}
+.arch-node .label{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px}
+.arch-node .desc{font-size:12px;color:var(--mid);line-height:1.55}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(167,139,250,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(167,139,250,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(167,139,250,.04);border:1px solid rgba(167,139,250,.14);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);color:var(--acc);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(167,139,250,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.24);color:var(--acc)}.pnav .next:hover{background:rgba(167,139,250,.15)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.arch{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="tb-cur">Week 4</span><span class="tb-sep">/</span><span class="tb-cur">Day 15</span></div>
+  <div class="tb-badge">Week 4 — Production</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="defi-landscape">DeFi Privacy Landscape</a>
+  <a class="sb-a" data-id="dark-pool">Dark Pool AMM</a>
+  <a class="sb-a sub" data-id="pool-design">Pool Design</a>
+  <a class="sb-a sub" data-id="add-liquidity">addLiquidity()</a>
+  <a class="sb-a sub" data-id="swap">swap()</a>
+  <a class="sb-a sub" data-id="reveal-price">Price Oracle</a>
+  <a class="sb-a" data-id="private-lending">Private Lending</a>
+  <a class="sb-a sub" data-id="collateral">Encrypted Collateral</a>
+  <a class="sb-a sub" data-id="health-factor">Health Factor</a>
+  <a class="sb-a sub" data-id="liquidation">Liquidation</a>
+  <a class="sb-a" data-id="private-payroll">On-Chain Payroll</a>
+  <a class="sb-a sub" data-id="salary-storage">Salary Storage</a>
+  <a class="sb-a sub" data-id="disbursement">Disbursement</a>
+  <a class="sb-a" data-id="composability">Composability Patterns</a>
+  <a class="sb-a sub" data-id="handle-passing">Handle Passing</a>
+  <a class="sb-a sub" data-id="transient-acl">Transient ACL</a>
+  <a class="sb-a" data-id="tradeoffs">Privacy Tradeoffs</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128176; Day 15 of 20</div>
+  <h1>Privacy-Preserving<br><em>DeFi Patterns</em></h1>
+  <p class="lead">DeFi on public chains leaks everything: your position size, your entry price, your collateral ratio, your salary. Today you design production-grade confidential DeFi primitives — a dark-pool AMM, a private lending protocol, and an on-chain payroll system — each applying the FHEVM patterns you've mastered to real financial use cases.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 5–6 hours</div>
+    <div class="stat">&#128176; Dark-pool AMM</div>
+    <div class="stat">&#127968; Private lending</div>
+    <div class="stat">&#128200; On-chain payroll</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="defi-landscape">The DeFi Privacy Problem</h2>
+<p>Standard DeFi protocols publish every position in real-time. This creates three categories of harm:</p>
+<div class="tw"><table>
+  <thead><tr><th>Leak</th><th>Protocol</th><th>Attack / Harm</th></tr></thead>
+  <tbody>
+    <tr><td>Swap size &amp; direction</td><td>Uniswap, Curve</td><td>Front-running: bots see your TX in mempool and sandwich it, extracting MEV</td></tr>
+    <tr><td>Collateral ratio</td><td>Aave, Compound</td><td>Targeted liquidation: bots watch undercollateralized positions and liquidate at optimal time</td></tr>
+    <tr><td>Wallet balance</td><td>All ERC-20</td><td>Phishing, extortion, dark-net targeting of high-value wallets</td></tr>
+    <tr><td>Salary / payroll</td><td>Gnosis Safe, Superfluid</td><td>Compensation discrimination, employee poaching by competitors</td></tr>
+    <tr><td>DAO vote &amp; position</td><td>Snapshot, Compound governance</td><td>Coercion, strategic vote-buying, market manipulation before reveal</td></tr>
+  </tbody>
+</table></div>
+<div class="box key">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">FHEVM Confidential DeFi Architecture</div>
+    <div class="box-text">All three protocols below follow the same pattern: <strong>encrypted state</strong> (euint64 balances/amounts), <strong>FHE arithmetic</strong> for invariant maintenance, <strong>FHE comparisons</strong> for condition checks, and <strong>Gateway decryption</strong> only for aggregate outputs that must be public (price oracles, global stats). Individual positions stay encrypted permanently.</div>
+  </div>
+</div>
+
+<h2 class="sec" id="dark-pool">Pattern 1 — Dark Pool AMM</h2>
+<p>A dark pool AMM maintains an x·y=k invariant over <em>encrypted</em> reserves. Traders submit encrypted swap amounts; the pool computes the output and updates reserves — all in FHE. The spot price is revealed only by the owner via a Gateway callback, acting as a price oracle.</p>
+
+<h3 class="sub" id="pool-design">Pool Architecture</h3>
+<div class="arch">
+  <div class="arch-node"><div class="ico">&#128176;</div><div class="label">Reserve X</div><div class="desc">euint64 — encrypted token A reserve. Never publicly readable.</div></div>
+  <div class="arch-node"><div class="ico">&#128176;</div><div class="label">Reserve Y</div><div class="desc">euint64 — encrypted token B reserve. k = X·Y maintained in FHE.</div></div>
+  <div class="arch-node"><div class="ico">&#128200;</div><div class="label">Price Oracle</div><div class="desc">Gateway decrypts reserves on request. Reveals price, not individual trades.</div></div>
+</div>
+
+<h3 class="sub" id="add-liquidity">addLiquidity() — Encrypted Deposit</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/DarkPoolAMM.sol — addLiquidity</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/gateway/GatewayCaller.sol"</span>;
+
+<span class="k">contract</span> <span class="t">DarkPoolAMM</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="t">euint64</span> <span class="k">private</span> reserveX;   <span class="c">// encrypted reserve of token A</span>
+    <span class="t">euint64</span> <span class="k">private</span> reserveY;   <span class="c">// encrypted reserve of token B</span>
+
+    <span class="c">// LP shares — plaintext; liquidity amounts are encrypted</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">uint64</span>) <span class="k">public</span> lpShares;
+    <span class="t">uint64</span> <span class="k">public</span> totalShares;
+
+    <span class="t">address</span> <span class="k">public immutable</span> owner;
+
+    <span class="ev">event</span> <span class="f">LiquidityAdded</span>(<span class="t">address indexed</span> provider);
+    <span class="ev">event</span> <span class="f">SwapExecuted</span>(<span class="t">address indexed</span> trader);
+    <span class="ev">event</span> <span class="f">PriceRevealed</span>(<span class="t">uint64</span> resX, <span class="t">uint64</span> resY);
+
+    <span class="k">constructor</span>() { owner = msg.sender; }
+
+    <span class="c">/**
+     * @notice Add liquidity with encrypted amounts.
+     * amountX and amountY must maintain the existing price ratio — 
+     * enforced off-chain by the LP. The contract trusts the amounts
+     * are proportional (a separate invariant check can be added).
+     */</span>
+    <span class="k">function</span> <span class="f">addLiquidity</span>(
+        <span class="t">externalEuint64</span> calldata encX,
+        <span class="t">bytes</span>           calldata proofX,
+        <span class="t">externalEuint64</span> calldata encY,
+        <span class="t">bytes</span>           calldata proofY,
+        <span class="t">uint64</span>          shares    <span class="c">// plaintext share amount requested</span>
+    ) <span class="k">external</span> {
+        <span class="t">euint64</span> amountX = FHE.<span class="f">fromExternal</span>(encX, proofX);
+        <span class="t">euint64</span> amountY = FHE.<span class="f">fromExternal</span>(encY, proofY);
+
+        <span class="c">// Initialisation: first liquidity provider sets the price</span>
+        <span class="k">if</span> (totalShares == <span class="n">0</span>) {
+            reserveX = amountX;
+            reserveY = amountY;
+        } <span class="k">else</span> {
+            <span class="c">// Accumulate reserves — price ratio maintained by LP</span>
+            reserveX = FHE.<span class="f">add</span>(reserveX, amountX);
+            reserveY = FHE.<span class="f">add</span>(reserveY, amountY);
+        }
+
+        FHE.<span class="f">allowThis</span>(reserveX); FHE.<span class="f">allowThis</span>(reserveY);
+
+        lpShares[msg.sender] += shares;
+        totalShares          += shares;
+        <span class="k">emit</span> <span class="f">LiquidityAdded</span>(msg.sender);
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="swap">swap() — The Dark Trade</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">DarkPoolAMM.sol — swap</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Swap token X for token Y with encrypted input amount.
+ * Uses the constant-product formula: amountOut = (reserveY * amountIn) / (reserveX + amountIn)
+ * IMPORTANT: Division is not a native FHE operation — see note below.
+ *
+ * For production: use an approximation or fixed-point integer arithmetic.
+ * This example uses a simplified fee-less integer approximation.
+ */</span>
+<span class="k">function</span> <span class="f">swapXforY</span>(
+    <span class="t">externalEuint64</span> calldata encAmountIn,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external</span> {
+    <span class="t">euint64</span> amountIn = FHE.<span class="f">fromExternal</span>(encAmountIn, proof);
+
+    <span class="c">// Step 1: Compute numerator = reserveY * amountIn (euint128 to avoid overflow)</span>
+    <span class="t">euint128</span> numerator = FHE.<span class="f">mul</span>(
+        FHE.<span class="f">asEuint128</span>(reserveY),
+        FHE.<span class="f">asEuint128</span>(amountIn)
+    );
+
+    <span class="c">// Step 2: Compute denominator = reserveX + amountIn</span>
+    <span class="t">euint64</span> denominator = FHE.<span class="f">add</span>(reserveX, amountIn);
+
+    <span class="c">// Step 3: Integer division approximation
+    // FHE.div() is O(N²) cost — use only when necessary
+    // For production use pre-committed price bands or TWAP oracles</span>
+    <span class="t">euint64</span> amountOut = FHE.<span class="f">asEuint64</span>(
+        FHE.<span class="f">div</span>(numerator, FHE.<span class="f">asEuint128</span>(denominator))
+    );
+
+    <span class="c">// Step 4: Update reserves</span>
+    reserveX = FHE.<span class="f">add</span>(reserveX, amountIn);
+    reserveY = FHE.<span class="f">sub</span>(reserveY, amountOut);
+
+    FHE.<span class="f">allowThis</span>(reserveX);
+    FHE.<span class="f">allowThis</span>(reserveY);
+
+    <span class="c">// Step 5: Credit output to trader's encrypted balance</span>
+    <span class="c">// (requires an encrypted token contract integration)</span>
+    _creditTrader(msg.sender, amountOut);
+
+    <span class="k">emit</span> <span class="f">SwapExecuted</span>(msg.sender);
+}
+
+<span class="k">function</span> <span class="f">_creditTrader</span>(<span class="t">address</span> trader, <span class="t">euint64</span> amount) <span class="k">internal</span> {
+    <span class="c">// Grant trader access to their output amount handle</span>
+    FHE.<span class="f">allow</span>(amount, trader);
+    <span class="c">// In a real system: call the confidential token contract to mint/transfer</span>
+}</pre>
+</div>
+
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">FHE Division — The Expensive Operation</div>
+    <div class="box-text">
+      <code>FHE.div()</code> is O(N²) in circuit complexity — roughly 64× the cost of <code>FHE.add()</code> for 64-bit operands. For a production AMM, consider these alternatives:<br>
+      <br>
+      • <strong>Pre-committed price bands</strong>: Accept trades at the last published price ± a tolerance band. Price updated via Gateway callback every N blocks.<br>
+      • <strong>TWAP oracle</strong>: Reveal aggregate price statistics (not individual trade prices) periodically.<br>
+      • <strong>Fixed-ratio pools</strong>: StableSwap-style pools where the ratio is close to 1:1 — cheaper arithmetic.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="reveal-price">Price Oracle via Gateway</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">DarkPoolAMM.sol — price oracle</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Owner can reveal current reserves to publish a price.
+/// Individual trades are never revealed — only aggregate pool state.</span>
+<span class="k">function</span> <span class="f">requestPriceReveal</span>() <span class="k">external</span> {
+    <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+
+    FHE.<span class="f">makePubliclyDecryptable</span>(reserveX);
+    FHE.<span class="f">makePubliclyDecryptable</span>(reserveY);
+
+    <span class="t">euint64</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">euint64</span>[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = reserveX;
+    handles[<span class="n">1</span>] = reserveY;
+
+    Gateway.<span class="f">requestDecryption</span>(
+        handles, <span class="k">this</span>.priceCallback.selector,
+        <span class="n">0</span>, block.timestamp + <span class="n">1 hours</span>, <span class="k">false</span>
+    );
+}
+
+<span class="k">function</span> <span class="f">priceCallback</span>(
+    <span class="t">uint256</span>, <span class="t">uint64</span> resX, <span class="t">uint64</span> resY
+) <span class="k">external onlyGateway</span> {
+    <span class="k">emit</span> <span class="f">PriceRevealed</span>(resX, resY);
+    <span class="c">// Price = resY / resX (token Y per token X)</span>
+    <span class="c">// Publish to price oracle consumers off-chain</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="private-lending">Pattern 2 — Private Lending Protocol</h2>
+<p>A Compound-style lending protocol where collateral ratios and borrow positions are encrypted. Liquidation is triggered only when a health factor falls below threshold — computed entirely in FHE without revealing the actual amounts.</p>
+
+<h3 class="sub" id="collateral">Encrypted Collateral &amp; Borrow Positions</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/PrivateLending.sol — storage &amp; deposit</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">contract</span> <span class="t">PrivateLending</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="c">// Encrypted positions per user</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">private</span> collateral;  <span class="c">// deposited collateral</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">private</span> borrowed;    <span class="c">// outstanding debt</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">private</span> interest;    <span class="c">// accrued interest</span>
+
+    <span class="c">// Plaintext: liquidation threshold factor (e.g. 150 = 150% overcollat)</span>
+    <span class="t">uint64</span> <span class="k">public constant</span> LTV_FACTOR = <span class="n">150</span>;  <span class="c">// borrow up to 66% of collateral</span>
+    <span class="t">uint64</span> <span class="k">public constant</span> LIQ_THRESHOLD = <span class="n">120</span>; <span class="c">// liquidate below 120%</span>
+
+    <span class="t">address</span> <span class="k">public immutable</span> owner;
+    <span class="k">mapping</span>(<span class="t">uint256</span> =&gt; <span class="t">address</span>) <span class="k">private</span> liquidationTarget; <span class="c">// reqId → user</span>
+
+    <span class="ev">event</span> <span class="f">Deposited</span>(<span class="t">address indexed</span> user);
+    <span class="ev">event</span> <span class="f">Borrowed</span>(<span class="t">address indexed</span> user);
+    <span class="ev">event</span> <span class="f">LiquidationRequested</span>(<span class="t">address indexed</span> user, <span class="t">uint256</span> reqId);
+    <span class="ev">event</span> <span class="f">Liquidated</span>(<span class="t">address indexed</span> user, <span class="t">uint64</span> seized);
+
+    <span class="k">constructor</span>() { owner = msg.sender; }
+
+    <span class="c">/// @notice Deposit encrypted collateral</span>
+    <span class="k">function</span> <span class="f">deposit</span>(
+        <span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof
+    ) <span class="k">external</span> {
+        <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+
+        <span class="k">if</span> (<span class="t">euint64</span>.<span class="f">unwrap</span>(collateral[msg.sender]) == <span class="n">0</span>) {
+            collateral[msg.sender] = amount;
+        } <span class="k">else</span> {
+            collateral[msg.sender] = FHE.<span class="f">add</span>(collateral[msg.sender], amount);
+        }
+
+        FHE.<span class="f">allowThis</span>(collateral[msg.sender]);
+        FHE.<span class="f">allow</span>(collateral[msg.sender], msg.sender);
+        FHE.<span class="f">allow</span>(collateral[msg.sender], owner);
+        <span class="k">emit</span> <span class="f">Deposited</span>(msg.sender);
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="health-factor">Health Factor Check in FHE</h3>
+<p>The health factor (collateral × 100 / debt) must stay above the liquidation threshold. This comparison is done entirely in FHE — no one learns the actual amounts, only whether the account is healthy or not.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateLending.sol — borrow &amp; health check</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Borrow against encrypted collateral.
+/// Borrow amount is validated: borrowed * LTV_FACTOR <= collateral * 100</span>
+<span class="k">function</span> <span class="f">borrow</span>(
+    <span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+    <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+
+    <span class="c">// Compute total debt if borrow succeeds</span>
+    <span class="t">euint64</span> totalDebt = FHE.<span class="f">add</span>(borrowed[msg.sender], amount);
+
+    <span class="c">// Health check: collateral * 100 >= totalDebt * LTV_FACTOR
+    // i.e. collateral / totalDebt >= LTV_FACTOR / 100</span>
+    <span class="t">euint64</span> collateral100 = FHE.<span class="f">mul</span>(collateral[msg.sender], FHE.<span class="f">asEuint64</span>(<span class="n">100</span>));
+    <span class="t">euint64</span> debtLTV       = FHE.<span class="f">mul</span>(totalDebt, FHE.<span class="f">asEuint64</span>(LTV_FACTOR));
+    <span class="t">ebool</span>   healthy       = FHE.<span class="f">gte</span>(collateral100, debtLTV);
+
+    <span class="c">// Only update borrowed if healthy — cap at current if not
+    // (silent cap pattern: no revert to preserve privacy)</span>
+    borrowed[msg.sender] = FHE.<span class="f">select</span>(healthy, totalDebt, borrowed[msg.sender]);
+
+    FHE.<span class="f">allowThis</span>(borrowed[msg.sender]);
+    FHE.<span class="f">allow</span>(borrowed[msg.sender], msg.sender);
+    FHE.<span class="f">allow</span>(borrowed[msg.sender], owner);
+    <span class="k">emit</span> <span class="f">Borrowed</span>(msg.sender);
+}
+
+<span class="c">/// @notice Returns an encrypted bool: true = healthy, false = liquidatable.
+/// Only the account owner and protocol owner can check their own health.</span>
+<span class="k">function</span> <span class="f">isHealthy</span>(<span class="t">address</span> user) <span class="k">external view returns</span> (<span class="t">ebool</span>) {
+    <span class="k">require</span>(
+        msg.sender == user || msg.sender == owner,
+        <span class="s">"Not authorized"</span>
+    );
+    <span class="t">euint64</span> collateral100 = FHE.<span class="f">mul</span>(collateral[user], FHE.<span class="f">asEuint64</span>(<span class="n">100</span>));
+    <span class="t">euint64</span> debtThreshold = FHE.<span class="f">mul</span>(borrowed[user], FHE.<span class="f">asEuint64</span>(LIQ_THRESHOLD));
+    <span class="t">ebool</span>   result        = FHE.<span class="f">gte</span>(collateral100, debtThreshold);
+    FHE.<span class="f">allow</span>(result, msg.sender);
+    <span class="k">return</span> result;
+}</pre>
+</div>
+
+<h3 class="sub" id="liquidation">Liquidation — Revealing Only What's Needed</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateLending.sol — liquidation</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Request liquidation check for a user.
+ * Owner calls this on any account. Gateway decrypts the health boolean.
+ * If unhealthy, the callback seizes collateral.
+ *
+ * PRIVACY NOTE: The fact that liquidation was *requested* is visible.
+ * The collateral amount is only revealed in the Liquidated event.
+ */</span>
+<span class="k">function</span> <span class="f">requestLiquidationCheck</span>(<span class="t">address</span> user) <span class="k">external</span> {
+    <span class="k">require</span>(msg.sender == owner, <span class="s">"Only protocol owner"</span>);
+
+    <span class="t">euint64</span> collateral100 = FHE.<span class="f">mul</span>(collateral[user], FHE.<span class="f">asEuint64</span>(<span class="n">100</span>));
+    <span class="t">euint64</span> debtThreshold = FHE.<span class="f">mul</span>(borrowed[user], FHE.<span class="f">asEuint64</span>(LIQ_THRESHOLD));
+    <span class="t">ebool</span>   isUnhealthy   = FHE.<span class="f">lt</span>(collateral100, debtThreshold);
+
+    FHE.<span class="f">makePubliclyDecryptable</span>(isUnhealthy);
+    <span class="t">ebool</span>[] <span class="k">memory</span> h = <span class="k">new</span> <span class="t">ebool</span>[](<span class="n">1</span>);
+    h[<span class="n">0</span>] = isUnhealthy;
+
+    <span class="t">uint256</span> reqId = Gateway.<span class="f">requestDecryption</span>(
+        h, <span class="k">this</span>.liquidationCallback.selector,
+        <span class="n">0</span>, block.timestamp + <span class="n">30 minutes</span>, <span class="k">false</span>
+    );
+    liquidationTarget[reqId] = user;
+    <span class="k">emit</span> <span class="f">LiquidationRequested</span>(user, reqId);
+}
+
+<span class="k">function</span> <span class="f">liquidationCallback</span>(
+    <span class="t">uint256</span> requestId, <span class="k">bool</span> isUnhealthy
+) <span class="k">external onlyGateway</span> {
+    <span class="k">if</span> (!isUnhealthy) <span class="k">return</span>; <span class="c">// account is healthy, no action needed</span>
+
+    <span class="t">address</span> user = liquidationTarget[requestId];
+
+    <span class="c">// Seize all collateral and zero out the debt</span>
+    <span class="t">euint64</span> seized  = collateral[user];
+    FHE.<span class="f">makePubliclyDecryptable</span>(seized); <span class="c">// liquidation amount becomes public</span>
+
+    collateral[user] = FHE.<span class="f">asEuint64</span>(<span class="n">0</span>);
+    borrowed[user]   = FHE.<span class="f">asEuint64</span>(<span class="n">0</span>);
+    FHE.<span class="f">allowThis</span>(collateral[user]);
+    FHE.<span class="f">allowThis</span>(borrowed[user]);
+    FHE.<span class="f">allow</span>(collateral[user], user);
+    FHE.<span class="f">allow</span>(borrowed[user], user);
+
+    <span class="c">// We'd need another Gateway call to get the plaintext seized amount
+    // for the event. Here simplified for clarity.</span>
+    <span class="k">emit</span> <span class="f">Liquidated</span>(user, <span class="n">0</span>); <span class="c">// actual amount via separate callback</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="private-payroll">Pattern 3 — On-Chain Payroll</h2>
+<p>An employer stores encrypted salary schedules on-chain. Employees can only decrypt their own salary. The employer can pay out to all employees in a single batch transaction without any salary being visible to co-workers.</p>
+
+<h3 class="sub" id="salary-storage">Encrypted Salary Registry</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/PrivatePayroll.sol</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">contract</span> <span class="t">PrivatePayroll</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+
+    <span class="k">struct</span> <span class="t">Employee</span> {
+        <span class="t">euint64</span>  monthlySalary;    <span class="c">// encrypted — only employee can decrypt</span>
+        <span class="t">euint64</span>  bonusPool;        <span class="c">// encrypted — only employee + HR can decrypt</span>
+        <span class="t">uint256</span>  lastPaidAt;      <span class="c">// plaintext timestamp</span>
+        <span class="k">bool</span>     active;          <span class="c">// plaintext active flag</span>
+    }
+
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">Employee</span>) <span class="k">private</span> employees;
+    <span class="t">address</span>[] <span class="k">public</span> employeeList;
+    <span class="t">address</span> <span class="k">public immutable</span> employer;
+
+    <span class="ev">event</span> <span class="f">EmployeeAdded</span>(<span class="t">address indexed</span> employee);
+    <span class="ev">event</span> <span class="f">SalaryUpdated</span>(<span class="t">address indexed</span> employee);
+    <span class="ev">event</span> <span class="f">PayrollRun</span>(<span class="t">uint256</span> employeeCount, <span class="t">uint256</span> timestamp);
+
+    <span class="k">constructor</span>() { employer = msg.sender; }
+
+    <span class="c">/**
+     * @notice Register a new employee with encrypted salary.
+     * Only HR (employer) can call. The employee address is public
+     * (they're on the payroll), but the amount is private.
+     */</span>
+    <span class="k">function</span> <span class="f">addEmployee</span>(
+        <span class="t">address</span>         employee,
+        <span class="t">externalEuint64</span> calldata encSalary,
+        <span class="t">bytes</span>           calldata proof
+    ) <span class="k">external</span> {
+        <span class="k">require</span>(msg.sender == employer, <span class="s">"Only employer"</span>);
+        <span class="k">require</span>(!employees[employee].active, <span class="s">"Already registered"</span>);
+
+        <span class="t">euint64</span> salary = FHE.<span class="f">fromExternal</span>(encSalary, proof);
+
+        employees[employee] = <span class="t">Employee</span>({
+            monthlySalary: salary,
+            bonusPool:     FHE.<span class="f">asEuint64</span>(<span class="n">0</span>),
+            lastPaidAt:    block.timestamp,
+            active:        <span class="k">true</span>
+        });
+
+        <span class="c">// Grant access: only employee and employer can decrypt salary</span>
+        FHE.<span class="f">allowThis</span>(employees[employee].monthlySalary);
+        FHE.<span class="f">allow</span>(employees[employee].monthlySalary, employee);
+        FHE.<span class="f">allow</span>(employees[employee].monthlySalary, employer);
+
+        FHE.<span class="f">allowThis</span>(employees[employee].bonusPool);
+        FHE.<span class="f">allow</span>(employees[employee].bonusPool, employee);
+        FHE.<span class="f">allow</span>(employees[employee].bonusPool, employer);
+
+        employeeList.<span class="f">push</span>(employee);
+        <span class="k">emit</span> <span class="f">EmployeeAdded</span>(employee);
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="disbursement">Batch Payroll Disbursement</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivatePayroll.sol — runPayroll &amp; viewSalary</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Run monthly payroll: transfer salary to each employee's
+ * encrypted balance in the confidential token contract.
+ *
+ * Gas note: O(N) FHE.allowTransient() + N token.transfer() calls.
+ * For large payrolls (>50 employees), batch via off-chain merkle proof.
+ */</span>
+<span class="k">function</span> <span class="f">runPayroll</span>(<span class="t">address</span> tokenContract) <span class="k">external</span> {
+    <span class="k">require</span>(msg.sender == employer, <span class="s">"Only employer"</span>);
+    <span class="k">require</span>(
+        block.timestamp &gt;= _lastPayrollRun + <span class="n">28 days</span>,
+        <span class="s">"Too soon"</span>
+    );
+
+    <span class="t">IConfidentialToken</span> token = <span class="t">IConfidentialToken</span>(tokenContract);
+
+    <span class="k">for</span> (<span class="t">uint256</span> i = <span class="n">0</span>; i &lt; employeeList.length; i++) {
+        <span class="t">address</span>  emp = employeeList[i];
+        <span class="t">Employee</span> <span class="k">storage</span> e = employees[emp];
+        <span class="k">if</span> (!e.active) <span class="k">continue</span>;
+
+        <span class="c">// Allow token contract to read the salary handle for this tx</span>
+        FHE.<span class="f">allowTransient</span>(e.monthlySalary, tokenContract);
+
+        <span class="c">// Token contract transfers the encrypted salary amount to employee</span>
+        token.<span class="f">transferEncrypted</span>(emp, e.monthlySalary);
+
+        e.lastPaidAt = block.timestamp;
+    }
+
+    _lastPayrollRun = block.timestamp;
+    <span class="k">emit</span> <span class="f">PayrollRun</span>(employeeList.length, block.timestamp);
+}
+
+<span class="c">/// @notice Employee reads their own encrypted salary</span>
+<span class="k">function</span> <span class="f">viewSalary</span>() <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+    <span class="k">require</span>(employees[msg.sender].active, <span class="s">"Not an employee"</span>);
+    <span class="k">require</span>(
+        FHE.<span class="f">isSenderAllowed</span>(employees[msg.sender].monthlySalary),
+        <span class="s">"Not authorized"</span>
+    );
+    <span class="k">return</span> employees[msg.sender].monthlySalary;
+}
+
+<span class="c">/// @notice Update an employee's salary (employer only)</span>
+<span class="k">function</span> <span class="f">updateSalary</span>(
+    <span class="t">address</span>         employee,
+    <span class="t">externalEuint64</span> calldata encNewSalary,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external</span> {
+    <span class="k">require</span>(msg.sender == employer, <span class="s">"Only employer"</span>);
+    <span class="t">euint64</span> newSalary = FHE.<span class="f">fromExternal</span>(encNewSalary, proof);
+    employees[employee].monthlySalary = newSalary;
+    FHE.<span class="f">allowThis</span>(newSalary);
+    FHE.<span class="f">allow</span>(newSalary, employee);
+    FHE.<span class="f">allow</span>(newSalary, employer);
+    <span class="k">emit</span> <span class="f">SalaryUpdated</span>(employee);
+}</pre>
+</div>
+
+<h2 class="sec" id="composability">Cross-Contract Composability Patterns</h2>
+
+<h3 class="sub" id="handle-passing">Passing Handles Between Contracts</h3>
+<p>When Contract A needs to pass an encrypted value to Contract B, two patterns exist depending on the interaction type:</p>
+<div class="tw"><table>
+  <thead><tr><th>Pattern</th><th>API</th><th>Lifetime</th><th>When to Use</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Persistent grant</strong></td><td><code>FHE.allow(handle, contractB)</code></td><td>Permanent — survives across transactions</td><td>Contract B stores or repeatedly accesses the handle (e.g., staking contract holding an LP position)</td></tr>
+    <tr><td><strong>Transient grant</strong></td><td><code>FHE.allowTransient(handle, contractB)</code></td><td>This transaction only — revoked after</td><td>Contract B uses the handle only in this call (e.g., payroll disbursement calling a token contract)</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="transient-acl">Transient ACL in Practice</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Cross-contract FHE call pattern</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Contract A (caller): must grant transient access BEFORE calling Contract B</span>
+<span class="k">function</span> <span class="f">compoundPosition</span>(<span class="t">address</span> yieldFarm) <span class="k">external</span> {
+    <span class="t">euint64</span> myBalance = _balances[msg.sender];
+
+    <span class="c">// CRITICAL ORDER: allowTransient BEFORE the cross-contract call</span>
+    FHE.<span class="f">allowTransient</span>(myBalance, yieldFarm);
+
+    <span class="c">// Now Contract B (yieldFarm) can read myBalance in this transaction</span>
+    IYieldFarm(yieldFarm).<span class="f">depositEncrypted</span>(msg.sender, myBalance);
+
+    <span class="c">// After this call returns, the transient grant is automatically revoked
+    // yieldFarm cannot use myBalance in any future transaction</span>
+}
+
+<span class="c">// Contract B (callee): receives and uses the handle in the same transaction</span>
+<span class="k">function</span> <span class="f">depositEncrypted</span>(<span class="t">address</span> user, <span class="t">euint64</span> amount) <span class="k">external</span> {
+    <span class="c">// This call succeeds because Contract A granted transient access</span>
+    <span class="t">euint64</span> newDeposit = FHE.<span class="f">add</span>(_deposits[user], amount);
+    _deposits[user] = newDeposit;
+
+    <span class="c">// Must grant this contract persistent access to the NEW handle</span>
+    FHE.<span class="f">allowThis</span>(newDeposit);
+    FHE.<span class="f">allow</span>(newDeposit, user);
+}
+
+<span class="c">// COMMON BUG — calling Contract B WITHOUT allowTransient first:</span>
+<span class="k">function</span> <span class="f">buggyVersion</span>(<span class="t">address</span> yieldFarm) <span class="k">external</span> {
+    <span class="t">euint64</span> myBalance = _balances[msg.sender];
+    <span class="c">// ❌ Missing: FHE.allowTransient(myBalance, yieldFarm);</span>
+    IYieldFarm(yieldFarm).<span class="f">depositEncrypted</span>(msg.sender, myBalance);
+    <span class="c">// ↑ REVERTS: "ACL: sender is not allowed" inside depositEncrypted()</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="tradeoffs">Privacy Tradeoffs in DeFi</h2>
+<div class="tw"><table>
+  <thead><tr><th>What Stays Private</th><th>What Is Still Public</th><th>Design Choice</th></tr></thead>
+  <tbody>
+    <tr><td>Swap amounts in dark pool</td><td>Fact that a swap happened (event), trader address, timestamp</td><td>Use stealth addresses + relayer network for full anonymity</td></tr>
+    <tr><td>Collateral and borrow amounts</td><td>Fact that liquidation was requested, user address, timing</td><td>Aggregate liquidation requests; don't reveal targets publicly</td></tr>
+    <tr><td>Individual salary amounts</td><td>List of employees, payroll run dates, total tx count</td><td>Use pseudonymous addresses for extra privacy</td></tr>
+    <tr><td>LP reserve amounts (intra-block)</td><td>Price revealed by oracle periodically (not per-trade)</td><td>Oracle frequency is a tradeoff: more frequent = more info leakage</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 15 Quiz — Privacy-Preserving DeFi</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">Why is <code>FHE.div()</code> discouraged in AMM swap calculations, and what is the recommended alternative?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>FHE.div() doesn't exist — division is not supported in FHEVM</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>FHE.div() always rounds down, introducing systematic pricing errors</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>FHE.div() is O(N²) in circuit complexity — roughly 64× the cost of addition. Better alternatives include pre-committed price bands updated via Gateway, or TWAP oracles that reveal aggregate price without per-trade computation</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>FHE.div() requires the denominator to be plaintext, which would leak reserve amounts</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> FHE integer division uses long-division circuit construction, resulting in O(N²) gate complexity for N-bit operands. For 64-bit numbers this is ~4096× the gates of addition. Production AMMs avoid it by publishing price oracles periodically or using pre-committed execution prices.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">In the private lending protocol, why does <code>borrow()</code> use a silent cap (keeping current borrowed amount) rather than reverting when the health check fails?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Reverting would reveal that the requested amount exceeds the borrower's collateral capacity, leaking information about their actual collateral-to-debt ratio</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Reverts are not supported inside FHE operations</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Silent cap is cheaper gas-wise than a revert</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The health factor check is approximate, so reverting could incorrectly block valid borrows</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> If the contract reverted with "undercollateralized," the caller would know their debt-to-collateral ratio is above the LTV factor. This leaks private financial information. The silent cap preserves privacy: the transaction succeeds but the state update is a no-op — the caller can only tell their borrow didn't succeed by checking their encrypted balance later.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">What must be called <em>before</em> a cross-contract call when passing an encrypted handle from Contract A to Contract B?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.allow(handle, contractB)</code> — persistent grant</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.allowThis(handle)</code> — re-grant to this contract</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>No grant needed — handles are accessible to any contract that receives them as arguments</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>FHE.allowTransient(handle, contractB)</code> if B only needs it for this transaction, or <code>FHE.allow(handle, contractB)</code> if B needs persistent access</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The ACL must be updated before Contract B can use the handle. allowTransient() is preferred when B only uses the handle within this call (cheaper, auto-revokes). allow() is needed when B stores and reuses the handle across transactions. Forgetting this is the most common cross-contract FHEVM bug.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">In the dark pool AMM, what information does the <code>PriceRevealed</code> event leak?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — the event is also encrypted</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The aggregate pool reserves (resX, resY) at the moment of the oracle call — enough to compute the current spot price, but no individual trade amounts or trader identities</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The last trade amount and the direction of the trade</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The total volume traded since pool creation</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> PriceRevealed(resX, resY) reveals the current pool reserves — which implies the current spot price (resY/resX). It does NOT reveal who traded, how much they traded, or at what price individual trades executed. This is an intentional design: price discovery requires some revelation, but trading privacy is preserved.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">In the payroll contract, why is the employee list (<code>employeeList</code>) kept public while salaries are encrypted?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Employee addresses must be public for the payroll to function on-chain</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It is an oversight — ideally all employment data should be encrypted</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Deliberate design: whether someone works at a company is typically not sensitive (publicly visible employment), while compensation is sensitive. This also allows external verification that payroll was run for all employees</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Encrypted address arrays are not supported by FHEVM</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Employment itself (name on the company's payroll) is typically not confidential — it appears on LinkedIn, company websites, etc. Compensation is the sensitive data. This design separates these concerns: transparent accountability (everyone can verify payroll ran for all employees) with private amounts (only employer and employee know the figure).</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">What is the difference between <code>FHE.allowTransient()</code> and <code>FHE.allow()</code> in terms of grant lifetime?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>allowTransient()</code> grants access for the current transaction only and is automatically revoked after; <code>allow()</code> creates a permanent ACL entry that persists across all future transactions</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>allowTransient()</code> grants access for 24 hours; <code>allow()</code> is permanent</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>They are identical — "transient" is just a naming convention</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>allowTransient()</code> is cheaper in gas; <code>allow()</code> is permanent and expensive</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> allowTransient() uses transient storage (EIP-1153) which is cleared at the end of each transaction. Perfect for single-transaction cross-contract calls. allow() writes to persistent storage — the grant remains forever (until explicitly revoked). Use allowTransient() by default when the recipient only needs one-time access within the current call.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">In the lending protocol, the liquidation health check multiplies <code>collateral * 100</code> and <code>borrowed * LIQ_THRESHOLD</code>. Why multiply rather than divide?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>FHE.div() is not available for euint64 types</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To avoid integer overflow in the comparison</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The Solidity compiler requires integer comparisons to use multiplication</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Cross-multiplying avoids division: <code>col/debt >= threshold/100</code> is equivalent to <code>col*100 >= debt*threshold</code>. This uses only FHE.mul() (much cheaper than FHE.div()) while achieving the same comparison result</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> This is the cross-multiplication trick: col/debt >= T/100 ↔ col*100 >= debt*T. No division needed — both sides are multiplied out. FHE.mul() is O(N log N) while FHE.div() is O(N²), so this saves significant gas. The only risk is overflow: col*100 must fit in euint64 (max ~1.8×10¹⁹), which means max collateral is ~1.8×10¹⁷ units — fine for 6-decimal tokens.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">What metadata is still leaked even in a fully confidential on-chain payroll system?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — all payroll data is fully private with FHEVM</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The list of employee wallet addresses, the dates payroll was run, the number of employees, and the gas cost of the payroll transaction (which correlates with employee count)</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Only the total payroll cost (sum of all salaries) is leaked</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The salary range (min and max) is leaked through gas differential analysis</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> FHEVM hides amounts but not metadata. Anyone watching the blockchain sees: which addresses are on the payroll (employeeList is public), when payroll runs (timestamps in PayrollRun events), how many employees were paid (event parameter), and the gas cost of the transaction (which scales with employee count). For maximum privacy, use pseudonymous wallet addresses and run payroll through a relayer.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day14.html">&#8592; Day 14 — Cross-Chain FHE Patterns</a>
+  <a class="next" href="day16.html">Day 16 — Security Audit Framework &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','defi-landscape','dark-pool','pool-design','add-liquidity','swap','reveal-price','private-lending','collateral','health-factor','liquidation','private-payroll','salary-storage','disbursement','composability','handle-passing','transient-acl','tradeoffs','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Day 16!':pct>=87?'Excellent!':pct>=62?'Good — review the sections above.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
