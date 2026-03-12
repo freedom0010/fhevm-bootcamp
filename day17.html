@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 17 — Gas Optimization | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711; --ink2: #0d0d1a; --ink3: #141426;
+  --plate:  #1a1a2e; --plate2: #20203a;
+  --wire:   #2a2a45; --wire2: #383860;
+  --cyan:   #00e5ff; --cyan2: #00b8d4;
+  --lime:   #69ff47; --amber: #ffb300;
+  --rose:   #ff4d6d; --violet: #bf5af2;
+  --sky:    #4db8ff; --dim:   #6b6b95;
+  --mid:    #9898be; --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+  --body: 'Instrument Sans', sans-serif;
+  /* Week 4 accent: amber */
+  --acc: #ffb300; --acc2: rgba(255,179,0,.12); --accb: rgba(255,179,0,.22);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body); font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--amber), var(--lime)); z-index: 1000; transition: width .1s linear; }
+.topbar { position: sticky; top: 0; z-index: 100; height: 52px; background: rgba(7,7,17,.96);
+  backdrop-filter: blur(20px); border-bottom: 1px solid var(--wire); display: flex; align-items: center; }
+.tb-home { display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 22px;
+  border-right: 1px solid var(--wire); font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; transition: color .15s; letter-spacing: .5px; }
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb { display: flex; align-items: center; gap: 8px; padding: 0 20px; font-family: var(--mono); font-size: 11px; }
+.tb-crumb .sep { color: var(--wire2); } .tb-crumb .cur { color: var(--mid); }
+.tb-badge { margin-left: auto; margin-right: 18px; padding: 3px 11px; border-radius: 20px;
+  background: var(--acc2); border: 1px solid var(--accb);
+  font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 1.5px; text-transform: uppercase; }
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto;
+  background: var(--ink2); border-right: 1px solid var(--wire); padding: 22px 0 50px; }
+.sb-section { margin-bottom: 4px; }
+.sb-head { font-family: var(--mono); font-size: 9px; color: var(--dim);
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 14px 18px 5px; }
+.sb-a { display: block; padding: 6px 18px; font-family: var(--body); font-size: 12px; color: var(--mid);
+  border-left: 2px solid transparent; cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45; }
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--amber); border-left-color: var(--amber); background: var(--acc2); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+.main { padding: 56px 70px 120px; max-width: 900px; }
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill { display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px; border-radius: 3px;
+  margin-bottom: 24px; background: var(--acc2); border: 1px solid var(--accb);
+  font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-family: var(--head); font-size: clamp(34px,4vw,52px); font-weight: 800;
+  line-height: 1.08; letter-spacing: -1px; margin-bottom: 20px; color: var(--white); }
+.hero h1 em { font-style: italic; color: var(--amber); font-weight: 600; }
+.hero .lead { font-size: 15.5px; color: var(--mid); line-height: 1.84; max-width: 640px; margin-bottom: 32px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700; color: var(--white);
+  margin: 56px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--wire);
+  scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600; color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code { font-family: var(--mono); font-size: 12px; color: var(--amber);
+  background: var(--acc2); padding: 2px 6px; border-radius: 3px; }
+.code { background: #040408; border: 1px solid var(--wire); border-radius: 10px; margin: 20px 0;
+  overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.code-top { display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  background: var(--ink3); border-bottom: 1px solid var(--wire); }
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang { font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 1.5px; text-transform: uppercase; }
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy { background: none; border: 1px solid var(--wire); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: all .14s; letter-spacing: .8px; }
+.copy:hover { border-color: var(--amber); color: var(--amber); }
+pre { padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0; tab-size: 2; }
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}
+.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}.v{color:#f8f8f2}
+.box { border-radius: 8px; padding: 15px 20px; margin: 20px 0; border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start; }
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title { font-family: var(--mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code { font-family: var(--mono); font-size: 11.5px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); } .tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); } .warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); } .alert .box-title{ color: var(--rose); }
+.info { background: var(--acc2); border-color: var(--amber); } .info .box-title { color: var(--amber); }
+.key  { background: rgba(0,229,255,.05); border-color: var(--cyan); border-width: 2px; } .key .box-title { color: var(--cyan); }
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--ink3); padding: 9px 14px; text-align: left; font-family: var(--mono);
+  font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.2px; border: 1px solid var(--wire); }
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code { font-family: var(--mono); font-size: 11px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+td strong { color: var(--bright); }
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+/* gas meter bar */
+.gas-meter { margin: 6px 0; }
+.gas-bar-wrap { background: var(--ink3); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 4px; }
+.gas-bar { height: 100%; border-radius: 4px; }
+.gas-label { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; justify-content: space-between; }
+.gas-val { color: var(--amber); }
+/* quiz */
+.quiz { background: var(--ink2); border: 1px solid var(--wire2); border-radius: 14px; margin: 52px 0; overflow: hidden; }
+.quiz-head { padding: 20px 24px; background: var(--acc2); border-bottom: 1px solid var(--wire2); display: flex; align-items: flex-start; gap: 14px; }
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--amber); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code { font-family: var(--mono); font-size: 12px; color: var(--amber); background: var(--acc2); padding: 1px 5px; border-radius: 3px; }
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px;
+  cursor: pointer; border: 1px solid var(--wire); font-size: 13px; color: var(--mid);
+  transition: all .14s; user-select: none; line-height: 1.58; }
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr { width: 22px; height: 22px; border-radius: 50%; background: var(--plate); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp { margin-top: 10px; padding: 11px 14px; background: var(--acc2); border: 1px solid var(--accb);
+  border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68; display: none; }
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--amber); }
+.quiz-submit { display: block; margin: 2px 24px 24px; padding: 11px 24px; border-radius: 8px;
+  background: var(--acc2); border: 1px solid var(--accb); color: var(--amber);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+  cursor: pointer; transition: all .14s; }
+.quiz-submit:hover { background: rgba(255,179,0,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score { margin: 0 24px 24px; padding: 16px 20px; background: var(--ink3); border: 1px solid var(--wire);
+  border-radius: 9px; display: none; align-items: center; gap: 20px; }
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--amber); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.pnav { display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire); }
+.pnav a { display: flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 8px;
+  text-decoration: none; font-family: var(--mono); font-size: 11px; color: var(--mid);
+  border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px; }
+.pnav a:hover { border-color: var(--amber); color: var(--amber); }
+.pnav .next { background: var(--acc2); border-color: var(--accb); color: var(--amber); }
+.pnav .next:hover { background: rgba(255,179,0,.2); }
+@media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } .diff { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 4</span><span class="sep">/</span><span class="cur">Day 17</span>
+  </div>
+  <div class="tb-badge">Week 4 — Production</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="cost-model">FHE Cost Model</a>
+    <a class="sb-a sub" data-id="op-table">Operation Cost Table</a>
+    <a class="sb-a sub" data-id="vs-evm">vs. Normal EVM Ops</a>
+    <a class="sb-a" data-id="rule1">Rule 1 — Batch Ops</a>
+    <a class="sb-a sub" data-id="batch-code">Batch Code Pattern</a>
+    <a class="sb-a" data-id="rule2">Rule 2 — Prefer min/max</a>
+    <a class="sb-a sub" data-id="minmax-code">min/max vs select</a>
+    <a class="sb-a" data-id="rule3">Rule 3 — Type Width</a>
+    <a class="sb-a sub" data-id="width-table">Width Cost Table</a>
+    <a class="sb-a" data-id="rule4">Rule 4 — Avoid Reruns</a>
+    <a class="sb-a sub" data-id="cache-pattern">Cache Pattern</a>
+    <a class="sb-a" data-id="rule5">Rule 5 — ACL Batching</a>
+    <a class="sb-a sub" data-id="acl-batch">ACL Batch Code</a>
+    <a class="sb-a" data-id="rule6">Rule 6 — Multicall</a>
+    <a class="sb-a sub" data-id="multicall-code">Multicall Pattern</a>
+    <a class="sb-a" data-id="profiling">Profiling Tools</a>
+    <a class="sb-a sub" data-id="hardhat-gas">hardhat-gas-reporter</a>
+    <a class="sb-a" data-id="case-study">Case Study</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128293; Day 17 of 20</div>
+  <h1>Gas Optimization<br><em>for Encrypted Ops</em></h1>
+  <p class="lead">
+    FHE operations are 100–1000× more expensive than their plaintext equivalents.
+    A naively written <code>transfer</code> can cost 600k gas; an optimized one costs 260k.
+    In production, this difference determines whether your DApp is usable.
+    Today you learn the six rules that cut encrypted contract gas by 30–60%:
+    batching, preferring native min/max, right-sizing types, caching handles,
+    batching ACL grants, and multicall aggregation.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#9981; 6 optimization rules</div>
+    <div class="stat">&#128202; Gas profiling tools</div>
+    <div class="stat">&#9989; 6-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- COST MODEL -->
+<h2 class="sec" id="cost-model">The FHE Cost Model</h2>
+<p>
+  Standard Solidity gas costs scale with storage writes and computation complexity.
+  FHEVM adds a new dimension: <strong>every homomorphic operation dispatches a task
+  to the off-chain coprocessor</strong> and writes a new handle to the ACL.
+  Each FHE op has a fixed base cost regardless of how it's used.
+</p>
+
+<h3 class="sub" id="op-table">Operation Cost Reference</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Operation</th><th>Approx Gas</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>TFHE.asEuint64(bytes32, bytes)</code></td><td>~65k</td><td>Input verification + ZK proof check</td></tr>
+      <tr><td><code>TFHE.add / TFHE.sub</code></td><td>~65k</td><td>Same cost for all widths (euint8–euint256)</td></tr>
+      <tr><td><code>TFHE.mul</code></td><td>~150k</td><td>Much more expensive — avoid in hot paths</td></tr>
+      <tr><td><code>TFHE.div / TFHE.rem</code></td><td>~300k</td><td>Extremely expensive — pre-compute divisors where possible</td></tr>
+      <tr><td><code>TFHE.gt / TFHE.lt / TFHE.eq</code></td><td>~65k</td><td>Returns ebool</td></tr>
+      <tr><td><code>TFHE.select</code></td><td>~45k</td><td>Oblivious conditional — cheaper than add/sub</td></tr>
+      <tr><td><code>TFHE.min / TFHE.max</code></td><td>~80k</td><td>Internally gt + select — but one coprocessor call</td></tr>
+      <tr><td><code>TFHE.and / TFHE.or / TFHE.xor</code></td><td>~30k</td><td>Cheapest ops after select</td></tr>
+      <tr><td><code>TFHE.allow(handle, addr)</code></td><td>~22k</td><td>One SSTORE in ACL contract</td></tr>
+      <tr><td><code>TFHE.allowTransient</code></td><td>~2k</td><td>Transient storage — much cheaper</td></tr>
+      <tr><td><code>GatewayLib.requestDecryption</code></td><td>~55k</td><td>Fixed overhead regardless of handle count</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 class="sub" id="vs-evm">Perspective: FHE vs Normal EVM</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Operation</th><th>Normal EVM Gas</th><th>FHE Equivalent Gas</th><th>Overhead</th></tr></thead>
+    <tbody>
+      <tr><td>Addition</td><td>3</td><td>~65,000</td><td><strong>~21,000×</strong></td></tr>
+      <tr><td>Comparison</td><td>3</td><td>~65,000</td><td><strong>~21,000×</strong></td></tr>
+      <tr><td>Conditional branch</td><td>10</td><td>~110,000 (gt+select)</td><td><strong>~11,000×</strong></td></tr>
+      <tr><td>Multiplication</td><td>5</td><td>~150,000</td><td><strong>~30,000×</strong></td></tr>
+      <tr><td>Storage write</td><td>20,000</td><td>20,000 + ~65k FHE</td><td>~4×</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">The Golden Rule</div>
+    <div class="box-text">
+      Every FHE operation that can be eliminated or combined saves 30k–300k gas.
+      Think of each TFHE call as a database query — design your contract logic to
+      minimize the number of encrypted operations per transaction, just as you would
+      minimize SQL queries in a hot path.
+    </div>
+  </div>
+</div>
+
+<!-- RULE 1 -->
+<h2 class="sec" id="rule1">Rule 1 — Batch Operations in One Transaction</h2>
+<p>
+  Each transaction has a fixed overhead for contract calls and ACL bookkeeping.
+  Grouping multiple FHE operations into a single transaction amortizes this overhead
+  and, more importantly, keeps all <code>allowTransient</code> calls valid within
+  the same execution context.
+</p>
+
+<h3 class="sub" id="batch-code">Batch vs Separate Transactions</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; Expensive — 3 separate txs (~195k + ~195k + ~195k = 585k gas total)</div>
+    <pre><span class="c">// 3 separate user transactions</span>
+token.transfer(alice, encAmt1, proof1)   <span class="c">// tx 1</span>
+token.transfer(bob,   encAmt2, proof2)   <span class="c">// tx 2</span>
+token.transfer(carol, encAmt3, proof3)   <span class="c">// tx 3</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Optimized — 1 multicall tx (~450k, saves ~35%)</div>
+    <pre><span class="c">// One multicall batches all three</span>
+multicall([
+  encodeTransfer(alice, encAmt1, proof1),
+  encodeTransfer(bob,   encAmt2, proof2),
+  encodeTransfer(carol, encAmt3, proof3),
+])</pre>
+  </div>
+</div>
+
+<p>
+  The savings come from: one base transaction cost (~21k gas), warm contract storage
+  access after the first call, and shared ACL contract state writes.
+</p>
+
+<!-- RULE 2 -->
+<h2 class="sec" id="rule2">Rule 2 — Prefer Native min/max Over gt + select</h2>
+<p>
+  A common pattern for clamping values is <code>TFHE.gt(a, cap)</code> followed by
+  <code>TFHE.select(isTooLarge, cap, a)</code>. This is two coprocessor calls.
+  <code>TFHE.min(a, cap)</code> does the same thing in one internal operation.
+</p>
+
+<h3 class="sub" id="minmax-code">min/max vs Manual Clamp</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; 2 ops — gt (~65k) + select (~45k) = ~110k gas</div>
+    <pre>ebool tooBig = TFHE.gt(amount, cap);
+euint64 safe = TFHE.select(tooBig, cap, amount);
+<span class="c">// Two separate coprocessor tasks</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; 1 op — TFHE.min (~80k) saves ~30k gas</div>
+    <pre>euint64 safe = TFHE.min(amount, cap);
+<span class="c">// One coprocessor task — use for all clamp patterns</span></pre>
+  </div>
+</div>
+
+<div class="box tip">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">min/max Cheat Sheet</div>
+    <div class="box-text">
+      Use <code>TFHE.min(a, b)</code> for clamping to a maximum (cap). Use <code>TFHE.max(a, b)</code>
+      to guarantee a minimum value (floor). Both are cheaper than the equivalent
+      <code>compare + select</code> pair. For the common "safe transfer" pattern,
+      <code>TFHE.min(balance, requested)</code> is the canonical form.
+    </div>
+  </div>
+</div>
+
+<!-- RULE 3 -->
+<h2 class="sec" id="rule3">Rule 3 — Use the Narrowest Type That Fits</h2>
+<p>
+  Counterintuitively, FHE operations <strong>do not</strong> cost more for wider types
+  (euint64 vs euint8 costs the same). However, type width matters for
+  <strong>input verification</strong>: verifying a <code>euint8</code> input is faster
+  than <code>euint64</code> because the ZK proof is smaller.
+  The real savings from narrow types come from <em>avoiding unnecessary widening casts</em>
+  mid-computation.
+</p>
+
+<h3 class="sub" id="width-table">Type Width Cost Table</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Type</th><th>Max Value</th><th>Input Verification Gas</th><th>Arithmetic Gas</th><th>Best For</th></tr></thead>
+    <tbody>
+      <tr><td><code>euint8</code></td><td>255</td><td>~38k</td><td>~65k</td><td>Counters, small flags, phase numbers</td></tr>
+      <tr><td><code>euint16</code></td><td>65,535</td><td>~42k</td><td>~65k</td><td>Scores, small amounts</td></tr>
+      <tr><td><code>euint32</code></td><td>~4.3B</td><td>~50k</td><td>~65k</td><td>Vote counts, timestamps</td></tr>
+      <tr><td><code>euint64</code></td><td>~18.4 quintillion</td><td>~65k</td><td>~65k</td><td>Token amounts (ERC20 default)</td></tr>
+      <tr><td><code>euint128</code></td><td>Huge</td><td>~80k</td><td>~65k</td><td>High-precision amounts</td></tr>
+      <tr><td><code>euint256</code></td><td>Max</td><td>~95k</td><td>~65k</td><td>Only when required</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="box info">
+  <div class="box-ico">&#128203;</div>
+  <div class="box-inner">
+    <div class="box-title">Rule of Thumb</div>
+    <div class="box-text">
+      Choose the type based on <em>domain range</em>, not gas. Use <code>euint64</code>
+      for most token amounts (matches Solidity's uint64 and avoids overflow). Avoid
+      unnecessary widening casts — each <code>TFHE.asEuint64(euint32)</code> is a
+      ~30k gas operation. Plan your type widths at contract design time.
+    </div>
+  </div>
+</div>
+
+<!-- RULE 4 -->
+<h2 class="sec" id="rule4">Rule 4 — Cache Intermediate Results</h2>
+<p>
+  Every time you reference <code>_balances[addr]</code> in a computation, you're
+  reading the handle from storage (cold: 2100 gas, warm: 100 gas). But if you call
+  a TFHE operation on it twice, <strong>each call creates a new coprocessor task</strong>.
+  Cache the result of expensive operations in local variables.
+</p>
+
+<h3 class="sub" id="cache-pattern">Cache Pattern</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; Recomputes add twice — wastes ~65k gas</div>
+    <pre><span class="c">// Each TFHE.add is a separate coprocessor call</span>
+_logs[user] = TFHE.add(_balances[user], amt);
+emit Transfer(_balances[user], <span class="c">// re-reads handle</span>
+              TFHE.add(_balances[user], amt)); <span class="c">// NEW op!</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Cache the result — one add, reused everywhere</div>
+    <pre><span class="c">// Compute once, reference the handle multiple times</span>
+euint64 newBal = TFHE.add(_balances[user], amt);
+_balances[user] = newBal;
+_logs[user]     = newBal;  <span class="c">// same handle, no new op</span>
+TFHE.allow(newBal, user);  <span class="c">// still one allow</span></pre>
+  </div>
+</div>
+
+<!-- RULE 5 -->
+<h2 class="sec" id="rule5">Rule 5 — Batch ACL Grants</h2>
+<p>
+  <code>TFHE.allow(handle, addr)</code> costs ~22k gas per call (one SSTORE in the
+  ACL contract). When you update multiple values for multiple addresses, grant order
+  and batching matters. Grant all permissions for a handle before moving to the
+  next to keep ACL contract storage warm.
+</p>
+
+<h3 class="sub" id="acl-batch">ACL Batch Code</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; Interleaved — cold storage access pattern</div>
+    <pre>TFHE.allow(senderBal, msg.sender);
+TFHE.allow(recipientBal, recipient);
+TFHE.allow(senderBal, address(this));   <span class="c">// cold again</span>
+TFHE.allow(recipientBal, address(this)); <span class="c">// cold again</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Grouped — warm storage saves ~1.2k gas each</div>
+    <pre><span class="c">// All grants for senderBal while it's warm</span>
+TFHE.allow(senderBal, msg.sender);
+TFHE.allow(senderBal, address(this));
+<span class="c">// Then all grants for recipientBal</span>
+TFHE.allow(recipientBal, recipient);
+TFHE.allow(recipientBal, address(this));</pre>
+  </div>
+</div>
+
+<p>
+  Additionally, use <code>TFHE.allowTransient</code> instead of <code>TFHE.allow</code>
+  for same-transaction cross-contract calls — transient storage is ~10× cheaper
+  (2k vs 22k gas per grant).
+</p>
+
+<!-- RULE 6 -->
+<h2 class="sec" id="rule6">Rule 6 — Aggregate with Multicall</h2>
+<p>
+  For admin or batch operations (e.g., airdrop to 100 addresses), a custom
+  <code>batchTransfer</code> function that loops internally is far cheaper than
+  100 individual <code>transfer</code> transactions. The savings are primarily from
+  transaction base cost (21k gas) and warm contract state access.
+</p>
+
+<h3 class="sub" id="multicall-code">Batch Transfer Pattern</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/ConfidentialERC20.sol — batchTransfer</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">struct</span> TransferOp {
+    address to;
+    bytes32 encryptedAmount;
+    bytes   inputProof;
+}
+
+<span class="c">/**
+ * @dev Batch transfer: execute N transfers in one tx.
+ *      Per-recipient savings: ~21k (base tx cost) + ~5k (warm contract storage).
+ *      For 10 recipients: ~260k gas vs ~2.6M for 10 separate txs.
+ *      Gas limit: keep N ≤ 20 to stay under the block gas limit.
+ */</span>
+<span class="k">function</span> <span class="f">batchTransfer</span>(TransferOp[] calldata ops) <span class="k">external</span> {
+    <span class="k">require</span>(ops.length &lt;= <span class="n">20</span>, <span class="s">"Max 20 per batch"</span>);
+
+    <span class="c">// Cache sender balance handle — one cold SLOAD, then all warm</span>
+    euint64 senderBalance = _balances[msg.sender];
+    TFHE.allow(senderBalance, address(<span class="k">this</span>));
+
+    <span class="k">for</span> (uint i = <span class="n">0</span>; i &lt; ops.length; i++) {
+        euint64 amt = TFHE.asEuint64(ops[i].encryptedAmount, ops[i].inputProof);
+
+        <span class="c">// Clamp to available balance (safe transfer pattern)</span>
+        euint64 toSend = TFHE.min(amt, senderBalance);
+
+        <span class="c">// Update balances</span>
+        senderBalance        = TFHE.sub(senderBalance, toSend);
+        euint64 newRecipient = TFHE.add(_balances[ops[i].to], toSend);
+        _balances[ops[i].to] = newRecipient;
+
+        <span class="c">// ACL: group grants for newRecipient while warm</span>
+        TFHE.allow(newRecipient, ops[i].to);
+        TFHE.allow(newRecipient, address(<span class="k">this</span>));
+
+        <span class="k">emit</span> Transfer(msg.sender, ops[i].to);
+    }
+
+    <span class="c">// Write final sender balance once (not N times)</span>
+    _balances[msg.sender] = senderBalance;
+    TFHE.allow(senderBalance, msg.sender);
+    TFHE.allow(senderBalance, address(<span class="k">this</span>));
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">Block Gas Limit</div>
+    <div class="box-text">
+      Each FHE operation dispatches a coprocessor task. Very large batches can cause
+      the transaction to exceed the block gas limit (~30M on Zama Devnet). Keep batches
+      to ≤ 20 FHE-heavy operations per transaction. Test your gas usage with
+      <code>hardhat-gas-reporter</code> before deploying.
+    </div>
+  </div>
+</div>
+
+<!-- PROFILING -->
+<h2 class="sec" id="profiling">Gas Profiling Tools</h2>
+
+<h3 class="sub" id="hardhat-gas">hardhat-gas-reporter Setup</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">terminal</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>npm install --save-dev hardhat-gas-reporter</pre>
+</div>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">hardhat.config.ts (gas reporter config)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> <span class="s">'hardhat-gas-reporter'</span>
+
+<span class="k">const</span> config: HardhatUserConfig = {
+  <span class="c">// ...existing config...</span>
+  gasReporter: {
+    enabled:     <span class="n">true</span>,
+    currency:    <span class="s">'USD'</span>,
+    coinmarketcap: process.env.CMC_API_KEY,
+    outputFile:  <span class="s">'gas-report.txt'</span>,
+    noColors:    <span class="n">true</span>,
+    <span class="c">// Report per-method breakdown</span>
+    reportPureAndViewMethods: <span class="n">false</span>,
+  },
+}</pre>
+</div>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div><div class="fname">Run tests with gas reporting</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>REPORT_GAS=true npx hardhat test
+
+<span class="c"># Output example:</span>
+<span class="c"># ·····················|·······················|·············|·············</span>
+<span class="c"># Contract            | Method                 |  Min Gas    |  Max Gas</span>
+<span class="c"># ·····················|·······················|·············|·············</span>
+<span class="c"># ConfidentialERC20   | transfer               |    256,841  |    268,223</span>
+<span class="c"># ConfidentialERC20   | batchTransfer (10 ops) |    892,430  |    921,002</span>
+<span class="c"># SealedBidAuction    | placeBid               |    318,440  |    322,110</span></pre>
+</div>
+
+<!-- CASE STUDY -->
+<h2 class="sec" id="case-study">Case Study: Optimizing ConfidentialERC20 transfer</h2>
+<p>
+  Let's trace through a real optimization sequence from a naive implementation to
+  a production-ready one, tracking gas savings at each step.
+</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Version</th><th>Changes</th><th>Gas Used</th><th>Saved vs Previous</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>V1 — Naive</strong></td>
+        <td>Plain translation: gt + select for safe sub, separate allows interleaved</td>
+        <td>~485k</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>V2 — min() clamp</strong></td>
+        <td>Replace gt+select with TFHE.min()</td>
+        <td>~420k</td>
+        <td>~65k (−13%)</td>
+      </tr>
+      <tr>
+        <td><strong>V3 — Grouped ACL</strong></td>
+        <td>Reorder TFHE.allow calls to group by handle</td>
+        <td>~410k</td>
+        <td>~10k (−2%)</td>
+      </tr>
+      <tr>
+        <td><strong>V4 — allowTransient</strong></td>
+        <td>Replace allow() with allowTransient() for same-tx cross-contract grants</td>
+        <td>~350k</td>
+        <td>~60k (−15%)</td>
+      </tr>
+      <tr>
+        <td><strong>V5 — Cached handles</strong></td>
+        <td>Cache SLOAD results; avoid duplicate FHE ops</td>
+        <td>~260k</td>
+        <td>~90k (−26%)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p>
+  <strong>Total savings: ~225k gas (−46%)</strong> through five targeted optimizations,
+  each addressing a specific FHE gas driver.
+</p>
+
+<!-- LAB -->
+<h2 class="sec" id="lab">Lab 4B — Optimize Your ConfidentialERC20</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Take your ConfidentialERC20 from Week 2 and apply all six optimization rules.
+      Measure gas before and after using <code>hardhat-gas-reporter</code>.
+      Target: reduce <code>transfer</code> gas by at least 25% from your original implementation.
+    </div>
+  </div>
+</div>
+<ul>
+  <li>Run baseline gas report on your existing contract — record transfer, approve, transferFrom gas</li>
+  <li>Apply Rule 2: replace all <code>gt + select</code> clamp patterns with <code>TFHE.min()</code></li>
+  <li>Apply Rule 4: audit for any repeated TFHE operations on the same inputs; cache results</li>
+  <li>Apply Rule 5: reorder <code>TFHE.allow</code> calls to group by handle</li>
+  <li>Apply Rule 6: add a <code>batchTransfer(TransferOp[])</code> function, max 20 ops</li>
+  <li>Re-run gas report and document the improvement in a <code>GAS_REPORT.md</code> file</li>
+</ul>
+<p><strong>Extension:</strong> Profile <code>batchTransfer</code> for 5, 10, and 20 recipients. Chart the gas-per-transfer as batch size grows to find the optimal batch size for your use case.</p>
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 17 Quiz</div>
+      <div class="quiz-subtitle">6 questions · gas optimization for FHE</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 06</div>
+      <div class="q-q">Why does <code>TFHE.add(a, b)</code> cost ~65,000 gas regardless of whether <code>a</code> is a <code>euint8</code> or <code>euint64</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Solidity pads all integer types to 256 bits internally</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The FHE base cost is determined by the coprocessor dispatch overhead, which is fixed per operation — the plaintext bit-width of the type does not change this dispatch cost</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ACL contract charges a flat 65k fee for all encrypted writes</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The EVM internally converts all FHEVM types to uint256 before processing</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The gas is dominated by the coprocessor task dispatch and ACL handle management overhead — both fixed costs independent of type width. Input <em>verification</em> (the ZK proof check) scales slightly with type width, but arithmetic operations themselves do not.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 02 / 06</div>
+      <div class="q-q">You want to cap a transfer amount to the sender's available balance. Which pattern is most gas-efficient?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>ebool ok = TFHE.ge(balance, amount); TFHE.select(ok, amount, balance)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>TFHE.asEuint64(balance) > amount ? amount : balance</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>TFHE.min(amount, balance)</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Request Gateway decryption of the balance, then compare in plaintext</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> <code>TFHE.min</code> is one coprocessor call (~80k gas). Option A requires two calls: ge (~65k) + select (~45k) = ~110k. Option B uses a Solidity comparison on an ebool which doesn't compile. Option D introduces async latency and defeats the purpose of encrypted operations.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 06</div>
+      <div class="q-q">When should you use <code>TFHE.allowTransient</code> instead of <code>TFHE.allow</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>When you want the permission to last for 1 day</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>When the receiving contract is on a different chain</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>When the user's wallet needs to sign the permission</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>When the permission only needs to last for the current transaction — for example, granting a router contract access to pass a handle to another contract in the same call chain</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> <code>allowTransient</code> uses EIP-1153 transient storage which is cleared at the end of each transaction (~2k gas vs ~22k for persistent). Use it for same-transaction cross-contract composability. Use persistent <code>allow</code> when the grantee needs to access the handle in a future transaction.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 06</div>
+      <div class="q-q">You compute <code>euint64 newBal = TFHE.add(_balances[user], amt)</code> and then need to store it and grant two ACL permissions. How many coprocessor calls does this represent?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>One — the add creates one new handle; storing and allowing it just reference the same handle without new coprocessor calls</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Three — one per operation (add, store, allow)</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Two — one for the add and one for the combined storage + ACL</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Four — the ACL grants each trigger a coprocessor verification</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> <code>TFHE.add</code> is the only coprocessor call. The resulting <code>newBal</code> is a handle (uint256). Writing it to storage and calling <code>TFHE.allow(newBal, addr)</code> twice just reference this handle — no additional FHE computation occurs.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 05 / 06</div>
+      <div class="q-q">Why is <code>TFHE.div</code> (~300k gas) particularly expensive compared to <code>TFHE.add</code> (~65k)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Division requires a Gateway decryption request</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Division in TFHE requires a more complex garbled circuit in the coprocessor — it cannot be expressed as a simple polynomial evaluation and requires more bootstrapping operations</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ACL charges more for quotient handles</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Division triggers a ZK proof re-generation on the coprocessor</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Addition and comparison map efficiently to polynomial arithmetic over the TFHE ring. Division requires a more complex computation — equivalent to multiple bootstrapping operations — driving the cost ~5× higher. When possible, replace division with pre-computed inverses or shift operations.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 06 / 06</div>
+      <div class="q-q">You have a <code>batchTransfer(TransferOp[] ops)</code> for 10 recipients. Approximately how much gas does this save vs 10 separate <code>transfer</code> transactions at ~260k gas each?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>No savings — each transfer still requires the same FHE operations</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>~50k total savings</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>~1.4M gas savings — the batch costs ~1.2M vs ~2.6M for 10 individual transactions</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>~5M gas savings</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> 10 separate txs: 10 × 260k = ~2.6M gas. A batch tx: ~120k per transfer (warm state, shared base cost) × 10 = ~1.2M gas. Savings: ~1.4M (~54%). The key savings are: one 21k base tx cost shared, warm contract storage access, and cached sender balance handle avoiding repeated cold SLOADs.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/6</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day16.html">&#8592; Day 16 — Security Audit</a>
+  <a class="next" href="day18.html">Day 18 — Mainnet Deployment &#8594;</a>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = ['intro','cost-model','op-table','vs-evm',
+  'rule1','batch-code','rule2','minmax-code','rule3','width-table',
+  'rule4','cache-pattern','rule5','acl-batch','rule6','multicall-code',
+  'profiling','hardhat-gas','case-study','lab','quiz'];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const TOTAL = 6;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! Gas-optimization master.' :
+    pct >= 83   ? 'Excellent work!'                   :
+    pct >= 50   ? 'Review the cost model section.'    :
+                  'Re-read the operation table.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
