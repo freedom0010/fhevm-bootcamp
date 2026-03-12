@@ -315,9 +315,9 @@ td code {
   display: flex; align-items: flex-start; gap: 14px;
 }
 .quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--violet); letter-spacing: -.2px; }
-.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
-.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+
+
+
 .q { }
 .q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
 .q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
@@ -325,7 +325,7 @@ td code {
   font-family: var(--mono); font-size: 12px; color: var(--cyan);
   background: rgba(0,229,255,.09); padding: 1px 5px; border-radius: 3px;
 }
-.q-opts { display: flex; flex-direction: column; gap: 7px; }
+
 .q-opt {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 10px 14px; border-radius: 8px; cursor: pointer;
@@ -352,26 +352,19 @@ td code {
 }
 .q-exp.show { display: block; }
 .q-exp strong { color: var(--cyan); }
-.quiz-submit {
-  display: block; margin: 2px 24px 24px;
-  padding: 11px 24px; border-radius: 8px;
-  background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.28);
-  color: var(--violet); font-family: var(--mono); font-size: 11px;
-  letter-spacing: 1.2px; text-transform: uppercase;
-  cursor: pointer; transition: all .14s;
-}
-.quiz-submit:hover { background: rgba(191,90,242,.2); }
-.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+
+
+
 .score {
   margin: 0 24px 24px; padding: 16px 20px;
   background: var(--ink3); border: 1px solid var(--wire);
   border-radius: 9px; display: none; align-items: center; gap: 20px;
 }
 .score.show { display: flex; }
-.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--cyan); letter-spacing: -1px; }
+
 .score-right { display: flex; flex-direction: column; gap: 3px; }
-.score-label { font-size: 13px; color: var(--mid); }
-.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+
 
 /* ── PAGE NAV ──────────────────────────────────── */
 .pnav {
@@ -395,6 +388,75 @@ td code {
   .diff { grid-template-columns: 1fr; }
   .arch { flex-wrap: wrap; }
 }
+
+/* ═══ QUIZ COMPONENT ══════════════════════════════════════ */
+.qz{background:var(--bg2,#0d0d1a);border:1px solid var(--b2,var(--border,#2a2a45));border-radius:12px;margin:48px 0;overflow:hidden}
+.qz-head{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--b2,var(--border,#2a2a45))}
+.qz-icon{font-size:22px;flex-shrink:0}
+.qz-title{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:18px;font-weight:700;color:var(--acc,var(--purple,var(--amber,#ffb300)));letter-spacing:-.2px}
+.qz-sub{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#6b6b95));margin-top:3px;letter-spacing:.5px}
+.qz-list{padding:0 24px;display:flex;flex-direction:column}
+.qz-q{padding:26px 0;border-bottom:1px solid var(--b2,var(--border,#1e1e36))}
+.qz-q:last-child{border-bottom:none}
+.qz-qnum{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#5a5a82));letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.qz-qtext{font-size:14px;color:var(--text,var(--white,#f0f0ff));line-height:1.65;margin-bottom:14px;font-weight:500}
+.qz-qtext code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,var(--amber,#ffb300));background:rgba(255,179,0,.08);padding:1px 6px;border-radius:3px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border,#2a2a45);cursor:pointer;font-size:13px;color:var(--text2,var(--mid,#9898be));line-height:1.6;transition:border-color .14s,background .14s,color .14s;user-select:none}
+.qz-opt:hover{border-color:var(--b2,#353560);background:rgba(255,255,255,.02);color:var(--text,#e0e0ff)}
+.qz-opt.sel{border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.05);color:var(--text,#f0f0ff)}
+.qz-opt.sel .qz-ltr{background:rgba(255,179,0,.18);color:var(--acc,#ffb300)}
+.qz-ltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg3,var(--plate,#1a1a30));color:var(--text3,#6b6b95);transition:all .14s}
+.qz-opt code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-exp{display:none}
+.qz-foot{padding:18px 24px;border-top:1px solid var(--b2,var(--border,#2a2a45));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.qz-prog{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--text3,#5a5a82);letter-spacing:.5px}
+.qz-btn{padding:11px 28px;border-radius:7px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:var(--acc,#ffb300);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.qz-btn:hover:not(:disabled){background:rgba(255,179,0,.2);border-color:var(--acc,#ffb300)}
+.qz-btn:disabled{opacity:.3;cursor:not-allowed}
+/* results overlay */
+.qz-ov{position:fixed;inset:0;z-index:9999;background:var(--bg,var(--ink,#070711));overflow-y:auto;display:none;flex-direction:column}
+.qz-ov.open{display:flex}
+.qz-ob{position:sticky;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(7,7,17,.97);border-bottom:1px solid var(--border,#2a2a45);backdrop-filter:blur(16px);z-index:10}
+.qz-ob-back{padding:5px 16px;border-radius:6px;border:1px solid var(--border,#2a2a45);background:none;color:var(--text3,#6b6b95);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;cursor:pointer;letter-spacing:.5px;transition:all .14s}
+.qz-ob-back:hover{border-color:var(--acc,#ffb300);color:var(--acc,#ffb300)}
+.qz-ob-pill{margin-left:auto;padding:3px 14px;border-radius:20px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--acc,#ffb300)}
+.qz-oh{display:flex;align-items:center;gap:32px;padding:40px 48px 32px;border-bottom:1px solid var(--border,#2a2a45)}
+.qz-oring{flex-shrink:0}
+.qz-oht{flex:1}
+.qz-oscore{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:56px;font-weight:800;color:var(--text,#f0f0ff);letter-spacing:-3px;line-height:1}
+.qz-oscore sup{font-size:28px;color:var(--acc,#ffb300);vertical-align:super;letter-spacing:0}
+.qz-omsg{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--text2,#9898be);margin:10px 0 12px;letter-spacing:.3px;line-height:1.7}
+.qz-obadge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.gb-s{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.25)}
+.gb-a{background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.22)}
+.gb-b{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.25)}
+.gb-c{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.qz-ocards{padding:32px 48px 80px;display:flex;flex-direction:column;gap:20px}
+.qz-oc{border:1px solid var(--border,#2a2a45);border-radius:12px;overflow:hidden}
+.qz-oc.oc-ok{border-left:3px solid #69ff47}
+.qz-oc.oc-no{border-left:3px solid #ff4d6d}
+.qz-och{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--b2,#1e1e36);background:var(--bg2,#0d0d1a)}
+.qz-ocn{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,#5a5a82);flex-shrink:0;padding-top:2px;letter-spacing:1.5px}
+.qz-ocq{font-size:13px;color:var(--text,#f0f0ff);flex:1;line-height:1.6}
+.qz-ocq code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocv{flex-shrink:0;padding:3px 10px;border-radius:10px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1px}
+.ocv-ok{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.2)}
+.ocv-no{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.2)}
+.qz-ocopts{padding:12px 20px;background:var(--bg3,#111128);display:flex;flex-direction:column;gap:7px}
+.qz-oco{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:7px;font-size:13px;color:var(--text2,#6b6b95);border:1px solid transparent;line-height:1.6}
+.qz-oco.oo-r{border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.05);color:var(--text,#f0f0ff)}
+.qz-oco.oo-w{border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;text-decoration:line-through;opacity:.8}
+.qz-oco code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg2,#1e1e36);color:var(--text3,#5a5a82)}
+.qz-oco.oo-r .qz-ocltr{background:rgba(105,255,71,.18);color:#69ff47}
+.qz-oco.oo-w .qz-ocltr{background:rgba(255,77,109,.14);color:#ff4d6d}
+.qz-ocexp{margin:0 20px 16px;padding:13px 16px;background:var(--bg2,#0d0d1a);border:1px solid var(--border,#2a2a45);border-radius:8px;font-size:13px;color:var(--text2,#9898be);line-height:1.75}
+.qz-ocexp strong{color:var(--acc,#ffb300)}
+.qz-ocexp em{color:var(--text,#c0c0e0)}
+.qz-ocexp code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+@media(max-width:720px){.qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px}.qz-ocards{padding:20px 16px 60px}.qz-oscore{font-size:44px}}
+/* ════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>
@@ -1202,132 +1264,107 @@ npx hardhat test test/verify-setup.test.ts --network hardhat
 </div>
 
 <!-- ── QUIZ ───────────────────────────────────────── -->
-<h2 class="sec" id="quiz">Knowledge Check</h2>
 
-<div class="quiz">
-  <div class="quiz-head">
-    <div class="quiz-head-icon">&#128221;</div>
-    <div>
-      <div class="quiz-title">Day 2 Quiz — FHEVM Architecture</div>
-      <div class="quiz-subtitle">8 questions &nbsp;&middot;&nbsp; Select one answer each, then submit all at once</div>
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
+    <div><div class="qz-title">Day 02 Quiz — FHEVM Architecture</div><div class="qz-sub">8 questions · handles, ACL, KMS</div></div>
+  </div>
+  <div class="qz-list">
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 01 / 08</div>
+      <div class="qz-qtext">What does <code>FHE.add(handleA, handleB)</code> synchronously return to your Solidity contract?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The ciphertext result of the addition, stored in EVM memory</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>A 32-byte handle — a deterministic keccak256 hash referencing the future ciphertext the coprocessor will compute off-chain</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The plaintext sum, verified by a trusted oracle before returning</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>A zero value placeholder that is updated once the coprocessor responds</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> The EVM only computes and returns a deterministic output handle (keccak256 of inputs + opcode + nonce) and emits an event. The actual TFHE computation happens off-chain on the coprocessor. The handle is immediately usable for chaining further FHE operations in the same transaction.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 02 / 08</div>
+      <div class="qz-qtext">Why is synchronous on-chain decryption architecturally impossible in FHEVM?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Decryption always exceeds the block gas limit</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The EVM cannot return variable-length data to smart contract callers</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The secret key is split across KMS nodes using threshold MPC — decryption requires multiple network round-trips between nodes, which cannot happen inside a synchronous EVM call frame</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Ciphertexts are too large to fit in EVM memory</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> Threshold MPC requires multiple KMS nodes to cooperate over the network — at minimum two round-trips. This is fundamentally incompatible with synchronous EVM execution, where every operation must complete atomically within a single call frame.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 03 / 08</div>
+      <div class="qz-qtext">You write <code>balance = FHE.add(balance, amount);</code> but forget <code>FHE.allowThis(balance)</code>. What happens in the <em>next</em> transaction that tries to use <code>balance</code>?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The transaction reverts — the contract's address has no ACL permission for the new handle, so the FHE operation fails its access check</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The balance handle is silently reset to zero</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The new handle automatically inherits ACL grants from its input handles</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Nothing — <code>allowThis()</code> is optional if the contract address is the deployer</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Every FHE operation creates a brand-new handle with zero ACL grants. The contract address is not automatically added. Without <code>allowThis()</code>, the next transaction that calls any FHE operation with this handle will fail the ACL check in the FHEVM Executor and revert. This is the most common FHEVM bug.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 04 / 08</div>
+      <div class="qz-qtext">When is <code>FHE.allowTransient(handle, addr)</code> the right choice instead of <code>FHE.allow(handle, addr)</code>?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>When granting permanent read access to a user wallet address</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>When the handle is about to be publicly decrypted via the Gateway</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>When the handle was created from a constant plaintext value</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Immediately before a cross-contract call, to give a called contract temporary access that expires at the end of the transaction — avoiding a permanent grant to an external contract</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> <code>allowTransient</code> uses EIP-1153 transient storage under the hood — the grant exists only for the duration of the current transaction. It's designed specifically for cross-contract handle passing where you want the called contract to use the handle without receiving a permanent ACL grant.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 05 / 08</div>
+      <div class="qz-qtext">What is the coprocessor's exact security boundary?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It can both compute on and decrypt ciphertexts, but only when authorized by the ACL</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It can compute on ciphertexts using the evaluation key, but cannot decrypt them — it does not hold the secret key, which stays in the KMS</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It can decrypt ciphertexts but cannot perform arithmetic on them</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It only routes messages between the EVM and KMS; it never touches ciphertext data</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> The coprocessor holds only the <em>evaluation key</em>, which enables computation on ciphertexts. The <em>secret key</em> (needed for decryption) lives exclusively in the KMS cluster. A fully compromised coprocessor can produce wrong computation results but cannot reveal any plaintext values.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 06 / 08</div>
+      <div class="qz-qtext">Why is the <code>onlyGateway</code> modifier on callback functions security-critical?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It prevents the KMS from delivering the same decryption result twice</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The Gateway uses a non-standard function call encoding that requires this modifier to decode</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Without it, any Ethereum address can call the callback with a fabricated plaintext value and corrupt your contract's state with a false decryption result</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It handles gas reimbursement for the decryption operation</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> Callback functions are ordinary public Solidity functions. Without <code>onlyGateway</code>, anyone can call them directly. An attacker could call <code>revealCallback(requestId, 999999)</code> and inject a false result. The modifier checks <code>msg.sender == Gateway.gatewayContractAddress()</code> to ensure only the legitimate Gateway delivers results.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 07 / 08</div>
+      <div class="qz-qtext">What does <code>FHE.makePubliclyDecryptable(handle)</code> do, and what is the critical risk?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It permanently and irreversibly marks the handle so any address can request decryption via the Gateway — the plaintext will be publicly obtainable forever and this cannot be undone</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It re-encrypts the ciphertext under a new public key for safe sharing</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It adds the handle to a public registry visible in block explorers</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It decrypts the value and stores the plaintext in contract public state</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Once called, this action cannot be reversed. Any address can then request the plaintext from the Gateway at any time in the future. This function should only be used for values that are <em>intended</em> to become public (e.g., auction results after the auction closes) and must always be guarded by strict access control and time-based restrictions.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 08 / 08</div>
+      <div class="qz-qtext">Which component holds the FHE evaluation key, and what does it allow?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The KMS — it allows threshold decryption across multiple nodes</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The Gateway — it allows bridging decryption requests on-chain</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The FHEVM Executor — it allows verifying ZK proofs from user inputs</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The Coprocessor — the evaluation key enables computing on ciphertexts (add, mul, compare, etc.) without decrypting them</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> The coprocessor holds the FHE evaluation key — a public key in the TFHE scheme that enables homomorphic computation (addition, multiplication, comparison, lookup tables) without revealing the plaintext. The secret key (needed to actually decrypt) is held only by the KMS cluster, maintaining the security separation between computation and decryption.</div>
     </div>
   </div>
-  <div class="quiz-body" id="qbody">
-
-    <!-- Q1 -->
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 01 / 08</div>
-      <div class="q-q">What does <code>FHE.add(handleA, handleB)</code> synchronously return to your Solidity contract?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The ciphertext result of the addition, stored in EVM memory</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A 32-byte handle — a deterministic keccak256 hash referencing the future ciphertext the coprocessor will compute off-chain</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The plaintext sum, verified by a trusted oracle before returning</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A zero value placeholder that is updated once the coprocessor responds</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> The EVM only computes and returns a deterministic output handle (keccak256 of inputs + opcode + nonce) and emits an event. The actual TFHE computation happens off-chain on the coprocessor. The handle is immediately usable for chaining further FHE operations in the same transaction.</div>
-    </div>
-
-    <!-- Q2 -->
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 02 / 08</div>
-      <div class="q-q">Why is synchronous on-chain decryption architecturally impossible in FHEVM?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Decryption always exceeds the block gas limit</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The EVM cannot return variable-length data to smart contract callers</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The secret key is split across KMS nodes using threshold MPC — decryption requires multiple network round-trips between nodes, which cannot happen inside a synchronous EVM call frame</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Ciphertexts are too large to fit in EVM memory</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> Threshold MPC requires multiple KMS nodes to cooperate over the network — at minimum two round-trips. This is fundamentally incompatible with synchronous EVM execution, where every operation must complete atomically within a single call frame.</div>
-    </div>
-
-    <!-- Q3 -->
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 03 / 08</div>
-      <div class="q-q">You write <code>balance = FHE.add(balance, amount);</code> but forget <code>FHE.allowThis(balance)</code>. What happens in the <em>next</em> transaction that tries to use <code>balance</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The transaction reverts — the contract's address has no ACL permission for the new handle, so the FHE operation fails its access check</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The balance handle is silently reset to zero</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The new handle automatically inherits ACL grants from its input handles</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Nothing — <code>allowThis()</code> is optional if the contract address is the deployer</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Every FHE operation creates a brand-new handle with zero ACL grants. The contract address is not automatically added. Without <code>allowThis()</code>, the next transaction that calls any FHE operation with this handle will fail the ACL check in the FHEVM Executor and revert. This is the most common FHEVM bug.</div>
-    </div>
-
-    <!-- Q4 -->
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 04 / 08</div>
-      <div class="q-q">When is <code>FHE.allowTransient(handle, addr)</code> the right choice instead of <code>FHE.allow(handle, addr)</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>When granting permanent read access to a user wallet address</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>When the handle is about to be publicly decrypted via the Gateway</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>When the handle was created from a constant plaintext value</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Immediately before a cross-contract call, to give a called contract temporary access that expires at the end of the transaction — avoiding a permanent grant to an external contract</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> <code>allowTransient</code> uses EIP-1153 transient storage under the hood — the grant exists only for the duration of the current transaction. It's designed specifically for cross-contract handle passing where you want the called contract to use the handle without receiving a permanent ACL grant.</div>
-    </div>
-
-    <!-- Q5 -->
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 05 / 08</div>
-      <div class="q-q">What is the coprocessor's exact security boundary?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It can both compute on and decrypt ciphertexts, but only when authorized by the ACL</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It can compute on ciphertexts using the evaluation key, but cannot decrypt them — it does not hold the secret key, which stays in the KMS</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It can decrypt ciphertexts but cannot perform arithmetic on them</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It only routes messages between the EVM and KMS; it never touches ciphertext data</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> The coprocessor holds only the <em>evaluation key</em>, which enables computation on ciphertexts. The <em>secret key</em> (needed for decryption) lives exclusively in the KMS cluster. A fully compromised coprocessor can produce wrong computation results but cannot reveal any plaintext values.</div>
-    </div>
-
-    <!-- Q6 -->
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 06 / 08</div>
-      <div class="q-q">Why is the <code>onlyGateway</code> modifier on callback functions security-critical?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It prevents the KMS from delivering the same decryption result twice</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway uses a non-standard function call encoding that requires this modifier to decode</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Without it, any Ethereum address can call the callback with a fabricated plaintext value and corrupt your contract's state with a false decryption result</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It handles gas reimbursement for the decryption operation</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> Callback functions are ordinary public Solidity functions. Without <code>onlyGateway</code>, anyone can call them directly. An attacker could call <code>revealCallback(requestId, 999999)</code> and inject a false result. The modifier checks <code>msg.sender == Gateway.gatewayContractAddress()</code> to ensure only the legitimate Gateway delivers results.</div>
-    </div>
-
-    <!-- Q7 -->
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 07 / 08</div>
-      <div class="q-q">What does <code>FHE.makePubliclyDecryptable(handle)</code> do, and what is the critical risk?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It permanently and irreversibly marks the handle so any address can request decryption via the Gateway — the plaintext will be publicly obtainable forever and this cannot be undone</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It re-encrypts the ciphertext under a new public key for safe sharing</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It adds the handle to a public registry visible in block explorers</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It decrypts the value and stores the plaintext in contract public state</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Once called, this action cannot be reversed. Any address can then request the plaintext from the Gateway at any time in the future. This function should only be used for values that are <em>intended</em> to become public (e.g., auction results after the auction closes) and must always be guarded by strict access control and time-based restrictions.</div>
-    </div>
-
-    <!-- Q8 -->
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 08 / 08</div>
-      <div class="q-q">Which component holds the FHE evaluation key, and what does it allow?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The KMS — it allows threshold decryption across multiple nodes</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway — it allows bridging decryption requests on-chain</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The FHEVM Executor — it allows verifying ZK proofs from user inputs</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Coprocessor — the evaluation key enables computing on ciphertexts (add, mul, compare, etc.) without decrypting them</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> The coprocessor holds the FHE evaluation key — a public key in the TFHE scheme that enables homomorphic computation (addition, multiplication, comparison, lookup tables) without revealing the plaintext. The secret key (needed to actually decrypt) is held only by the KMS cluster, maintaining the security separation between computation and decryption.</div>
-    </div>
-
-  </div><!-- end quiz-body -->
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/8</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="day02-prog">0 / 8 answered</span>
+    <button class="qz-btn" id="day02-btn" disabled>VIEW RESULTS →</button>
   </div>
-</div><!-- end quiz -->
+</div>
 
 <!-- PAGE NAV -->
 <div class="pnav">
@@ -1369,51 +1406,129 @@ sbLinks.forEach(l => l.addEventListener('click', () => {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }));
 
-/* quiz */
-document.querySelectorAll('.q-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const q = opt.closest('.q');
-    if (q.dataset.done) return;
-    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
-    opt.classList.add('picked');
-    const total = document.querySelectorAll('.q').length;
-    const done  = document.querySelectorAll('.q-opt.picked').length;
-    document.getElementById('qsub').disabled = done < total;
-  });
-});
+(function() {
+  var ID      = 'day02';
+  var optEls  = document.querySelectorAll('#quiz .qz-opt');
+  var btnEl   = document.getElementById(ID + '-btn');
+  var progEl  = document.getElementById(ID + '-prog');
+  var total   = document.querySelectorAll('#quiz .qz-q').length;
 
-function gradeQuiz() {
-  let correct = 0;
-  document.querySelectorAll('.q').forEach(q => {
-    q.dataset.done = '1';
-    const picked = q.querySelector('.q-opt.picked');
-    const ans    = q.dataset.ans;
-    q.querySelectorAll('.q-opt').forEach(o => {
-      if (o.dataset.v === ans) o.classList.add('right');
-      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+  function picked() { return document.querySelectorAll('#quiz .qz-q .qz-opt.sel').length; }
+
+  function refresh() {
+    if (btnEl)  btnEl.disabled       = (picked() < total);
+    if (progEl) progEl.textContent   = picked() + ' / ' + total + ' answered';
+  }
+
+  for (var i = 0; i < optEls.length; i++) {
+    optEls[i].addEventListener('click', function() {
+      var q = this.closest('.qz-q');
+      if (!q) return;
+      var s = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < s.length; j++) s[j].classList.remove('sel');
+      this.classList.add('sel');
+      refresh();
     });
-    if (picked && picked.dataset.v === ans) correct++;
-    const exp = q.querySelector('.q-exp');
-    if (exp) exp.classList.add('show');
-  });
-  const pct = Math.round(correct / 8 * 100);
-  document.getElementById('snum').textContent = correct + '/8';
-  document.getElementById('smsg').textContent =
-    pct === 100 ? 'Perfect score — ready for Day 3!' :
-    pct >= 87   ? 'Excellent work!'                 :
-    pct >= 62   ? 'Good — review the explanations.' :
-                  'Re-read the sections above.';
-  document.getElementById('qscore').classList.add('show');
-  document.getElementById('qsub').disabled = true;
-}
+  }
 
-function copyCode(btn) {
-  const pre = btn.closest('.code').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(() => {
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY', 1800);
+  if (btnEl) btnEl.addEventListener('click', function() {
+    if (this.disabled) return;
+    render();
   });
-}
+
+  function render() {
+    var qEls = document.querySelectorAll('#quiz .qz-q');
+    var ok   = 0;
+    var html = '';
+
+    for (var i = 0; i < qEls.length; i++) {
+      var q     = qEls[i];
+      var ans   = q.getAttribute('data-ans');
+      var selEl = q.querySelector('.qz-opt.sel');
+      var selV  = selEl ? selEl.getAttribute('data-v') : null;
+      var isOk  = selV === ans;
+      if (isOk) ok++;
+
+      var qtEl  = q.querySelector('.qz-qtext');
+      var expEl = q.querySelector('.qz-exp');
+      var qText = qtEl  ? qtEl.innerHTML  : '';
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      var rows  = '';
+      var oEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < oEls.length; j++) {
+        var o    = oEls[j];
+        var v    = o.getAttribute('data-v');
+        var lEl  = o.querySelector('.qz-ltr');
+        var lTx  = lEl ? lEl.textContent : v;
+        var cl   = o.cloneNode(true);
+        var lc   = cl.querySelector('.qz-ltr');
+        if (lc)  lc.parentNode.removeChild(lc);
+        var cls  = v === ans ? 'oo-r' : (v === selV ? 'oo-w' : '');
+        rows += '<div class="qz-oco ' + cls + '"><span class="qz-ocltr">' + lTx + '</span>' + cl.innerHTML.trim() + '</div>';
+      }
+
+      html += '<div class="qz-oc ' + (isOk ? 'oc-ok' : 'oc-no') + '">'
+        + '<div class="qz-och"><span class="qz-ocn">Q' + (i+1) + '</span>'
+        + '<div class="qz-ocq">' + qText + '</div>'
+        + '<span class="qz-ocv ' + (isOk?'ocv-ok':'ocv-no') + '">' + (isOk?'✓ Correct':'✗ Wrong') + '</span></div>'
+        + '<div class="qz-ocopts">' + rows + '</div>'
+        + (exp ? '<div class="qz-ocexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var pct  = Math.round(ok / total * 100);
+    var circ = 251.3;
+    var off  = circ - (pct/100)*circ;
+    var rc   = pct===100?'#69ff47':pct>=80?'#00e5ff':pct>=60?'#ffb300':'#ff4d6d';
+    var bdg  = pct===100?'<span class="qz-obadge gb-s">🏆 Perfect Score</span>'
+              :pct>=80  ?'<span class="qz-obadge gb-a">✓ Excellent</span>'
+              :pct>=60  ?'<span class="qz-obadge gb-b">~ Needs Review</span>'
+              :'<span class="qz-obadge gb-c">↺ Try Again</span>';
+    var msg  = pct===100?'Flawless — every concept nailed.'
+              :pct>=80  ?'Strong work. Check any flagged questions.'
+              :pct>=60  ?'Good base — re-read sections for wrong answers.'
+              :'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-oring">'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+rc+'" stroke-width="7"'
+      +' stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"'
+      +' transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/></svg>';
+
+    var ov = document.getElementById(ID+'-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = ID+'-ov';
+      ov.className = 'qz-ov';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="qz-ob">'
+      +'<button class="qz-ob-back" id="'+ID+'-close">← Back to Quiz</button>'
+      +'<span class="qz-ob-pill">'+ok+'/'+total+' correct &nbsp;·&nbsp; '+pct+'%</span>'
+      +'</div>'
+      +'<div class="qz-oh">'+ring
+      +'<div class="qz-oht"><div class="qz-oscore">'+ok+'<sup>/'+total+'</sup></div>'
+      +'<div class="qz-omsg">'+msg+'</div>'+bdg+'</div></div>'
+      +'<div class="qz-ocards">'+html+'</div>';
+
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(ID+'-close').addEventListener('click', function() {
+      ov.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
+    });
+  }
+
+  refresh();
+})();
+
+
 </script>
 </body>
 </html>
