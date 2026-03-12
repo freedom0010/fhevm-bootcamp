@@ -72,13 +72,13 @@ td strong{color:var(--bright)}
 .quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
 .quiz-head{padding:20px 24px;background:rgba(192,132,252,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
 .quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
-.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--purple);letter-spacing:-.2px}
-.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
-.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+
+
+
 .q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
 .q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
 .q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
-.q-opts{display:flex;flex-direction:column;gap:7px}
+
 .q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
 .q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
 .q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
@@ -86,15 +86,84 @@ td strong{color:var(--bright)}
 .q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
 .q-exp{margin-top:10px;padding:11px 14px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
 .q-exp.show{display:block}.q-exp strong{color:var(--acc)}
-.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
-.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+
+
 .score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
-.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
-.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.score.show{display:flex}
+.score-right{display:flex;flex-direction:column;gap:3px}
 .pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
 .pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
 .pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.22);color:var(--acc)}.pnav .next:hover{background:rgba(52,211,153,.14)}
 @media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.grid2,.diff{grid-template-columns:1fr}}
+
+/* ═══ QUIZ COMPONENT ══════════════════════════════════════ */
+.qz{background:var(--bg2,#0d0d1a);border:1px solid var(--b2,var(--border,#2a2a45));border-radius:12px;margin:48px 0;overflow:hidden}
+.qz-head{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--b2,var(--border,#2a2a45))}
+.qz-icon{font-size:22px;flex-shrink:0}
+.qz-title{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:18px;font-weight:700;color:var(--acc,var(--purple,var(--amber,#ffb300)));letter-spacing:-.2px}
+.qz-sub{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#6b6b95));margin-top:3px;letter-spacing:.5px}
+.qz-list{padding:0 24px;display:flex;flex-direction:column}
+.qz-q{padding:26px 0;border-bottom:1px solid var(--b2,var(--border,#1e1e36))}
+.qz-q:last-child{border-bottom:none}
+.qz-qnum{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#5a5a82));letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.qz-qtext{font-size:14px;color:var(--text,var(--white,#f0f0ff));line-height:1.65;margin-bottom:14px;font-weight:500}
+.qz-qtext code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,var(--amber,#ffb300));background:rgba(255,179,0,.08);padding:1px 6px;border-radius:3px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border,#2a2a45);cursor:pointer;font-size:13px;color:var(--text2,var(--mid,#9898be));line-height:1.6;transition:border-color .14s,background .14s,color .14s;user-select:none}
+.qz-opt:hover{border-color:var(--b2,#353560);background:rgba(255,255,255,.02);color:var(--text,#e0e0ff)}
+.qz-opt.sel{border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.05);color:var(--text,#f0f0ff)}
+.qz-opt.sel .qz-ltr{background:rgba(255,179,0,.18);color:var(--acc,#ffb300)}
+.qz-ltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg3,var(--plate,#1a1a30));color:var(--text3,#6b6b95);transition:all .14s}
+.qz-opt code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-exp{display:none}
+.qz-foot{padding:18px 24px;border-top:1px solid var(--b2,var(--border,#2a2a45));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.qz-prog{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--text3,#5a5a82);letter-spacing:.5px}
+.qz-btn{padding:11px 28px;border-radius:7px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:var(--acc,#ffb300);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.qz-btn:hover:not(:disabled){background:rgba(255,179,0,.2);border-color:var(--acc,#ffb300)}
+.qz-btn:disabled{opacity:.3;cursor:not-allowed}
+/* results overlay */
+.qz-ov{position:fixed;inset:0;z-index:9999;background:var(--bg,var(--ink,#070711));overflow-y:auto;display:none;flex-direction:column}
+.qz-ov.open{display:flex}
+.qz-ob{position:sticky;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(7,7,17,.97);border-bottom:1px solid var(--border,#2a2a45);backdrop-filter:blur(16px);z-index:10}
+.qz-ob-back{padding:5px 16px;border-radius:6px;border:1px solid var(--border,#2a2a45);background:none;color:var(--text3,#6b6b95);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;cursor:pointer;letter-spacing:.5px;transition:all .14s}
+.qz-ob-back:hover{border-color:var(--acc,#ffb300);color:var(--acc,#ffb300)}
+.qz-ob-pill{margin-left:auto;padding:3px 14px;border-radius:20px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--acc,#ffb300)}
+.qz-oh{display:flex;align-items:center;gap:32px;padding:40px 48px 32px;border-bottom:1px solid var(--border,#2a2a45)}
+.qz-oring{flex-shrink:0}
+.qz-oht{flex:1}
+.qz-oscore{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:56px;font-weight:800;color:var(--text,#f0f0ff);letter-spacing:-3px;line-height:1}
+.qz-oscore sup{font-size:28px;color:var(--acc,#ffb300);vertical-align:super;letter-spacing:0}
+.qz-omsg{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--text2,#9898be);margin:10px 0 12px;letter-spacing:.3px;line-height:1.7}
+.qz-obadge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.gb-s{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.25)}
+.gb-a{background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.22)}
+.gb-b{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.25)}
+.gb-c{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.qz-ocards{padding:32px 48px 80px;display:flex;flex-direction:column;gap:20px}
+.qz-oc{border:1px solid var(--border,#2a2a45);border-radius:12px;overflow:hidden}
+.qz-oc.oc-ok{border-left:3px solid #69ff47}
+.qz-oc.oc-no{border-left:3px solid #ff4d6d}
+.qz-och{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--b2,#1e1e36);background:var(--bg2,#0d0d1a)}
+.qz-ocn{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,#5a5a82);flex-shrink:0;padding-top:2px;letter-spacing:1.5px}
+.qz-ocq{font-size:13px;color:var(--text,#f0f0ff);flex:1;line-height:1.6}
+.qz-ocq code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocv{flex-shrink:0;padding:3px 10px;border-radius:10px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1px}
+.ocv-ok{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.2)}
+.ocv-no{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.2)}
+.qz-ocopts{padding:12px 20px;background:var(--bg3,#111128);display:flex;flex-direction:column;gap:7px}
+.qz-oco{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:7px;font-size:13px;color:var(--text2,#6b6b95);border:1px solid transparent;line-height:1.6}
+.qz-oco.oo-r{border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.05);color:var(--text,#f0f0ff)}
+.qz-oco.oo-w{border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;text-decoration:line-through;opacity:.8}
+.qz-oco code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg2,#1e1e36);color:var(--text3,#5a5a82)}
+.qz-oco.oo-r .qz-ocltr{background:rgba(105,255,71,.18);color:#69ff47}
+.qz-oco.oo-w .qz-ocltr{background:rgba(255,77,109,.14);color:#ff4d6d}
+.qz-ocexp{margin:0 20px 16px;padding:13px 16px;background:var(--bg2,#0d0d1a);border:1px solid var(--border,#2a2a45);border-radius:8px;font-size:13px;color:var(--text2,#9898be);line-height:1.75}
+.qz-ocexp strong{color:var(--acc,#ffb300)}
+.qz-ocexp em{color:var(--text,#c0c0e0)}
+.qz-ocexp code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+@media(max-width:720px){.qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px}.qz-ocards{padding:20px 16px 60px}.qz-oscore{font-size:44px}}
+/* ════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>
@@ -465,111 +534,108 @@ REPORT_GAS=true npx hardhat test</pre>
   </div>
 </div>
 
-<h2 class="sec" id="quiz">Knowledge Check</h2>
-<div class="quiz">
-  <div class="quiz-head">
-    <div class="quiz-icon">&#128221;</div>
-    <div>
-      <div class="quiz-title">Day 7 Quiz — Gas Optimization</div>
-      <div class="quiz-subtitle">8 questions · select one answer each</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
+    <div><div class="qz-title">Day 07 Quiz — ConfidentialERC20</div><div class="qz-sub">8 questions · encrypted token</div></div>
+  </div>
+  <div class="qz-list">
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 01 / 08</div>
+      <div class="qz-qtext">You store a player's score (0–200) as <code>euint64</code>. What is the approximate gas penalty compared to using <code>euint8</code>?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>2× more expensive — euint64 is 2× wider than euint8 by name</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>8× more expensive — the add/compare cost scales linearly with bit-width (8 bits → 64 bits = 8× multiplier)</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The same — FHE precompile charges a flat fee regardless of type</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>4× more expensive — euint64 uses 4 more bytes than euint8</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Gas scales linearly with bit-width for arithmetic and comparison ops. euint8 = 1× baseline, euint16 = 2×, euint32 = 4×, euint64 = 8×. For a score capped at 200, euint8 (max 255) fits perfectly and costs 8× less per operation than euint64.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 02 / 08</div>
+      <div class="qz-qtext">Why is <code>FHE.asEuint64(0)</code> called in the constructor to cache <code>ZERO_HANDLE</code>, rather than calling it inline in every function?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>asEuint64() can only be called once per contract</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The ZK proof for a trivial encryption is too expensive per-call</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Each inline call pays ~0.2× FHE cost plus an SSTORE for the new handle. Caching it once means all subsequent calls use a single warm SLOAD (~0.01×) instead</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>You can only have one zero handle per contract due to ciphertext uniqueness</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> FHE.asEuint64(0) is cheap (~0.2× baseline) but still creates a new handle and costs an SSTORE each time. In a frequently-called function, caching in constructor means subsequent calls pay only an SLOAD (warm ~100 gas) instead of a new FHE op + SSTORE.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 03 / 08</div>
+      <div class="qz-qtext">What is the key benefit of multi-input encryption (multiple <code>.add*()</code> calls on one <code>createEncryptedInput</code>)?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The client-side encryption is faster when batched</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Multiple encrypted values can share one storage slot on-chain</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The ciphertext sizes are smaller when combined</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>One ZK proof covers all values — each <code>fromExternal()</code> on the same proof amortizes the ~6000-gas ZK verification cost across all inputs</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> fromExternal() with a shared proof amortizes the ZK verification across all inputs encrypted together. Sending N values each with a separate proof costs N × ~6000 gas for verification alone. With one shared proof and multi-input, you pay verification once plus a small per-value cost — roughly 80% savings on 4 inputs.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 04 / 08</div>
+      <div class="qz-qtext">You call <code>FHE.allow(handle, addr)</code> twice for the same handle and address in one function. What is the net effect?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Identical outcome but double the gas — the second call writes the same value to the same ACL slot, achieving nothing but wasting an SSTORE</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The second call strengthens the grant with a higher permission level</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The second call fails silently — ACL ignores duplicate grants</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The grant is extended in time</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> ACL grants are idempotent — granting the same address access to the same handle twice produces the same result as once, but costs SSTORE gas both times. Auditing your code for duplicate allow() calls is a quick win.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 05 / 08</div>
+      <div class="qz-qtext">Which operation has the FLATTEST cost regardless of bit-width?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>FHE.add()</code></div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>FHE.mul()</code></div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>FHE.fromExternal()</code> — ZK proof verification is a fixed cost (~6000 gas) regardless of whether the encrypted value is euint8 or euint128</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>FHE.select()</code></div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> fromExternal() verifies a ZK proof that binds the ciphertext to contract+caller. This verification circuit has fixed complexity regardless of the value's bit-width. In contrast, all arithmetic operations (add, sub, mul, select) scale with bit-width because the homomorphic computation has more "wires" to evaluate.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 06 / 08</div>
+      <div class="qz-qtext">Why should you never call <code>FHE.allowThis()</code> on a handle that is only used as a temporary local variable and never stored?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>allowThis() on local variables causes a Solidity compiler error</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The ACL storage write costs gas but provides no benefit — the handle will never be accessed in a future transaction since it isn't stored anywhere</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Local handles expire at end of function and the ACL entry becomes invalid</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>allowThis() is reserved for the contract owner only</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> allowThis() writes to the ACL contract (SSTORE). If the handle is a temp variable used only within the current function and never written to storage, no future transaction can ever reference it — so the ACL grant costs gas and provides zero benefit. Only grant allowThis() to handles you STORE.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 07 / 08</div>
+      <div class="qz-qtext">A contract checks whether a user has any balance before proceeding. What is the most gas-efficient approach?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Use <code>FHE.gt(_balances[user], FHE.asEuint64(0))</code> and request a Gateway decrypt to check the result</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Use <code>FHE.ne(_balances[user], FHE.asEuint64(0))</code> inline</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Read the handle directly and check if it equals bytes32(0)</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Maintain a plaintext <code>mapping(address => bool) hasDeposited</code> that is set on first deposit — a single SLOAD (~2100 cold / 100 warm gas) vs 600+ gas for an FHE comparison</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> Whenever a plaintext boolean flag can substitute for an FHE comparison, use it. Tracking "has deposited" as a plain bool costs one SLOAD (~100 warm gas) compared to FHE.gt() + asEuint64(0) which costs 600–1200+ gas. The general principle: use FHE only for operations that must be confidential.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 08 / 08</div>
+      <div class="qz-qtext">Which of the following correctly describes the gas cost of <code>FHE.mul()</code> compared to <code>FHE.add()</code> at the same bit-width?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>mul() costs approximately 2× add() at the same bit-width — multiplication circuits are more complex than addition circuits in FHE</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>They cost the same — FHE operations are priced per bit-width regardless of operation type</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>mul() costs 10× add() — polynomial multiplication in Ring-LWE is extremely expensive</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>mul() is actually cheaper than add() because it uses a different circuit path</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Multiplication in FHE uses a more complex circuit than addition (roughly 2× the gate count at the same width). euint64 add ≈ 8× baseline, euint64 mul ≈ 16× baseline. Avoid mul() where possible — use bit-shifts or pre-computed constants instead when multiplying by known values.</div>
     </div>
   </div>
-  <div class="quiz-body" id="qbody">
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 01 / 08</div>
-      <div class="q-q">You store a player's score (0–200) as <code>euint64</code>. What is the approximate gas penalty compared to using <code>euint8</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>2× more expensive — euint64 is 2× wider than euint8 by name</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>8× more expensive — the add/compare cost scales linearly with bit-width (8 bits → 64 bits = 8× multiplier)</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The same — FHE precompile charges a flat fee regardless of type</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>4× more expensive — euint64 uses 4 more bytes than euint8</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Gas scales linearly with bit-width for arithmetic and comparison ops. euint8 = 1× baseline, euint16 = 2×, euint32 = 4×, euint64 = 8×. For a score capped at 200, euint8 (max 255) fits perfectly and costs 8× less per operation than euint64.</div>
-    </div>
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 02 / 08</div>
-      <div class="q-q">Why is <code>FHE.asEuint64(0)</code> called in the constructor to cache <code>ZERO_HANDLE</code>, rather than calling it inline in every function?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>asEuint64() can only be called once per contract</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ZK proof for a trivial encryption is too expensive per-call</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Each inline call pays ~0.2× FHE cost plus an SSTORE for the new handle. Caching it once means all subsequent calls use a single warm SLOAD (~0.01×) instead</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>You can only have one zero handle per contract due to ciphertext uniqueness</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> FHE.asEuint64(0) is cheap (~0.2× baseline) but still creates a new handle and costs an SSTORE each time. In a frequently-called function, caching in constructor means subsequent calls pay only an SLOAD (warm ~100 gas) instead of a new FHE op + SSTORE.</div>
-    </div>
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 08</div>
-      <div class="q-q">What is the key benefit of multi-input encryption (multiple <code>.add*()</code> calls on one <code>createEncryptedInput</code>)?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The client-side encryption is faster when batched</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Multiple encrypted values can share one storage slot on-chain</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ciphertext sizes are smaller when combined</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>One ZK proof covers all values — each <code>fromExternal()</code> on the same proof amortizes the ~6000-gas ZK verification cost across all inputs</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> fromExternal() with a shared proof amortizes the ZK verification across all inputs encrypted together. Sending N values each with a separate proof costs N × ~6000 gas for verification alone. With one shared proof and multi-input, you pay verification once plus a small per-value cost — roughly 80% savings on 4 inputs.</div>
-    </div>
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 04 / 08</div>
-      <div class="q-q">You call <code>FHE.allow(handle, addr)</code> twice for the same handle and address in one function. What is the net effect?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Identical outcome but double the gas — the second call writes the same value to the same ACL slot, achieving nothing but wasting an SSTORE</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The second call strengthens the grant with a higher permission level</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The second call fails silently — ACL ignores duplicate grants</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The grant is extended in time</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> ACL grants are idempotent — granting the same address access to the same handle twice produces the same result as once, but costs SSTORE gas both times. Auditing your code for duplicate allow() calls is a quick win.</div>
-    </div>
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 08</div>
-      <div class="q-q">Which operation has the FLATTEST cost regardless of bit-width?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.add()</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.mul()</code></div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>FHE.fromExternal()</code> — ZK proof verification is a fixed cost (~6000 gas) regardless of whether the encrypted value is euint8 or euint128</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>FHE.select()</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> fromExternal() verifies a ZK proof that binds the ciphertext to contract+caller. This verification circuit has fixed complexity regardless of the value's bit-width. In contrast, all arithmetic operations (add, sub, mul, select) scale with bit-width because the homomorphic computation has more "wires" to evaluate.</div>
-    </div>
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 06 / 08</div>
-      <div class="q-q">Why should you never call <code>FHE.allowThis()</code> on a handle that is only used as a temporary local variable and never stored?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>allowThis() on local variables causes a Solidity compiler error</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ACL storage write costs gas but provides no benefit — the handle will never be accessed in a future transaction since it isn't stored anywhere</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Local handles expire at end of function and the ACL entry becomes invalid</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>allowThis() is reserved for the contract owner only</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> allowThis() writes to the ACL contract (SSTORE). If the handle is a temp variable used only within the current function and never written to storage, no future transaction can ever reference it — so the ACL grant costs gas and provides zero benefit. Only grant allowThis() to handles you STORE.</div>
-    </div>
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 07 / 08</div>
-      <div class="q-q">A contract checks whether a user has any balance before proceeding. What is the most gas-efficient approach?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Use <code>FHE.gt(_balances[user], FHE.asEuint64(0))</code> and request a Gateway decrypt to check the result</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Use <code>FHE.ne(_balances[user], FHE.asEuint64(0))</code> inline</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Read the handle directly and check if it equals bytes32(0)</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Maintain a plaintext <code>mapping(address => bool) hasDeposited</code> that is set on first deposit — a single SLOAD (~2100 cold / 100 warm gas) vs 600+ gas for an FHE comparison</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> Whenever a plaintext boolean flag can substitute for an FHE comparison, use it. Tracking "has deposited" as a plain bool costs one SLOAD (~100 warm gas) compared to FHE.gt() + asEuint64(0) which costs 600–1200+ gas. The general principle: use FHE only for operations that must be confidential.</div>
-    </div>
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 08 / 08</div>
-      <div class="q-q">Which of the following correctly describes the gas cost of <code>FHE.mul()</code> compared to <code>FHE.add()</code> at the same bit-width?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>mul() costs approximately 2× add() at the same bit-width — multiplication circuits are more complex than addition circuits in FHE</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>They cost the same — FHE operations are priced per bit-width regardless of operation type</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>mul() costs 10× add() — polynomial multiplication in Ring-LWE is extremely expensive</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>mul() is actually cheaper than add() because it uses a different circuit path</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Multiplication in FHE uses a more complex circuit than addition (roughly 2× the gate count at the same width). euint64 add ≈ 8× baseline, euint64 mul ≈ 16× baseline. Avoid mul() where possible — use bit-shifts or pre-computed constants instead when multiplying by known values.</div>
-    </div>
-  </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/8</div>
-    <div class="score-right"><div class="score-label">questions correct</div><div class="score-msg" id="smsg"></div></div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="day07-prog">0 / 8 answered</span>
+    <button class="qz-btn" id="day07-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
+
 <div class="pnav">
   <a href="day06.html">&#8592; Day 6 — Sealed-Bid Auction</a>
   <a class="next" href="day08.html">Day 8 — Access Control Patterns &#8594;</a>
@@ -580,8 +646,128 @@ window.addEventListener('scroll',()=>{const d=document.documentElement;document.
 const sba=document.querySelectorAll('.sb-a[data-id]');
 ['intro','cost-model','op-table','vs-evm','type-sizing','pick-type','batch','acl-batch','multi-input','avoid-patterns','redundant','unnecessary','storage','packing','profiling','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
 sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
-document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
-function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect score!':pct>=75?'Great work!':pct>=50?'Good — review the explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
-function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+(function() {
+  var ID      = 'day07';
+  var optEls  = document.querySelectorAll('#quiz .qz-opt');
+  var btnEl   = document.getElementById(ID + '-btn');
+  var progEl  = document.getElementById(ID + '-prog');
+  var total   = document.querySelectorAll('#quiz .qz-q').length;
+
+  function picked() { return document.querySelectorAll('#quiz .qz-q .qz-opt.sel').length; }
+
+  function refresh() {
+    if (btnEl)  btnEl.disabled       = (picked() < total);
+    if (progEl) progEl.textContent   = picked() + ' / ' + total + ' answered';
+  }
+
+  for (var i = 0; i < optEls.length; i++) {
+    optEls[i].addEventListener('click', function() {
+      var q = this.closest('.qz-q');
+      if (!q) return;
+      var s = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < s.length; j++) s[j].classList.remove('sel');
+      this.classList.add('sel');
+      refresh();
+    });
+  }
+
+  if (btnEl) btnEl.addEventListener('click', function() {
+    if (this.disabled) return;
+    render();
+  });
+
+  function render() {
+    var qEls = document.querySelectorAll('#quiz .qz-q');
+    var ok   = 0;
+    var html = '';
+
+    for (var i = 0; i < qEls.length; i++) {
+      var q     = qEls[i];
+      var ans   = q.getAttribute('data-ans');
+      var selEl = q.querySelector('.qz-opt.sel');
+      var selV  = selEl ? selEl.getAttribute('data-v') : null;
+      var isOk  = selV === ans;
+      if (isOk) ok++;
+
+      var qtEl  = q.querySelector('.qz-qtext');
+      var expEl = q.querySelector('.qz-exp');
+      var qText = qtEl  ? qtEl.innerHTML  : '';
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      var rows  = '';
+      var oEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < oEls.length; j++) {
+        var o    = oEls[j];
+        var v    = o.getAttribute('data-v');
+        var lEl  = o.querySelector('.qz-ltr');
+        var lTx  = lEl ? lEl.textContent : v;
+        var cl   = o.cloneNode(true);
+        var lc   = cl.querySelector('.qz-ltr');
+        if (lc)  lc.parentNode.removeChild(lc);
+        var cls  = v === ans ? 'oo-r' : (v === selV ? 'oo-w' : '');
+        rows += '<div class="qz-oco ' + cls + '"><span class="qz-ocltr">' + lTx + '</span>' + cl.innerHTML.trim() + '</div>';
+      }
+
+      html += '<div class="qz-oc ' + (isOk ? 'oc-ok' : 'oc-no') + '">'
+        + '<div class="qz-och"><span class="qz-ocn">Q' + (i+1) + '</span>'
+        + '<div class="qz-ocq">' + qText + '</div>'
+        + '<span class="qz-ocv ' + (isOk?'ocv-ok':'ocv-no') + '">' + (isOk?'✓ Correct':'✗ Wrong') + '</span></div>'
+        + '<div class="qz-ocopts">' + rows + '</div>'
+        + (exp ? '<div class="qz-ocexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var pct  = Math.round(ok / total * 100);
+    var circ = 251.3;
+    var off  = circ - (pct/100)*circ;
+    var rc   = pct===100?'#69ff47':pct>=80?'#00e5ff':pct>=60?'#ffb300':'#ff4d6d';
+    var bdg  = pct===100?'<span class="qz-obadge gb-s">🏆 Perfect Score</span>'
+              :pct>=80  ?'<span class="qz-obadge gb-a">✓ Excellent</span>'
+              :pct>=60  ?'<span class="qz-obadge gb-b">~ Needs Review</span>'
+              :'<span class="qz-obadge gb-c">↺ Try Again</span>';
+    var msg  = pct===100?'Flawless — every concept nailed.'
+              :pct>=80  ?'Strong work. Check any flagged questions.'
+              :pct>=60  ?'Good base — re-read sections for wrong answers.'
+              :'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-oring">'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+rc+'" stroke-width="7"'
+      +' stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"'
+      +' transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/></svg>';
+
+    var ov = document.getElementById(ID+'-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = ID+'-ov';
+      ov.className = 'qz-ov';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="qz-ob">'
+      +'<button class="qz-ob-back" id="'+ID+'-close">← Back to Quiz</button>'
+      +'<span class="qz-ob-pill">'+ok+'/'+total+' correct &nbsp;·&nbsp; '+pct+'%</span>'
+      +'</div>'
+      +'<div class="qz-oh">'+ring
+      +'<div class="qz-oht"><div class="qz-oscore">'+ok+'<sup>/'+total+'</sup></div>'
+      +'<div class="qz-omsg">'+msg+'</div>'+bdg+'</div></div>'
+      +'<div class="qz-ocards">'+html+'</div>';
+
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(ID+'-close').addEventListener('click', function() {
+      ov.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
+    });
+  }
+
+  refresh();
+})();
+
+
 </script>
 </body></html>
