@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 16 — Security Audit Framework | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#07060f;--ink2:#0d0b1a;--ink3:#121020;--plate:#181528;
+  --wire:#262240;--wire2:#343058;
+  --acc:#f97316;--acc2:#ea580c;
+  --green:#4ade80;--rose:#f87171;--amber:#fbbf24;
+  --teal:#2dd4bf;--sky:#60a5fa;--purple:#c084fc;
+  --dim:#66605a;--mid:#b8a898;--bright:#f0e8d8;--white:#fff8f0;
+  --mono:'JetBrains Mono',monospace;
+  --head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--amber));z-index:1000;transition:width .1s}
+
+/* ── TOP BAR ── */
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,6,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-sep{color:var(--wire2)}.tb-cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── LAYOUT ── */
+.page{display:grid;grid-template-columns:224px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 60px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}
+.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(249,115,22,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}
+.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:940px}
+
+/* ── HERO ── */
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(32px,4vw,50px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}
+.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+
+/* ── TYPOGRAPHY ── */
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}
+p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}
+li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}
+li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(249,115,22,.09);padding:2px 6px;border-radius:3px}
+
+/* ── CODE BLOCKS ── */
+.code{background:#060406;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 28px rgba(0,0,0,.5)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}
+.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.82;color:#cfc8b8;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#524840;font-style:italic}
+.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.e{color:#ff5555}.ok{color:#50fa7b}
+
+/* ── CALLOUT BOXES ── */
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}
+.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(249,115,22,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(249,115,22,.06);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(45,212,191,.06);border-color:var(--teal);border-width:2px}.key .box-title{color:var(--teal)}
+.crit{background:rgba(248,113,113,.10);border-color:var(--rose);border-width:2px}.crit .box-title{color:var(--rose)}
+
+/* ── TABLES ── */
+.tw{overflow-x:auto;margin:20px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(249,115,22,.07);padding:1px 5px;border-radius:3px}
+
+/* ── SEVERITY BADGES ── */
+.sev{display:inline-block;padding:2px 9px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
+.sev-c{background:rgba(248,113,113,.18);color:#ff5555;border:1px solid rgba(248,113,113,.3)}
+.sev-h{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+.sev-m{background:rgba(249,115,22,.15);color:#f97316;border:1px solid rgba(249,115,22,.3)}
+.sev-l{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.25)}
+.sev-i{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+
+/* ── VULN CARDS ── */
+.vuln-grid{display:flex;flex-direction:column;gap:18px;margin:22px 0}
+.vuln{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;overflow:hidden}
+.vuln-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.vuln-id{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:1px}
+.vuln-title{font-size:13.5px;font-weight:600;color:var(--white);flex:1}
+.vuln-body{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.vuln-col-label{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.vuln-col pre{padding:12px;font-size:11.5px;line-height:1.7;background:#040208;border-radius:6px;overflow-x:auto}
+.vuln-fix{padding:0 18px 16px}
+.vuln-fix-label{font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.vuln-fix pre{padding:12px;font-size:11.5px;line-height:1.7;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.14);border-radius:6px;overflow-x:auto}
+.vuln-desc{padding:0 18px 16px;font-size:13px;color:var(--mid);line-height:1.74}
+
+/* ── CHECKLIST ── */
+.checklist{display:flex;flex-direction:column;gap:6px;margin:16px 0}
+.cl-item{display:flex;align-items:flex-start;gap:12px;padding:9px 14px;border-radius:7px;background:var(--ink2);border:1px solid var(--wire);font-size:13px;color:var(--mid)}
+.cl-box{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--wire2);flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .13s;display:flex;align-items:center;justify-content:center}
+.cl-box.checked{background:var(--green);border-color:var(--green)}
+.cl-box.checked::after{content:"✓";font-size:10px;color:#000;font-weight:700}
+.cl-cat{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;padding:12px 14px 4px;margin-top:8px}
+
+/* ── AUDIT FLOW STEPS ── */
+.flow{display:flex;flex-direction:column;gap:0;margin:22px 0;position:relative}
+.flow::before{content:'';position:absolute;left:22px;top:24px;bottom:24px;width:2px;background:linear-gradient(to bottom,var(--acc),rgba(249,115,22,.1))}
+.flow-step{display:flex;gap:16px;padding:0 0 22px}
+.flow-num{width:44px;height:44px;border-radius:50%;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:var(--acc);font-family:var(--mono);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+.flow-content{padding-top:8px;flex:1}
+.flow-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:5px}
+.flow-desc{font-size:13px;color:var(--mid);line-height:1.68}
+
+/* ── QUIZ ── */
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(249,115,22,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(249,115,22,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}
+.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}
+.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}
+.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(249,115,22,.04);border:1px solid rgba(249,115,22,.14);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:var(--acc);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(249,115,22,.2)}
+.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}
+.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}
+.score-label{font-size:13px;color:var(--mid)}
+.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* ── PAGE NAV ── */
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}
+.pnav .next{background:rgba(249,115,22,.07);border-color:rgba(249,115,22,.24);color:var(--acc)}
+.pnav .next:hover{background:rgba(249,115,22,.15)}
+
+@media(max-width:860px){
+  .page{grid-template-columns:1fr}.sidebar{display:none}
+  .main{padding:30px 18px 60px}
+  .vuln-body{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="tb-cur">Week 4</span><span class="tb-sep">/</span><span class="tb-cur">Day 16</span>
+  </div>
+  <div class="tb-badge">Week 4 — Production</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="vuln-taxonomy">Vulnerability Taxonomy</a>
+  <a class="sb-a sub" data-id="critical-vulns">Critical</a>
+  <a class="sb-a sub" data-id="high-vulns">High</a>
+  <a class="sb-a sub" data-id="medium-vulns">Medium / Low</a>
+  <a class="sb-a" data-id="audit-process">Audit Process</a>
+  <a class="sb-a sub" data-id="static-analysis">Static Analysis</a>
+  <a class="sb-a sub" data-id="manual-review">Manual Review</a>
+  <a class="sb-a sub" data-id="fuzz-testing">Fuzz Testing</a>
+  <a class="sb-a" data-id="vuln-patterns">Vulnerable Code Patterns</a>
+  <a class="sb-a sub" data-id="v-direct-decrypt">Direct On-Chain Decrypt</a>
+  <a class="sb-a sub" data-id="v-missing-allowthis">Missing allowThis()</a>
+  <a class="sb-a sub" data-id="v-gateway-auth">Gateway Auth Bypass</a>
+  <a class="sb-a sub" data-id="v-public-decrypt">Unauthorized makePubliclyDecryptable</a>
+  <a class="sb-a sub" data-id="v-overflow">Encrypted Overflow</a>
+  <a class="sb-a" data-id="audit-checklist">Audit Checklist</a>
+  <a class="sb-a" data-id="remediation">Remediation Workflow</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+
+<main class="main">
+
+<!-- HERO -->
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128737;&#65039; Day 16 of 20</div>
+  <h1>FHEVM Security<br><em>Audit Framework</em></h1>
+  <p class="lead">FHEVM contracts have an entirely new class of vulnerabilities that standard Solidity auditing tools don't catch — silent ACL failures, unauthorized plaintext reveals, fake Gateway callbacks, and encrypted branch oracles. Today you build a complete audit methodology: vulnerability taxonomy, pattern-based static analysis, manual review checklist, and fuzz strategies specific to FHE contracts.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 5–6 hours</div>
+    <div class="stat">&#128737;&#65039; 5 vuln classes</div>
+    <div class="stat">&#128203; 30-item checklist</div>
+    <div class="stat">&#128269; Full audit workflow</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- VULNERABILITY TAXONOMY -->
+<h2 class="sec" id="vuln-taxonomy">FHEVM Vulnerability Taxonomy</h2>
+
+<p>Every FHEVM bug falls into one of five severity classes. The table below maps severity, root cause, detection method, and the business impact of exploitation.</p>
+
+<div class="tw"><table>
+  <thead><tr><th>Severity</th><th>Vulnerability Class</th><th>Root Cause</th><th>Detection</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="sev sev-c">CRITICAL</span></td>
+      <td>Direct on-chain decryption</td>
+      <td><code>FHE.decrypt()</code> called in a transaction — plaintext exposed in calldata/events</td>
+      <td>AST grep for <code>decrypt(</code> outside off-chain context</td>
+      <td>Complete privacy loss of all encrypted state</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-c">CRITICAL</span></td>
+      <td>Encrypted branch oracle</td>
+      <td><code>if (encBool)</code> or <code>require(encBool)</code> — plaintext leaked by revert/no-revert</td>
+      <td>AST grep: conditional expressions whose argument is <code>ebool</code></td>
+      <td>Binary search oracle — any secret recoverable in log₂(domain) calls</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-h">HIGH</span></td>
+      <td>Missing <code>allowThis()</code></td>
+      <td>FHE op creates new handle; contract doesn't grant itself access → state locked</td>
+      <td>Taint analysis: every FHE.add/sub/mul/select result must have allowThis()</td>
+      <td>Contract permanently unable to use updated encrypted state (DoS)</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-h">HIGH</span></td>
+      <td>Missing <code>allowTransient()</code></td>
+      <td>Cross-contract call without transient grant → callee cannot access handle</td>
+      <td>Call-graph analysis: any external call passing euint argument</td>
+      <td>Cross-contract integration broken; funds locked in receiving contract</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-h">HIGH</span></td>
+      <td>Fake Gateway callback</td>
+      <td>Callback function lacks <code>onlyGateway</code> modifier → any address can trigger settlement</td>
+      <td>Grep: callback functions without modifier; check modifier enforces Gateway address</td>
+      <td>Attacker controls decrypted value, manipulates auction/vote outcomes</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-h">HIGH</span></td>
+      <td>Unauthorized public reveal</td>
+      <td><code>makePubliclyDecryptable()</code> callable by any address</td>
+      <td>Access control analysis on functions calling makePubliclyDecryptable()</td>
+      <td>Anyone can permanently expose any encrypted value</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-m">MEDIUM</span></td>
+      <td>Uninitialized encrypted variable</td>
+      <td>Zero handle used in FHE op → arithmetic on undefined value</td>
+      <td>Grep: euint storage vars without constructor init</td>
+      <td>Silent corruption of encrypted state; wrong computation results</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-m">MEDIUM</span></td>
+      <td>Encrypted arithmetic overflow</td>
+      <td>FHE.add() exceeds euintX max; wraps silently without revert</td>
+      <td>Range analysis: operations on bounded types (euint8, euint16)</td>
+      <td>Balance manipulation, incorrect totals in DeFi applications</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-l">LOW</span></td>
+      <td>Plaintext metadata in events</td>
+      <td>Events emit correlated metadata (amounts, addresses) alongside encrypted handles</td>
+      <td>Event signature analysis for sensitive parameter types</td>
+      <td>Partial privacy leakage via event log correlation analysis</td>
+    </tr>
+    <tr>
+      <td><span class="sev sev-i">INFO</span></td>
+      <td>Stale ACL grants</td>
+      <td>Old handles still have ACL entries after state update; ex-users can still decrypt old values</td>
+      <td>ACL lifecycle tracking: every update should revoke grants on superseded handles</td>
+      <td>Historical data exposure; former employees can read old salaries</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<div class="box crit">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">The Two Catastrophic Anti-Patterns</div>
+    <div class="box-text">
+      These two patterns are critical severity because they completely defeat FHE encryption:<br><br>
+      <strong>1. On-chain decrypt:</strong> <code>FHE.decrypt(secret)</code> in a transaction publishes the plaintext in calldata, accessible to every node and block explorer permanently.<br><br>
+      <strong>2. Encrypted branch oracle:</strong> <code>if (FHE.eq(balance, target))</code> — if the transaction reverts when false and succeeds when true, an attacker binary-searches the secret. A 64-bit value is recoverable in ≤64 transactions.
+    </div>
+  </div>
+</div>
+
+<!-- CRITICAL VULNS -->
+<h3 class="sub" id="critical-vulns">Critical Severity — Examples</h3>
+<div class="vuln-grid">
+
+  <!-- VULN-001 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-c">CRITICAL</span>
+      <span class="vuln-id">FHEVM-001</span>
+      <span class="vuln-title">Direct On-Chain Decryption</span>
+    </div>
+    <div class="vuln-desc">Calling <code>FHE.decrypt()</code> in a transaction or view function emits the plaintext into the EVM execution trace. Block explorers, archive nodes, and anyone replaying the transaction can read the value.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="k">function</span> <span class="f">getBalance</span>()
+  <span class="k">external view returns</span> (<span class="t">uint64</span>) {
+  <span class="c">// CRITICAL: decrypts on-chain</span>
+  <span class="c">// plaintext in calldata!</span>
+  <span class="k">return</span> FHE.<span class="f">decrypt</span>(
+    _balance[msg.sender]
+  );
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed Pattern</div>
+        <pre><span class="k">function</span> <span class="f">getBalance</span>()
+  <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+  <span class="c">// Return encrypted handle</span>
+  <span class="c">// Client decrypts via re-enc</span>
+  <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(
+    _balance[msg.sender]
+  ), <span class="s">"Not authorized"</span>);
+  <span class="k">return</span> _balance[msg.sender];
+}</pre>
+      </div>
+    </div>
+    <div class="vuln-fix">
+      <div class="vuln-fix-label">Remediation</div>
+      <pre><span class="c">// Off-chain decryption via fhevmjs (correct pattern):</span>
+<span class="c">// 1. Call getBalance() — returns euint64 handle</span>
+<span class="c">// 2. instance.createEIP712(pubKey, contractAddr) → signature</span>
+<span class="c">// 3. instance.reencrypt(handle, privKey, pubKey, sig, contract, user)</span>
+<span class="c">// 4. instance.decrypt(contract, reencrypted) → plaintext locally</span>
+<span class="c">// Plaintext NEVER touches the blockchain</span></pre>
+    </div>
+  </div>
+
+  <!-- VULN-002 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-c">CRITICAL</span>
+      <span class="vuln-id">FHEVM-002</span>
+      <span class="vuln-title">Encrypted Branch Oracle (Revert Leak)</span>
+    </div>
+    <div class="vuln-desc">Using an <code>ebool</code> in a conditional statement (if/require) leaks its value via the transaction success/failure. An attacker calls the function repeatedly with different test values to binary-search the secret.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="k">function</span> <span class="f">checkBalance</span>(
+  <span class="t">uint64</span> guess
+) <span class="k">external</span> {
+  <span class="t">ebool</span> eq = FHE.<span class="f">eq</span>(
+    _balance[msg.sender],
+    FHE.<span class="f">asEuint64</span>(guess)
+  );
+  <span class="c">// CRITICAL: revert reveals ebool!</span>
+  <span class="k">require</span>(
+    FHE.<span class="f">decrypt</span>(eq),
+    <span class="s">"Wrong guess"</span>
+  );
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed Pattern</div>
+        <pre><span class="k">function</span> <span class="f">getEncryptedBalance</span>()
+  <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+  <span class="c">// Never compare plaintext guesses</span>
+  <span class="c">// against encrypted values on-chain</span>
+  <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(
+    _balance[msg.sender]
+  ));
+  <span class="k">return</span> _balance[msg.sender];
+  <span class="c">// Client does comparison locally</span>
+}</pre>
+      </div>
+    </div>
+    <div class="vuln-fix">
+      <div class="vuln-fix-label">Attack Vector (64-bit secret recovery)</div>
+      <pre><span class="c">// Attacker script: binary search to find secret value</span>
+<span class="c">// Total calls needed: log₂(2^64) = 64 transactions</span>
+lo = <span class="n">0n</span>; hi = <span class="n">18446744073709551615n</span>;  <span class="c">// uint64 max</span>
+<span class="k">while</span> (lo &lt; hi) {
+  mid = (lo + hi) / <span class="n">2n</span>;
+  <span class="k">try</span> { <span class="k">await</span> contract.<span class="f">checkBalance</span>(mid);    lo = mid + <span class="n">1n</span>; }
+  <span class="k">catch</span> {                                          hi = mid;     }
+}
+<span class="c">// After 64 calls: lo === secret value</span></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- HIGH VULNS -->
+<h3 class="sub" id="high-vulns">High Severity — Examples</h3>
+<div class="vuln-grid">
+
+  <!-- VULN-003 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-h">HIGH</span>
+      <span class="vuln-id">FHEVM-003</span>
+      <span class="vuln-title">Missing allowThis() After FHE Operation</span>
+    </div>
+    <div class="vuln-desc">Every FHE operation that produces a new handle creates a handle with <em>zero</em> ACL entries. If the contract does not immediately call <code>FHE.allowThis()</code>, it permanently loses access to the result — DoS on all subsequent operations.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="k">function</span> <span class="f">deposit</span>(
+  <span class="t">externalEuint64</span> calldata enc,
+  <span class="t">bytes</span>           calldata prf
+) <span class="k">external</span> {
+  <span class="t">euint64</span> amt = FHE.<span class="f">fromExternal</span>(enc, prf);
+  <span class="c">// ❌ new handle — contract has NO access!</span>
+  _bal[msg.sender] = FHE.<span class="f">add</span>(
+    _bal[msg.sender], amt
+  );
+  <span class="c">// Next call: "ACL: not allowed"</span>
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed</div>
+        <pre><span class="k">function</span> <span class="f">deposit</span>(
+  <span class="t">externalEuint64</span> calldata enc,
+  <span class="t">bytes</span>           calldata prf
+) <span class="k">external</span> {
+  <span class="t">euint64</span> amt = FHE.<span class="f">fromExternal</span>(enc, prf);
+  <span class="t">euint64</span> newBal = FHE.<span class="f">add</span>(
+    _bal[msg.sender], amt
+  );
+  <span class="c">// ✅ grant access to new handle</span>
+  FHE.<span class="f">allowThis</span>(newBal);
+  FHE.<span class="f">allow</span>(newBal, msg.sender);
+  _bal[msg.sender] = newBal;
+}</pre>
+      </div>
+    </div>
+    <div class="vuln-fix">
+      <div class="vuln-fix-label">Detection Rule</div>
+      <pre><span class="c">// Taint rule: every assignment of a new euint variable must be</span>
+<span class="c">// followed (in the same function body) by allowThis() on that variable.</span>
+<span class="c">// Slither custom detector pseudocode:</span>
+<span class="k">for</span> node <span class="k">in</span> cfg:
+  <span class="k">if</span> node.is_fhe_op():        <span class="c">// FHE.add/sub/mul/select/fromExternal</span>
+    result_var = node.lhs
+    <span class="k">if</span> <span class="k">not</span> result_var.has_downstream(FHE.allowThis):
+      report(<span class="s">"FHEVM-003: missing allowThis on {result_var}"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- VULN-004 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-h">HIGH</span>
+      <span class="vuln-id">FHEVM-004</span>
+      <span class="vuln-title">Gateway Callback Without onlyGateway</span>
+    </div>
+    <div class="vuln-desc">A callback function that settles an auction, vote, or liquidation — without the <code>onlyGateway</code> modifier — allows any address to invoke it with a crafted plaintext value, completely bypassing FHE decryption.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="c">// Anyone can call with fake winner!</span>
+<span class="k">function</span> <span class="f">settleAuction</span>(
+  <span class="t">uint256</span> reqId,
+  <span class="t">address</span> winner,
+  <span class="t">uint64</span>  amount
+) <span class="k">external</span> {
+  <span class="c">// ❌ No modifier — attacker calls</span>
+  <span class="c">// this directly with fake values</span>
+  _winner = winner;
+  _amount = amount;
+  payable(winner).<span class="f">transfer</span>(
+    address(<span class="k">this</span>).balance
+  );
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed</div>
+        <pre><span class="c">// Only Gateway contract can call</span>
+<span class="k">function</span> <span class="f">settleAuction</span>(
+  <span class="t">uint256</span> reqId,
+  <span class="t">address</span> winner,
+  <span class="t">uint64</span>  amount
+<span class="c">// ✅ modifier enforces Gateway addr</span>
+) <span class="k">external onlyGateway</span> {
+  _winner = winner;
+  _amount = amount;
+  payable(winner).<span class="f">transfer</span>(
+    address(<span class="k">this</span>).balance
+  );
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- VULN-005 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-h">HIGH</span>
+      <span class="vuln-id">FHEVM-005</span>
+      <span class="vuln-title">Unauthorized makePubliclyDecryptable()</span>
+    </div>
+    <div class="vuln-desc"><code>FHE.makePubliclyDecryptable()</code> permanently removes privacy from a ciphertext. If any address can call a function that invokes it, they can permanently reveal any encrypted value in the contract.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="c">// Anyone can expose any salary!</span>
+<span class="k">function</span> <span class="f">revealSalary</span>(
+  <span class="t">address</span> employee
+) <span class="k">external</span> {
+  <span class="c">// ❌ No access control</span>
+  FHE.<span class="f">makePubliclyDecryptable</span>(
+    salaries[employee]
+  );
+  Gateway.<span class="f">requestDecryption</span>(
+    salaries[employee], ...
+  );
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed</div>
+        <pre><span class="k">function</span> <span class="f">revealSalary</span>(
+  <span class="t">address</span> employee
+) <span class="k">external</span> {
+  <span class="c">// ✅ Only the employee themselves</span>
+  <span class="c">// can reveal their own salary</span>
+  <span class="k">require</span>(
+    msg.sender == employee,
+    <span class="s">"Not your salary"</span>
+  );
+  FHE.<span class="f">makePubliclyDecryptable</span>(
+    salaries[employee]
+  );
+  Gateway.<span class="f">requestDecryption</span>(...);
+}</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MEDIUM/LOW VULNS -->
+<h3 class="sub" id="medium-vulns">Medium and Low Severity</h3>
+<div class="vuln-grid">
+
+  <!-- VULN-006 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-m">MEDIUM</span>
+      <span class="vuln-id">FHEVM-006</span>
+      <span class="vuln-title">Uninitialized Encrypted Variable</span>
+    </div>
+    <div class="vuln-desc">A <code>euint64</code> storage variable defaults to zero — a valid-looking handle that wraps the value 0. Any FHE operation on this uninitialized value silently propagates 0 through the computation, corrupting results.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="k">contract</span> <span class="t">Counter</span> {
+  <span class="t">euint64</span> <span class="k">private</span> count;
+  <span class="c">// ❌ count is a zero handle</span>
+  <span class="c">// (not the same as euint64(0))</span>
+
+  <span class="k">function</span> <span class="f">increment</span>() <span class="k">external</span> {
+    count = FHE.<span class="f">add</span>(
+      count,           <span class="c">// uninitialized!</span>
+      FHE.<span class="f">asEuint64</span>(<span class="n">1</span>)
+    );
+    FHE.<span class="f">allowThis</span>(count);
+  }
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed</div>
+        <pre><span class="k">contract</span> <span class="t">Counter</span> {
+  <span class="t">euint64</span> <span class="k">private</span> count;
+  <span class="t">bool</span>    <span class="k">private</span> initialized;
+
+  <span class="k">constructor</span>() {
+    <span class="c">// ✅ explicit initialization</span>
+    count = FHE.<span class="f">asEuint64</span>(<span class="n">0</span>);
+    FHE.<span class="f">allowThis</span>(count);
+    initialized = <span class="k">true</span>;
+  }
+
+  <span class="k">function</span> <span class="f">increment</span>() <span class="k">external</span> {
+    <span class="k">require</span>(initialized);
+    count = FHE.<span class="f">add</span>(count, FHE.<span class="f">asEuint64</span>(<span class="n">1</span>));
+    FHE.<span class="f">allowThis</span>(count);
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- VULN-007 -->
+  <div class="vuln">
+    <div class="vuln-head">
+      <span class="sev sev-m">MEDIUM</span>
+      <span class="vuln-id">FHEVM-007</span>
+      <span class="vuln-title">Encrypted Arithmetic Overflow / Wraparound</span>
+    </div>
+    <div class="vuln-desc">FHE arithmetic wraps silently on overflow without reverting. An attacker who can add values to an <code>euint8</code> balance can wrap it from 255 to 0, or manipulate a small-type accumulator to arbitrary values.</div>
+    <div class="vuln-body">
+      <div>
+        <div class="vuln-col-label">&#10060; Vulnerable</div>
+        <pre><span class="t">euint8</span> <span class="k">private</span> score;  <span class="c">// max 255</span>
+
+<span class="k">function</span> <span class="f">addScore</span>(
+  <span class="t">externalEuint8</span> calldata enc,
+  <span class="t">bytes</span>          calldata prf
+) <span class="k">external</span> {
+  <span class="t">euint8</span> pts = FHE.<span class="f">fromExternal</span>(enc, prf);
+  <span class="c">// ❌ no overflow guard</span>
+  <span class="c">// score + pts wraps silently at 256</span>
+  score = FHE.<span class="f">add</span>(score, pts);
+  FHE.<span class="f">allowThis</span>(score);
+}</pre>
+      </div>
+      <div>
+        <div class="vuln-col-label">&#10003; Fixed — Saturating Add</div>
+        <pre><span class="t">euint8</span> <span class="k">private</span> score;
+
+<span class="k">function</span> <span class="f">addScore</span>(
+  <span class="t">externalEuint8</span> calldata enc,
+  <span class="t">bytes</span>          calldata prf
+) <span class="k">external</span> {
+  <span class="t">euint8</span> pts = FHE.<span class="f">fromExternal</span>(enc, prf);
+  <span class="t">euint8</span> sum = FHE.<span class="f">add</span>(score, pts);
+  <span class="c">// ✅ cap at 255 using FHE.select</span>
+  <span class="c">// if sum < score: overflow occurred</span>
+  <span class="t">ebool</span>  overflow = FHE.<span class="f">lt</span>(sum, score);
+  <span class="t">euint8</span> max255   = FHE.<span class="f">asEuint8</span>(<span class="n">255</span>);
+  score = FHE.<span class="f">select</span>(overflow, max255, sum);
+  FHE.<span class="f">allowThis</span>(score);
+}</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- AUDIT PROCESS -->
+<h2 class="sec" id="audit-process">Audit Process</h2>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div class="flow-content">
+      <div class="flow-title">Scope &amp; Dependency Mapping</div>
+      <div class="flow-desc">List all contracts, identify which import FHE.sol and GatewayCaller.sol. Map every function that: accepts <code>externalEuintX</code> parameters, calls FHE operations, calls Gateway, emits events containing encrypted handles, or calls external contracts with euint arguments. This is your attack surface.</div>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div class="flow-content">
+      <div class="flow-title">Static Analysis Pass</div>
+      <div class="flow-desc">Run automated grep rules and Slither custom detectors (see below) to catch FHEVM-001 through FHEVM-007. This pass catches ~70% of issues mechanically — false positive rate is low because the patterns are very specific.</div>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div class="flow-content">
+      <div class="flow-title">Manual Review — Handle Lifecycle</div>
+      <div class="flow-desc">Trace every encrypted variable from creation (constructor / fromExternal) through every write path to every read path. Verify allowThis() and allow() are called correctly at every point where the handle changes. Use the taint graph: every handle must have an unbroken chain of ACL grants.</div>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">4</div>
+    <div class="flow-content">
+      <div class="flow-title">Access Control Audit</div>
+      <div class="flow-desc">For every function calling <code>makePubliclyDecryptable()</code> or <code>requestDecryption()</code>: verify caller restrictions are correct and minimal. For every callback function: verify the <code>onlyGateway</code> modifier is present and the modifier correctly checks <code>msg.sender == GATEWAY_ADDRESS</code>.</div>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">5</div>
+    <div class="flow-content">
+      <div class="flow-title">Fuzz Testing</div>
+      <div class="flow-desc">Run the invariant test suite (from Day 10) with Foundry's fuzz runner against 10,000+ random input sequences. Key invariants: sum of encrypted balances == totalSupply, all handles have allowThis(), no handle is zero after initialization, Gateway callback can only be triggered once per request ID.</div>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">6</div>
+    <div class="flow-content">
+      <div class="flow-title">Report &amp; Remediation</div>
+      <div class="flow-desc">Produce findings grouped by severity. For each finding: FHEVM vulnerability class, affected function, proof-of-concept (exploit code or test), and the recommended fix. Require developer fixes with re-audit of changed functions before deployment sign-off.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATIC ANALYSIS -->
+<h3 class="sub" id="static-analysis">Static Analysis — Grep Rules</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Bash</span><span class="fname">audit/static-scan.sh</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">#!/bin/bash
+# FHEVM Static Analysis Script
+# Run from project root: bash audit/static-scan.sh contracts/</span>
+
+TARGET=${<span class="n">1</span>:-contracts/}
+FINDINGS=<span class="n">0</span>
+
+<span class="f">check</span>() {
+  <span class="k">local</span> SEVERITY=$<span class="n">1</span> RULE=$<span class="n">2</span> PATTERN=$<span class="n">3</span> MSG=$<span class="n">4</span>
+  <span class="k">local</span> RESULTS=$(grep -rn "$PATTERN" "$TARGET" --include="*.sol" 2>/dev/null)
+  <span class="k">if</span> [ -n "$RESULTS" ]; then
+    echo ""
+    echo "[$SEVERITY] $RULE: $MSG"
+    echo "$RESULTS" | <span class="k">while</span> read line; <span class="k">do</span> echo "  $line"; <span class="k">done</span>
+    FINDINGS=$((FINDINGS + 1))
+  fi
+}
+
+echo "=== FHEVM Security Scan ==="
+echo "Target: $TARGET"
+echo ""
+
+<span class="c"># CRITICAL checks</span>
+<span class="f">check</span> "CRITICAL" "FHEVM-001" \
+  'FHE\.decrypt(' \
+  "On-chain decryption detected — plaintext exposed in calldata"
+
+<span class="f">check</span> "CRITICAL" "FHEVM-002a" \
+  'if.*ebool\|if.*FHE\.eq\|if.*FHE\.lt\|if.*FHE\.gt\|if.*FHE\.lte\|if.*FHE\.gte' \
+  "Encrypted bool used in branch condition — revert oracle vulnerability"
+
+<span class="f">check</span> "CRITICAL" "FHEVM-002b" \
+  'require.*FHE\.\|require.*ebool' \
+  "Encrypted value used in require — revert oracle vulnerability"
+
+<span class="c"># HIGH checks</span>
+<span class="f">check</span> "HIGH" "FHEVM-004" \
+  'function.*callback.*external\b' \
+  "External callback function — verify onlyGateway modifier is present"
+
+<span class="f">check</span> "HIGH" "FHEVM-005" \
+  'makePubliclyDecryptable' \
+  "makePubliclyDecryptable usage — verify access control on caller"
+
+<span class="f">check</span> "HIGH" "FHEVM-008" \
+  'allowTransient\|allowTransient' \
+  "Verify allowTransient() is called BEFORE every cross-contract call with euint arg"
+
+<span class="c"># MEDIUM checks</span>
+<span class="f">check</span> "MEDIUM" "FHEVM-006" \
+  'euint[0-9]* private [a-zA-Z]' \
+  "euint storage variable — verify initialized in constructor"
+
+<span class="f">check</span> "INFO" "FHEVM-009" \
+  'emit.*[Tt]ransfer\|emit.*[Bb]alance\|emit.*[Aa]mount' \
+  "Event may emit amount metadata — verify no correlation with encrypted values"
+
+echo ""
+echo "=== Scan Complete: $FINDINGS rule(s) triggered ==="
+echo "NOTE: This scan detects patterns, not logic errors."
+echo "All triggered rules require manual verification."</pre>
+</div>
+
+<!-- MANUAL REVIEW -->
+<h3 class="sub" id="manual-review">Manual Review — Handle Lifecycle Tracing</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">audit/handle-trace.ts — ACL verification in tests</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+
+<span class="k">const</span> ACL_ABI = [
+  <span class="s">"function isAllowed(bytes32 handle, address account) view returns (bool)"</span>
+];
+
+<span class="c">/**
+ * Verify that a handle has correct ACL grants after an operation.
+ * Call this in audit tests after every state-changing function.
+ *
+ * @param handle        The euint handle to check (as bigint)
+ * @param contractAddr  The contract that should have allowThis()
+ * @param authorizedUsers  Addresses that should have allow()
+ * @param unauthorizedUsers  Addresses that should NOT have access
+ */</span>
+<span class="k">export async function</span> <span class="f">auditHandleACL</span>(
+  handle:             bigint,
+  contractAddr:       <span class="t">string</span>,
+  authorizedUsers:    <span class="t">string</span>[],
+  unauthorizedUsers:  <span class="t">string</span>[]
+) {
+  <span class="k">const</span> acl = <span class="k">new</span> ethers.Contract(
+    <span class="s">"0x339EcE85B9E11a3A3AA557582784a15d7F82AAf2"</span>,
+    ACL_ABI,
+    ethers.provider
+  );
+  <span class="k">const</span> failures: <span class="t">string</span>[] = [];
+
+  <span class="c">// Contract must always have allowThis()</span>
+  <span class="k">if</span> (!(<span class="k">await</span> acl.<span class="f">isAllowed</span>(handle, contractAddr))) {
+    failures.<span class="f">push</span>(`FAIL: contract ${contractAddr} missing allowThis()`);
+  }
+
+  <span class="c">// Authorized users must have access</span>
+  <span class="k">for</span> (<span class="k">const</span> user <span class="k">of</span> authorizedUsers) {
+    <span class="k">if</span> (!(<span class="k">await</span> acl.<span class="f">isAllowed</span>(handle, user))) {
+      failures.<span class="f">push</span>(`FAIL: authorized user ${user} missing allow()`);
+    }
+  }
+
+  <span class="c">// Unauthorized users must NOT have access</span>
+  <span class="k">for</span> (<span class="k">const</span> addr <span class="k">of</span> unauthorizedUsers) {
+    <span class="k">if</span> (<span class="k">await</span> acl.<span class="f">isAllowed</span>(handle, addr)) {
+      failures.<span class="f">push</span>(`FAIL: unauthorized address ${addr} has access`);
+    }
+  }
+
+  <span class="k">if</span> (failures.length > <span class="n">0</span>) {
+    console.<span class="f">error</span>(<span class="s">"\n[AUDIT FAILURE] Handle ACL violations:"</span>);
+    failures.<span class="f">forEach</span>(f => console.<span class="f">error</span>(<span class="s">" "</span>, f));
+    <span class="k">throw new</span> Error(<span class="s">`${failures.length} ACL violation(s) found`</span>);
+  }
+
+  console.<span class="f">log</span>(<span class="s">`[AUDIT OK] Handle ACL correct — ${authorizedUsers.length} authorized, ${unauthorizedUsers.length} excluded`</span>);
+}</pre>
+</div>
+
+<!-- FUZZ TESTING -->
+<h3 class="sub" id="fuzz-testing">Fuzz Testing — FHEVM Invariants</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">audit/fuzz.invariants.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+
+<span class="c">/**
+ * Fuzz test: randomly sequence deposits + transfers + withdrawals
+ * and verify FHEVM-specific invariants after every operation.
+ *
+ * Run with: HARDHAT_FHEVM_MOCK=true npx hardhat test audit/fuzz.invariants.test.ts
+ */</span>
+describe(<span class="s">"FHEVM Invariant Fuzz — ConfidentialERC20"</span>, () => {
+  <span class="k">const</span> RUNS = <span class="n">500</span>;  <span class="c">// increase for deeper coverage</span>
+
+  it(<span class="s">`survives ${RUNS} random operations with all invariants held`</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> [owner, alice, bob, carol] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> signers = [alice, bob, carol];
+
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"ConfidentialERC20"</span>);
+    <span class="k">const</span> token = <span class="k">await</span> F.<span class="f">deploy</span>(<span class="s">"FuzzToken"</span>, <span class="s">"FZZ"</span>);
+    <span class="k">const</span> addr   = <span class="k">await</span> token.<span class="f">getAddress</span>();
+
+    <span class="c">// Seed balances</span>
+    <span class="k">for</span> (<span class="k">const</span> s <span class="k">of</span> signers) <span class="k">await</span> token.<span class="f">mint</span>(s.address, <span class="n">1000n</span>);
+
+    <span class="k">let</span> totalMinted = <span class="n">3000n</span>;
+
+    <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i < RUNS; i++) {
+      <span class="c">// Pick random operation: 0=mint, 1=transfer, 2=burn</span>
+      <span class="k">const</span> op   = Math.<span class="f">floor</span>(Math.<span class="f">random</span>() * <span class="n">3</span>);
+      <span class="k">const</span> from = signers[Math.<span class="f">floor</span>(Math.<span class="f">random</span>() * signers.length)];
+      <span class="k">const</span> to   = signers[Math.<span class="f">floor</span>(Math.<span class="f">random</span>() * signers.length)];
+      <span class="k">const</span> amt  = BigInt(Math.<span class="f">floor</span>(Math.<span class="f">random</span>() * <span class="n">100</span>));
+
+      <span class="k">try</span> {
+        <span class="k">if</span> (op === <span class="n">0</span>) {
+          <span class="k">await</span> token.<span class="f">connect</span>(owner).<span class="f">mint</span>(from.address, amt);
+          totalMinted += amt;
+        } <span class="k">else if</span> (op === <span class="n">1</span>) {
+          <span class="k">const</span> { handles: h, inputProof: p } =
+            <span class="k">await</span> <span class="f">encUint64</span>(amt, addr, from.address);
+          <span class="k">await</span> token.<span class="f">connect</span>(from).<span class="f">transfer</span>(to.address, h[<span class="n">0</span>], p);
+        }
+      } <span class="k">catch</span> {} <span class="c">// silent failures OK — cap-not-revert pattern</span>
+
+      <span class="c">// ─── INVARIANT CHECKS after every operation ───</span>
+      <span class="k">const</span> supply = <span class="k">await</span> token.<span class="f">totalSupply</span>();
+      expect(supply).<span class="f">to</span>.<span class="f">equal</span>(totalMinted, <span class="s">`Run ${i}: totalSupply mismatch`</span>);
+
+      <span class="k">for</span> (<span class="k">const</span> s <span class="k">of</span> signers) {
+        <span class="k">const</span> handle = <span class="k">await</span> token.<span class="f">connect</span>(s).<span class="f">balanceOf</span>(s.address);
+        <span class="c">// Verify contract ACL is maintained</span>
+        <span class="k">const</span> ok = <span class="k">await</span> acl.<span class="f">isAllowed</span>(handle, addr);
+        expect(ok).<span class="f">to</span>.<span class="f">be</span>.<span class="k">true</span>, <span class="s">`Run ${i}: ${s.address} balance handle lost allowThis`</span>;
+      }
+    }
+    console.<span class="f">log</span>(<span class="s">`Fuzz complete: ${RUNS} operations, all invariants held`</span>);
+  });
+});</pre>
+</div>
+
+<!-- AUDIT CHECKLIST -->
+<h2 class="sec" id="audit-checklist">30-Item Audit Checklist</h2>
+<p>Work through every item before signing off on a FHEVM contract. Click each item to mark it complete.</p>
+
+<div id="checklist">
+  <div class="cl-cat">CRITICAL — Privacy Violations</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No <code>FHE.decrypt()</code> call exists in any transaction-executing function (only off-chain via fhevmjs)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No <code>ebool</code> or FHE comparison result is used as an <code>if</code> / <code>require</code> / ternary condition</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No FHE result is directly returned as plaintext to the caller</span></div>
+
+  <div class="cl-cat">HIGH — ACL Correctness</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every <code>FHE.add / sub / mul / div / select / fromExternal</code> result has <code>FHE.allowThis()</code> in the same function</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every user-facing encrypted storage variable has <code>FHE.allow(handle, user)</code> after every write path</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every cross-contract call passing a <code>euint</code> argument is preceded by <code>FHE.allowTransient(handle, contractB)</code></span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Persistent cross-contract handle sharing uses <code>FHE.allow(handle, contractB)</code> not allowTransient</span></div>
+
+  <div class="cl-cat">HIGH — Gateway Security</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every Gateway callback function has the <code>onlyGateway</code> modifier</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>The <code>onlyGateway</code> modifier checks <code>msg.sender == GATEWAY_ADDRESS</code> (not just a role flag)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every callback stores and validates the <code>requestId</code> to prevent double-execution</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span><code>requestId</code> → entity mapping is cleared after callback to prevent replay</span></div>
+
+  <div class="cl-cat">HIGH — Public Reveal Control</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Every function calling <code>makePubliclyDecryptable()</code> has proper access control (owner-only or user-only)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span><code>makePubliclyDecryptable()</code> is only called on handles that legitimately need public decryption (aggregates, not individual positions)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>There is no path where an unauthorized user can trigger public reveal of another user's data</span></div>
+
+  <div class="cl-cat">MEDIUM — Arithmetic Safety</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>All <code>euint8 / euint16</code> arithmetic has overflow guards (<code>FHE.select</code> saturating pattern)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>All subtraction has underflow guards (<code>FHE.select(gte(a,b), FHE.sub(a,b), zero)</code>)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>All <code>euint64 / euint128</code> multiplications won't overflow given domain constraints</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No <code>FHE.div()</code> used in hot paths (high gas cost — verify alternatives were considered)</span></div>
+
+  <div class="cl-cat">MEDIUM — Initialization</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>All <code>euint</code> storage variables are explicitly initialized (constructor or first-use guard)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No FHE operation is performed on a handle that could be zero (uninitialized)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Proxy contracts properly reinitialize encrypted storage after upgrades</span></div>
+
+  <div class="cl-cat">MEDIUM — Input Validation</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span><code>FHE.fromExternal(enc, proof)</code> is used for all user-supplied encrypted inputs (not raw handle casting)</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>No proof is cached and reused across different contract addresses or callers</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Type sizes are appropriate (don't use <code>euint128</code> where <code>euint32</code> suffices — unnecessary gas cost)</span></div>
+
+  <div class="cl-cat">LOW — Information Leakage</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Events do not emit correlated metadata that would allow deanonymization of encrypted amounts</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Function call patterns (which functions are called, when, by whom) do not leak sensitive information</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Gas usage differences between branches do not create timing side channels</span></div>
+
+  <div class="cl-cat">TESTING</div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Unit test suite runs in both mock mode and real-FHE mode</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Invariant fuzz test runs ≥500 random operation sequences</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>ACL invariant is verified after every state-changing operation in integration tests</span></div>
+  <div class="cl-item"><div class="cl-box" onclick="toggleCheck(this)"></div><span>Static analysis scan (FHEVM-001 through FHEVM-009) passes with zero findings</span></div>
+</div>
+
+<div id="cl-progress" style="margin-top:14px;padding:12px 16px;background:var(--ink2);border:1px solid var(--wire);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--dim)">
+  Progress: <span id="cl-count">0</span> / 30 items complete
+  <div style="margin-top:8px;height:4px;background:var(--wire);border-radius:2px;overflow:hidden">
+    <div id="cl-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--acc),var(--amber));transition:width .3s;border-radius:2px"></div>
+  </div>
+</div>
+
+<!-- REMEDIATION WORKFLOW -->
+<h2 class="sec" id="remediation">Remediation Workflow</h2>
+
+<div class="tw"><table>
+  <thead><tr><th>Finding Severity</th><th>Required Before Deploy</th><th>Verification</th></tr></thead>
+  <tbody>
+    <tr><td><span class="sev sev-c">CRITICAL</span></td><td>Fix &amp; full re-audit of affected contracts</td><td>Re-run static scan + full test suite + auditor sign-off</td></tr>
+    <tr><td><span class="sev sev-h">HIGH</span></td><td>Fix &amp; targeted re-audit of changed functions</td><td>New unit tests covering the fixed path + ACL invariant test</td></tr>
+    <tr><td><span class="sev sev-m">MEDIUM</span></td><td>Fix or accepted risk with documentation</td><td>Test coverage for affected code paths</td></tr>
+    <tr><td><span class="sev sev-l">LOW</span></td><td>Optional — can ship with documented exceptions</td><td>Note in security.md with rationale</td></tr>
+    <tr><td><span class="sev sev-i">INFO</span></td><td>No blocker — recommendation only</td><td>Developer acknowledgement</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box tip">
+  <span class="box-ico">&#9989;</span>
+  <div class="box-inner">
+    <div class="box-title">Pre-Deployment Security Gate</div>
+    <div class="box-text">
+      Zero CRITICAL or HIGH findings. All 30 checklist items marked. Static scan returns zero results. Fuzz test passes 500+ runs. Tests pass in both mock and real-FHE mode. Gas report reviewed for unexpected FHE.div() usage. Auditor has signed the final report.
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 16 Quiz — Security Audit Framework</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">Why is using an <code>ebool</code> in an <code>if</code> statement classified as CRITICAL severity — even though no explicit <code>FHE.decrypt()</code> is called?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Because <code>if (ebool)</code> automatically triggers on-chain decryption internally</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The transaction revert/success itself encodes the boolean value — an attacker binary-searches any encrypted value by calling the function repeatedly with different test values, recovering a 64-bit secret in just 64 calls</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>ebool types cannot be used in conditionals due to Solidity type restrictions</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It creates a gas difference that leaks the bit width of the encrypted value</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> This is the revert oracle attack. When <code>if (FHE.eq(secret, guess))</code> is used, a false guess reverts (or takes a different code path) while a true guess succeeds. The attacker observes the outcome (revert vs success) as a 1-bit oracle. With binary search on a 64-bit value space, they recover the secret in exactly 64 transactions.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">What is the correct way to return an encrypted value to a user for off-chain reading?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Call <code>FHE.decrypt(handle)</code> and return the plaintext <code>uint64</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Emit the handle in an event so the user can find it in logs</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Store it in a public mapping so the user can read it directly</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Return the <code>euint64</code> handle from a view function (after verifying ACL with <code>FHE.isSenderAllowed()</code>), then the client uses fhevmjs re-encryption to decrypt locally — plaintext never touches the chain</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The correct flow: 1) contract returns the euint handle, 2) client calls instance.createEIP712() to create a re-encryption request signed by the user, 3) client calls instance.reencrypt() which asks the KMS to re-encrypt the ciphertext under the client's ephemeral public key, 4) client decrypts locally. The plaintext is only ever on the client device.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">A contract has a callback function <code>settleAuction(uint256 reqId, address winner)</code> that transfers ETH to the winner. What is the severity if it lacks <code>onlyGateway</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>HIGH — any address can call settleAuction with a crafted winner address, draining the contract's ETH balance without any valid decryption having occurred</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>MEDIUM — only the owner can call it in practice since only the owner initiates the auction</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>LOW — the Gateway will still call it correctly regardless</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>CRITICAL — it also decrypts the value on-chain</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Without onlyGateway, any address can call settleAuction(reqId, attackerAddress) directly, bypassing the entire FHE decryption process. The attacker sets themselves as the winner and receives all the ETH. This is a complete funds drain vulnerability. The Gateway modifier is the only thing separating "FHE-protected settlement" from "free ETH for anyone."</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">Why is an <em>uninitialized</em> <code>euint64</code> storage variable a MEDIUM severity issue rather than just an edge case?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Because uninitialized variables always revert when used in FHE operations</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Because accessing an uninitialized variable depletes the contract's gas allowance</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A zero handle represents an uninitialized state, not the value zero — FHE arithmetic on it produces silently corrupted results without any error or revert. The bug is invisible in tests that don't check the decrypted value.</span></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It causes the constructor to fail silently, leaving the contract in a broken state</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The default value of a euint64 storage variable is the zero handle — which is distinct from FHE.asEuint64(0). Operations on the zero handle may produce nonsense values or silently wrap. Unlike a plaintext uint that defaults to 0 and is usable, the zero handle is genuinely uninitialized and must be explicitly set with FHE.asEuint64(initialValue) before use.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">What is the purpose of storing the <code>requestId → entityId</code> mapping in a Gateway callback setup, and what bug does NOT storing it create?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It is for gas optimization — storing it avoids re-computation in the callback</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It prevents duplicate requests being sent to the Gateway</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It allows the callback to be retried if it fails the first time</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The callback needs to know <em>which</em> auction/vote/proposal the decrypted value belongs to. Without the mapping, the callback either always updates the wrong entity or requires an unsafe assumption that there's only one active request at a time</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> requestDecryption() returns a uint256 requestId. The callback receives this requestId as its first parameter. If you don't store reqId→auctionId (or proposalId, etc.), the callback has no way to know which entity to update. The bug: if multiple auctions are running concurrently, callbacks may settle the wrong auction, or all callbacks may overwrite a single shared state variable.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">How does the static analysis script detect the encrypted branch oracle vulnerability (FHEVM-002)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It compiles the contract and checks the bytecode for conditional jumps</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It greps the Solidity source for <code>if</code>/<code>require</code> expressions whose argument contains an <code>ebool</code> type or a call to <code>FHE.eq/lt/gt/lte/gte</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It runs the contract with test inputs and monitors which branches are taken</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It checks that every <code>ebool</code> variable is only used as a <code>FHE.select()</code> argument</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The static scan uses regex patterns to find <code>if.*ebool</code>, <code>if.*FHE.eq</code>, <code>require.*FHE.</code> in Solidity source. This is a low false-positive rule because legitimate uses of FHE comparisons almost always go through FHE.select(), not if/require. Any hit requires manual review to confirm whether it's an oracle vulnerability.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">In the saturating addition pattern for overflow protection, how does <code>FHE.select(overflow, max255, sum)</code> detect that overflow occurred?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>After <code>sum = FHE.add(score, pts)</code>, if overflow occurred, <code>sum</code> wraps and becomes less than <code>score</code>. So <code>FHE.lt(sum, score)</code> is true only when overflow happened — this ebool drives the select</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>FHE.add() sets a carry flag that FHE.lt() reads</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The overflow is detected by checking if <code>pts > 255 - score</code> before the addition</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>FHE.add() returns a tuple with the sum and an overflow indicator</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> This is the modular-arithmetic overflow detection trick: if a + b overflows euint8, the result wraps modulo 256 and becomes smaller than a. So (a + b) &lt; a is true if and only if overflow occurred. Applying this: sum = add(score, pts); overflow = lt(sum, score). If overflow is true, we use max (255); if false, we use sum. All in FHE — no plaintext values are revealed.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">A contract passes an audit with zero findings on the 30-item checklist. Is it safe to deploy to mainnet?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Yes — the checklist covers all FHEVM vulnerability classes</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Yes, if the fuzz test also passed</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Not necessarily — the checklist covers FHEVM-specific issues, but standard Solidity vulnerabilities (reentrancy, integer overflow in plaintext code, access control on non-FHE functions, oracle manipulation) still require a standard smart contract audit</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>No — audits can never guarantee safety</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The FHEVM checklist only covers FHE-specific issues. A confidential token contract still has standard vulnerability classes: reentrancy in withdraw functions, missing access control on admin functions, front-running of non-encrypted parameters, oracle price manipulation, etc. A complete audit requires both the FHEVM-specific checklist AND a standard Solidity security review (Slither, manual code review, reentrancy analysis).</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day15.html">&#8592; Day 15 — Privacy-Preserving DeFi</a>
+  <a class="next" href="day17.html">Day 17 — Advanced Gas Optimization &#8594;</a>
+</div>
+</main>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+
+// Sidebar highlight
+const sba = document.querySelectorAll('.sb-a[data-id]');
+['intro','vuln-taxonomy','critical-vulns','high-vulns','medium-vulns',
+ 'audit-process','static-analysis','manual-review','fuzz-testing',
+ 'vuln-patterns','v-direct-decrypt','v-missing-allowthis','v-gateway-auth',
+ 'v-public-decrypt','v-overflow','audit-checklist','remediation','quiz'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        sba.forEach(l => l.classList.remove('on'));
+        const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+        if (m) m.classList.add('on');
+      }
+    });
+  }, { rootMargin: '-18% 0px -68% 0px' }).observe(el);
+});
+sba.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+
+// Checklist
+function toggleCheck(box) {
+  box.classList.toggle('checked');
+  const total   = document.querySelectorAll('.cl-box').length;
+  const checked = document.querySelectorAll('.cl-box.checked').length;
+  document.getElementById('cl-count').textContent = checked;
+  document.getElementById('cl-bar').style.width = (checked / total * 100) + '%';
+}
+
+// Quiz
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const picked = document.querySelectorAll('.q-opt.picked').length;
+    const total  = document.querySelectorAll('.q').length;
+    document.getElementById('qsub').disabled = picked < total;
+  });
+});
+function gradeQuiz() {
+  let c = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const p = q.querySelector('.q-opt.picked');
+    const a = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === a) o.classList.add('right');
+      else if (p && o.dataset.v === p.dataset.v) o.classList.add('wrong');
+    });
+    if (p && p.dataset.v === a) c++;
+    const e = q.querySelector('.q-exp');
+    if (e) e.classList.add('show');
+  });
+  const pct = Math.round(c / 8 * 100);
+  document.getElementById('snum').textContent = c + '/8';
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect — ready for production audits!' :
+    pct >= 87   ? 'Excellent — strong security intuition!' :
+    pct >= 62   ? 'Good — review the vulnerability patterns above.' :
+                  'Re-read the vulnerability taxonomy section.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
