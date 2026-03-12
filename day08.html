@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 8 — Access Control Patterns | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#08070f;--ink2:#0e0d1c;--ink3:#14132a;--plate:#1a1836;--wire:#282650;--wire2:#363460;--acc:#a78bfa;--acc2:#7c3aed;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--sky:#60a5fa;--teal:#2dd4bf;--dim:#64608a;--mid:#9895b8;--bright:#dcdaf5;--white:#eeeeff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--sky));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(8,7,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(167,139,250,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:920px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(167,139,250,.09);padding:2px 6px;border-radius:3px}
+.code{background:#04030a;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(167,139,250,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(167,139,250,.06);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(45,212,191,.07);border-color:var(--teal);border-width:2px}.key .box-title{color:var(--teal)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(167,139,250,.07);padding:1px 5px;border-radius:3px}td strong{color:var(--bright)}
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.role-card{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;padding:16px 18px}
+.role-title{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px}
+.role-card p{font-size:12.5px;margin-bottom:6px}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.diff-card{background:#04030a;border:1px solid var(--wire);border-radius:10px;overflow:hidden}
+.diff-label{padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:600;border-bottom:1px solid var(--wire)}
+.diff-label.bad{color:var(--rose);background:rgba(248,113,113,.06)}.diff-label.good{color:var(--green);background:rgba(74,222,128,.06)}
+.diff-card pre{font-size:11.5px;padding:14px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(167,139,250,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(167,139,250,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(167,139,250,.04);border:1px solid rgba(167,139,250,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.28);color:var(--acc);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(167,139,250,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.22);color:var(--acc)}.pnav .next:hover{background:rgba(167,139,250,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.role-grid{grid-template-columns:1fr}.diff{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 2</span><span class="sep">/</span><span class="cur">Day 8</span></div>
+  <div class="tb-badge">Week 2 — Patterns</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="acl-deep">ACL Deep Dive</a>
+  <a class="sb-a sub" data-id="acl-funcs">ACL Functions</a>
+  <a class="sb-a sub" data-id="transient">allowTransient</a>
+  <a class="sb-a" data-id="roles">Role-Based Access</a>
+  <a class="sb-a sub" data-id="rbac-contract">RBAC Contract</a>
+  <a class="sb-a sub" data-id="role-matrix">Role Matrix</a>
+  <a class="sb-a" data-id="delegated">Delegated Decryption</a>
+  <a class="sb-a sub" data-id="delegate-pattern">Delegate Pattern</a>
+  <a class="sb-a" data-id="cross-contract">Cross-Contract ACL</a>
+  <a class="sb-a sub" data-id="transient-pattern">Transient Pattern</a>
+  <a class="sb-a sub" data-id="pitfalls">Common Pitfalls</a>
+  <a class="sb-a" data-id="revocation">Revocation Problem</a>
+  <a class="sb-a" data-id="compliance">Compliance Views</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128272; Day 8 of 20</div>
+  <h1>Access Control<br><em>Patterns</em></h1>
+  <p class="lead">The ACL (Access Control List) is FHEVM's permission layer for encrypted data. Today you master every ACL function, build a role-based access system, handle cross-contract encrypted data sharing, and learn how to design compliance views — all while keeping user data private.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#128272; Full ACL reference</div>
+    <div class="stat">&#128101; Role-based access</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="acl-deep">ACL Deep Dive</h2>
+<p>The ACL contract lives at a fixed address set by your <code>ZamaXxxConfig</code> base contract. It maps <code>(handle, address) → bool</code> — a simple lookup that the coprocessor checks before honoring any FHE operation referencing a handle.</p>
+
+<h3 class="sub" id="acl-funcs">Complete ACL Function Reference</h3>
+<div class="tw"><table>
+  <thead><tr><th>Function</th><th>Who Can Call</th><th>Effect</th><th>Persists?</th></tr></thead>
+  <tbody>
+    <tr><td><code>FHE.allow(handle, addr)</code></td><td>Any contract</td><td>Grants addr permanent read/use access to handle</td><td>&#10003; Yes</td></tr>
+    <tr><td><code>FHE.allowThis(handle)</code></td><td>Any contract</td><td>Shorthand: <code>allow(handle, address(this))</code></td><td>&#10003; Yes</td></tr>
+    <tr><td><code>FHE.allowTransient(handle, addr)</code></td><td>Any contract</td><td>Grants addr access for the <strong>current transaction only</strong> — revoked automatically at tx end</td><td>&#10007; Tx-scoped</td></tr>
+    <tr><td><code>FHE.makePubliclyDecryptable(handle)</code></td><td>Any contract</td><td>Marks handle as decryptable by anyone via Gateway — <strong>IRREVERSIBLE</strong></td><td>&#10003; Permanent</td></tr>
+    <tr><td><code>FHE.isSenderAllowed(handle)</code></td><td>Any (view)</td><td>Returns true if msg.sender has ACL access to handle</td><td>Read-only</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box alert">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">makePubliclyDecryptable is Irreversible</div>
+    <div class="box-text">Once you call <code>FHE.makePubliclyDecryptable(handle)</code>, that ciphertext can be decrypted by anyone via the Gateway forever. There is no revoke. Use only for data you intend to reveal publicly (e.g., auction results, final vote tallies). Never call it on a handle that might need to stay private.</div>
+  </div>
+</div>
+
+<h3 class="sub" id="transient">allowTransient — Cross-Contract Calls</h3>
+<p>When Contract A calls Contract B in the same transaction, Contract B needs access to handles owned by Contract A. <code>allowTransient</code> grants that access for the current transaction only — automatically cleaned up when the transaction ends.</p>
+
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">allowTransient pattern for cross-contract calls</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Contract A — passes its encrypted data to Contract B</span>
+<span class="k">contract</span> <span class="t">TokenVault</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+    <span class="t">euint64</span> <span class="k">private</span> _balance;
+    <span class="t">address</span> <span class="k">public</span>  swapRouter;
+
+    <span class="k">function</span> <span class="f">initiateSwap</span>(<span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof) <span class="k">external</span> {
+        <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+
+        <span class="c">// Grant swapRouter access for THIS transaction only
+        // After tx completes, access is automatically revoked</span>
+        FHE.<span class="f">allowTransient</span>(amount, swapRouter);
+        FHE.<span class="f">allowTransient</span>(_balance, swapRouter);
+
+        <span class="c">// Now call swapRouter — it can use amount and _balance within this tx</span>
+        ISwapRouter(swapRouter).<span class="f">executeSwap</span>(amount, _balance);
+        <span class="c">// After this call returns: swapRouter's transient access is revoked</span>
+    }
+}
+
+<span class="c">// Contract B — receives transient access to handles from Contract A</span>
+<span class="k">contract</span> <span class="t">SwapRouter</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+    <span class="k">function</span> <span class="f">executeSwap</span>(<span class="t">euint64</span> amount, <span class="t">euint64</span> maxSlippage) <span class="k">external</span> {
+        <span class="c">// Can use amount and maxSlippage because allowTransient was called
+        // These operations work within this transaction</span>
+        <span class="t">ebool</span> acceptable = FHE.<span class="f">le</span>(amount, maxSlippage);
+        <span class="t">euint64</span> result    = FHE.<span class="f">select</span>(acceptable, amount, maxSlippage);
+        FHE.<span class="f">allowThis</span>(result);  <span class="c">// grant SwapRouter permanent access to result</span>
+        <span class="c">// Note: SwapRouter does NOT need allowTransient on result
+        // because result is a NEW handle created by SwapRouter itself</span>
+    }
+}</pre>
+</div>
+
+<h2 class="sec" id="roles">Role-Based Access Control</h2>
+<p>For complex protocols, a flat owner/user model is insufficient. You need roles: admins who can configure, auditors who can inspect, users who can transact, and operators who can act on behalf of users.</p>
+
+<div class="role-grid">
+  <div class="role-card">
+    <div class="role-title">&#128081; Admin</div>
+    <p>Can grant/revoke roles. Can configure contract parameters. <strong>Cannot</strong> decrypt user data unless explicitly granted.</p>
+  </div>
+  <div class="role-card">
+    <div class="role-title">&#128269; Auditor</div>
+    <p>Receives permanent ACL grants on all encrypted handles. Can decrypt for compliance purposes. Cannot modify state.</p>
+  </div>
+  <div class="role-card">
+    <div class="role-title">&#128100; User</div>
+    <p>Receives ACL grant on their own handles. Can encrypt inputs, decrypt own data via re-encryption. Cannot see others' data.</p>
+  </div>
+  <div class="role-card">
+    <div class="role-title">&#9881; Operator</div>
+    <p>User-delegated actor (e.g., a trading bot). Receives ACL grant from user for specific handles. Revocable.</p>
+  </div>
+  <div class="role-card">
+    <div class="role-title">&#128296; Minter</div>
+    <p>Can call <code>mint()</code> with plaintext amounts. Receives ACL on newly minted encrypted handles.</p>
+  </div>
+  <div class="role-card">
+    <div class="role-title">&#128274; Compliance</div>
+    <p>Like auditor but for regulatory reporting only. May receive transient access rather than permanent grants.</p>
+  </div>
+</div>
+
+<h3 class="sub" id="rbac-contract">RBAC + FHE Contract</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/RBACVault.sol</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+
+<span class="k">contract</span> <span class="t">RBACVault</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+
+    <span class="c">// ── Roles as bytes32 constants (OpenZeppelin style) ──</span>
+    <span class="t">bytes32</span> <span class="k">public constant</span> ADMIN_ROLE    = <span class="f">keccak256</span>(<span class="s">"ADMIN"</span>);
+    <span class="t">bytes32</span> <span class="k">public constant</span> AUDITOR_ROLE  = <span class="f">keccak256</span>(<span class="s">"AUDITOR"</span>);
+    <span class="t">bytes32</span> <span class="k">public constant</span> MINTER_ROLE   = <span class="f">keccak256</span>(<span class="s">"MINTER"</span>);
+    <span class="t">bytes32</span> <span class="k">public constant</span> OPERATOR_ROLE = <span class="f">keccak256</span>(<span class="s">"OPERATOR"</span>);
+
+    <span class="k">mapping</span>(<span class="t">bytes32</span> => <span class="k">mapping</span>(<span class="t">address</span> => <span class="k">bool</span>)) <span class="k">public</span> roles;
+
+    <span class="c">// Encrypted balances: only owner + auditors can decrypt</span>
+    <span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint64</span>) <span class="k">private</span> _balances;
+
+    <span class="c">// Set of registered auditors (get ACL grants on all new handles)</span>
+    <span class="t">address</span>[] <span class="k">public</span> auditors;
+    <span class="k">mapping</span>(<span class="t">address</span> => <span class="k">bool</span>) <span class="k">public</span> isAuditor;
+
+    <span class="ev">event</span> <span class="f">RoleGranted</span>(<span class="t">bytes32</span> indexed role, <span class="t">address</span> indexed account);
+    <span class="ev">event</span> <span class="f">RoleRevoked</span>(<span class="t">bytes32</span> indexed role, <span class="t">address</span> indexed account);
+
+    <span class="k">constructor</span>() { roles[ADMIN_ROLE][msg.sender] = <span class="k">true</span>; }
+
+    <span class="k">modifier</span> <span class="f">onlyRole</span>(<span class="t">bytes32</span> role) {
+        <span class="k">require</span>(roles[role][msg.sender], <span class="s">"Missing role"</span>);
+        _;
+    }
+
+    <span class="k">function</span> <span class="f">grantRole</span>(<span class="t">bytes32</span> role, <span class="t">address</span> account) <span class="k">external onlyRole</span>(ADMIN_ROLE) {
+        roles[role][account] = <span class="k">true</span>;
+        <span class="k">if</span> (role == AUDITOR_ROLE && !isAuditor[account]) {
+            auditors.<span class="f">push</span>(account);
+            isAuditor[account] = <span class="k">true</span>;
+        }
+        <span class="k">emit</span> <span class="f">RoleGranted</span>(role, account);
+    }
+
+    <span class="k">function</span> <span class="f">revokeRole</span>(<span class="t">bytes32</span> role, <span class="t">address</span> account) <span class="k">external onlyRole</span>(ADMIN_ROLE) {
+        roles[role][account] = <span class="k">false</span>;
+        <span class="c">// Note: cannot revoke ACL grants on existing handles (see Revocation section)</span>
+        <span class="k">emit</span> <span class="f">RoleRevoked</span>(role, account);
+    }
+
+    <span class="c">/// @notice Mint with auditor grants on the new handle</span>
+    <span class="k">function</span> <span class="f">mint</span>(<span class="t">address</span> to, <span class="t">uint64</span> amount) <span class="k">external onlyRole</span>(MINTER_ROLE) {
+        <span class="t">euint64</span> current = _balances[to];
+        <span class="k">if</span> (<span class="t">euint64</span>.<span class="f">unwrap</span>(current) == <span class="n">0</span>) {
+            _balances[to] = FHE.<span class="f">asEuint64</span>(amount);
+        } <span class="k">else</span> {
+            _balances[to] = FHE.<span class="f">add</span>(_balances[to], FHE.<span class="f">asEuint64</span>(amount));
+        }
+        <span class="t">euint64</span> handle = _balances[to];
+
+        <span class="c">// Standard grants</span>
+        FHE.<span class="f">allowThis</span>(handle);
+        FHE.<span class="f">allow</span>(handle, to);
+
+        <span class="c">// Grant all auditors access to new handle</span>
+        <span class="k">for</span> (<span class="t">uint</span> i = <span class="n">0</span>; i < auditors.length; i++) {
+            FHE.<span class="f">allow</span>(handle, auditors[i]);
+        }
+    }
+
+    <span class="k">function</span> <span class="f">balanceOf</span>(<span class="t">address</span> account) <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+        <span class="k">require</span>(
+            msg.sender == account ||
+            isAuditor[msg.sender] ||
+            FHE.<span class="f">isSenderAllowed</span>(_balances[account]),
+            <span class="s">"Not authorized"</span>
+        );
+        <span class="k">return</span> _balances[account];
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="role-matrix">ACL Grant Matrix by Role</h3>
+<div class="tw"><table>
+  <thead><tr><th>Operation</th><th>Admin</th><th>Auditor</th><th>Minter</th><th>User</th><th>Operator</th></tr></thead>
+  <tbody>
+    <tr><td>Read own balance</td><td>&#10003;</td><td>&#10003;</td><td>&#10007;</td><td>&#10003;</td><td>If delegated</td></tr>
+    <tr><td>Read any balance</td><td>&#10007; (unless auditor)</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+    <tr><td>Call mint()</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td></tr>
+    <tr><td>Call transfer()</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td><td>If delegated</td></tr>
+    <tr><td>Grant roles</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+    <tr><td>makePubliclyDecryptable</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="delegated">Delegated Decryption</h2>
+<p>Users can delegate access to their encrypted data to an operator (e.g., a trading bot, a DeFi protocol). This is done by calling <code>FHE.allow(userHandle, operatorAddress)</code> from the user's transaction.</p>
+<h3 class="sub" id="delegate-pattern">Delegation Pattern</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Operator delegation</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// User delegates their balance handle to an approved operator</span>
+<span class="k">function</span> <span class="f">delegateToOperator</span>(<span class="t">address</span> operator) <span class="k">external</span> {
+    <span class="k">require</span>(roles[OPERATOR_ROLE][operator], <span class="s">"Not a registered operator"</span>);
+    <span class="c">// Operator gets ACL access to this user's balance</span>
+    FHE.<span class="f">allow</span>(_balances[msg.sender], operator);
+    operators[msg.sender] = operator;
+    <span class="k">emit</span> <span class="f">OperatorDelegated</span>(msg.sender, operator);
+}
+
+<span class="c">// Operator can now use the user's encrypted balance in strategies
+// (but cannot arbitrarily decrypt it — only use it in FHE ops)</span>
+<span class="k">function</span> <span class="f">operatorTransfer</span>(
+    <span class="t">address</span> user, <span class="t">address</span> to,
+    <span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+    <span class="k">require</span>(operators[user] == msg.sender, <span class="s">"Not user operator"</span>);
+    <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(_balances[user]), <span class="s">"No ACL access"</span>);
+    <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+    <span class="c">// ... transfer logic ...</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="cross-contract">Cross-Contract ACL</h2>
+<h3 class="sub" id="transient-pattern">The Transient Pattern for Composability</h3>
+<p>DeFi composability requires contracts to pass encrypted values to each other. The pattern is always: grant transient access <strong>before</strong> the external call, never after.</p>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; Wrong — transient after the call</div>
+    <pre><span class="c">// ❌ Protocol B can't use handle — it was
+// called BEFORE the transient grant</span>
+IProtocolB(pb).<span class="f">deposit</span>(_balance);
+FHE.<span class="f">allowTransient</span>(_balance, pb);
+<span class="c">// Too late! deposit() already ran</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Correct — transient before the call</div>
+    <pre><span class="c">// ✓ Grant first, then call</span>
+FHE.<span class="f">allowTransient</span>(_balance, pb);
+IProtocolB(pb).<span class="f">deposit</span>(_balance);
+<span class="c">// Protocol B can use _balance in its
+// deposit() execution frame</span></pre>
+  </div>
+</div>
+
+<h3 class="sub" id="pitfalls">Common ACL Pitfalls</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ACL pitfall catalog</span></div>
+  <pre><span class="c">// ❌ PITFALL 1: Missing allowThis after FHE op
+// The new handle has ZERO grants — next tx on this handle will fail</span>
+_balance = FHE.<span class="f">add</span>(_balance, amount);
+<span class="c">// forgot: FHE.allowThis(_balance) ← contract can't use it next tx!</span>
+
+<span class="c">// ❌ PITFALL 2: Granting to address(0) — public by accident</span>
+FHE.<span class="f">allow</span>(handle, <span class="t">address</span>(<span class="n">0</span>)); <span class="c">// ← Don't do this</span>
+
+<span class="c">// ❌ PITFALL 3: Checking ACL in a write function without modifying
+// isSenderAllowed() passes but you still need to grant AFTER any FHE op</span>
+<span class="k">function</span> <span class="f">updateScore</span>(<span class="t">externalEuint8</span> calldata enc, <span class="t">bytes</span> calldata proof) <span class="k">external</span> {
+    <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(_scores[msg.sender]), <span class="s">"No access"</span>);
+    _scores[msg.sender] = FHE.<span class="f">add</span>(_scores[msg.sender], FHE.<span class="f">fromExternal</span>(enc, proof));
+    <span class="c">// ❌ Missing FHE.allowThis(_scores[msg.sender]) !
+    // The old grant checked above was for the OLD handle
+    // The new handle from FHE.add() has no grants</span>
+}
+
+<span class="c">// ❌ PITFALL 4: allowTransient on the wrong address
+// Using 'address(this)' when you mean the called contract's address</span>
+FHE.<span class="f">allowTransient</span>(handle, <span class="t">address</span>(<span class="k">this</span>)); <span class="c">// grants THIS contract, not the callee</span>
+ICallee(callee).<span class="f">use</span>(handle);              <span class="c">// callee still has no access!</span>
+
+<span class="c">// ✓ CORRECT: pass the callee address</span>
+FHE.<span class="f">allowTransient</span>(handle, callee);
+ICallee(callee).<span class="f">use</span>(handle);</pre>
+</div>
+
+<h2 class="sec" id="revocation">The Revocation Problem</h2>
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">ACL Grants Are Not Revocable</div>
+    <div class="box-text">
+      Once you call <code>FHE.allow(handle, addr)</code>, that address has permanent access to that specific handle. <strong>There is no revoke function.</strong><br><br>
+      <strong>Mitigation strategy:</strong> When you need revocable access, create a new handle via a trivial FHE op (e.g., <code>FHE.add(balance, ZERO)</code>) and only grant the new handle to current authorized parties. The old handle becomes inaccessible since the contract no longer stores it. The ex-operator still holds the old handle — but the contract has moved on to a new handle, so old access is moot.<br><br>
+      This is why <code>allowTransient</code> is preferred for DeFi integrations — it automatically revokes.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="compliance">Compliance Views</h2>
+<p>Regulated protocols need auditors or compliance officers to view encrypted balances. The pattern: maintain a separate auditor registry and grant all auditors access to every new handle.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Compliance auditor pattern</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Internal helper: grant all registered compliance viewers</span>
+<span class="k">function</span> <span class="f">_grantCompliance</span>(<span class="t">euint64</span> handle) <span class="k">internal</span> {
+    <span class="k">for</span> (<span class="t">uint</span> i = <span class="n">0</span>; i < complianceViewers.length; i++) {
+        FHE.<span class="f">allow</span>(handle, complianceViewers[i]);
+    }
+}
+
+<span class="c">// Call at the end of every state-changing function</span>
+<span class="k">function</span> <span class="f">deposit</span>(<span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof) <span class="k">external</span> {
+    <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+    _balances[msg.sender] = FHE.<span class="f">add</span>(_balances[msg.sender], amount);
+    FHE.<span class="f">allowThis</span>(_balances[msg.sender]);
+    FHE.<span class="f">allow</span>(_balances[msg.sender], msg.sender);
+    <span class="f">_grantCompliance</span>(_balances[msg.sender]); <span class="c">// auditors see new handle too</span>
+}
+
+<span class="c">// Gas consideration: O(N) ACL writes per tx where N = auditor count
+// For protocols with many auditors, consider a tiered approach:
+// - Critical operations: full auditor grants
+// - Routine ops: transient compliance access via external audit requests</span></pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 8 Quiz — Access Control Patterns</div>
+      <div class="quiz-subtitle">8 questions · select one answer each</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">Contract A calls Contract B in the same transaction, passing an encrypted handle. What must Contract A do <em>before</em> the call?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Call <code>FHE.allow(handle, addressB)</code> for permanent access</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call <code>FHE.makePubliclyDecryptable(handle)</code> so Contract B can read it</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Call <code>FHE.allowTransient(handle, addressB)</code> — grants access for the current transaction only, automatically revoked at tx end</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Nothing — handle ownership is inherited by called contracts automatically</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> allowTransient is the correct pattern for cross-contract calls. It grants access only for the current transaction, then automatically revokes — perfect for DeFi composability where you don't want the called contract to retain permanent access to your users' data.</div>
+    </div>
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">An auditor is removed from a role. Can you revoke their ACL access to handles they were previously granted?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Yes — call <code>FHE.revoke(handle, auditor)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>No — ACL grants are permanent. The mitigation is to generate a new handle (via a trivial FHE op) and stop granting the removed auditor on future handles</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Yes — the admin can reset the ACL contract entries for that address</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Yes — call <code>FHE.allow(handle, auditor)</code> again with a false flag</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> There is no revoke function in the FHEVM ACL. Once granted, an address has permanent access to that specific handle. The forward-looking mitigation: generate a new handle via FHE.add(balance, ZERO_HANDLE), grant new parties only, and stop referencing the old handle. The ex-auditor keeps their old grant but it becomes irrelevant.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">You update an encrypted balance: <code>_balance = FHE.add(_balance, amount)</code>. The old handle had an ACL grant for the user. Does the user still have access?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Yes — ACL grants transfer to the new handle automatically</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Yes — the new handle inherits all grants from its input operands</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Yes — the contract's allowThis covers all derived handles</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>No — every FHE operation produces a brand-new handle with zero ACL grants. You must re-run <code>FHE.allow(newHandle, user)</code> after every operation</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> This is the most common ACL bug. FHE.add() creates a new handle — it does NOT inherit the ACL grants of its inputs. You must explicitly re-grant all necessary addresses on the output handle. Forgetting this means the user can never decrypt their updated balance.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">What is the correct order of operations when using allowTransient for a cross-contract call?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>1. Call <code>FHE.allowTransient(handle, callee)</code> 2. Call the external contract</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>1. Call the external contract 2. Call <code>FHE.allowTransient</code> to retroactively grant</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The order doesn't matter — transient grants apply to the entire transaction</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>1. Call the external contract 2. Call <code>FHE.allow</code> 3. Call the contract again</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> allowTransient must be called BEFORE the external call. The transient grant needs to be active when the callee executes its FHE operations. Calling it after is too late — the callee has already run and failed its ACL check.</div>
+    </div>
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Why is <code>FHE.isSenderAllowed(handle)</code> used in view functions, while <code>FHE.allow()</code> should NOT appear in view functions?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.allow()</code> requires a transaction signature that view functions can't provide</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.isSenderAllowed()</code> is cheaper than <code>FHE.allow()</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>FHE.allow()</code> writes to the ACL contract (state change) — view functions cannot modify state. <code>isSenderAllowed()</code> only reads, which is valid in view functions</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>View functions can't interact with external contracts like ACL</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> FHE.allow() writes to the ACL contract — it's a state-changing operation. Solidity view functions cannot modify state. isSenderAllowed() reads from the ACL contract, which is allowed. Put your allow() calls in write functions (the ones that modify encrypted state), use isSenderAllowed() in view functions to gate access.</div>
+    </div>
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">In a protocol with 5 auditors, how many extra ACL writes does each transfer() call incur?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>0 — auditors receive bulk access via a single registry call</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>10 — 5 auditors × 2 handles updated per transfer (sender balance + recipient balance) = 10 extra allow() calls</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>5 — one grant per auditor for the transfer event</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>2 — one for each balance handle, auditors share a single ACL slot</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Each transfer() updates two balance handles (sender and recipient). Each new handle needs allow() for every auditor. With 5 auditors and 2 handles, that's 5×2 = 10 extra SSTORE operations per transfer, plus the standard allowThis + allow(user) grants. This is why managing auditor count matters for gas.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">What does calling <code>FHE.allowTransient(handle, address(this))</code> accomplish?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Grants temporary access to the contract itself — useful for recursive calls</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Equivalent to allowThis() but only for the current transaction</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Grants the owner transient access to the handle</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Mostly useless — if you need the contract to access its own handle, use <code>FHE.allowThis()</code> for permanent access. allowTransient to address(this) wastes gas because transient grants on the calling contract expire at tx end anyway</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> For cross-contract calls, you want allowTransient to the CALLEE address, not address(this). allowTransient(handle, address(this)) grants the current contract transient access to its own handle — which it should already have via allowThis(). It's redundant and wastes gas.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">A user wants to let a trading bot manage their balance for one week, then revoke access. What is the best ACL design?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Use a plaintext time-locked operator mapping. When the lock expires, generate a new handle via FHE.add(balance, ZERO) and do not grant the bot on the new handle — the old grant becomes moot</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call FHE.allow() now and FHE.revoke() after one week</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Use makePubliclyDecryptable and let the bot monitor via Gateway</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Use allowTransient renewed on each transaction</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Since FHE.revoke() doesn't exist, the workaround is: (1) grant the bot now, (2) after one week, generate a new handle via FHE.add(balance, ZERO_HANDLE) — this creates a fresh handle with no grants, (3) grant only the user on the new handle, (4) the bot retains its old grant but the contract now references the new handle, making the old grant irrelevant. This is the standard FHEVM pattern for time-limited access.</div>
+    </div>
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right"><div class="score-label">questions correct</div><div class="score-msg" id="smsg"></div></div>
+  </div>
+</div>
+<div class="pnav">
+  <a href="day07.html">&#8592; Day 7 — Gas Optimization</a>
+  <a class="next" href="day09.html">Day 9 — Gateway &amp; Async Decryption &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','acl-deep','acl-funcs','transient','roles','rbac-contract','role-matrix','delegated','delegate-pattern','cross-contract','transient-pattern','pitfalls','revocation','compliance','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect score!':pct>=75?'Great work!':pct>=50?'Good — review the explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
