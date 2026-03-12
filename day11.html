@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 11 — fhevmjs Frontend Integration | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711;
+  --ink2:   #0d0d1a;
+  --ink3:   #141426;
+  --plate:  #1a1a2e;
+  --plate2: #20203a;
+  --wire:   #2a2a45;
+  --wire2:  #383860;
+  --cyan:   #00e5ff;
+  --cyan2:  #00b8d4;
+  --lime:   #69ff47;
+  --amber:  #ffb300;
+  --rose:   #ff4d6d;
+  --violet: #bf5af2;
+  --sky:    #4db8ff;
+  --dim:    #6b6b95;
+  --mid:    #9898be;
+  --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono:   'JetBrains Mono', monospace;
+  --head:   'Syne', sans-serif;
+  --body:   'Instrument Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body);
+       font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+        background: linear-gradient(90deg, var(--violet), var(--cyan));
+        z-index: 1000; transition: width .1s linear; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  height: 52px; background: rgba(7,7,17,.96); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--wire);
+  display: flex; align-items: center; gap: 0;
+}
+.tb-home {
+  display: flex; align-items: center; gap: 8px;
+  height: 100%; padding: 0 22px;
+  border-right: 1px solid var(--wire);
+  font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; transition: color .15s; letter-spacing: .5px;
+}
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 20px; font-family: var(--mono); font-size: 11px;
+}
+.tb-crumb .sep { color: var(--wire2); }
+.tb-crumb .cur { color: var(--mid); }
+.tb-badge {
+  margin-left: auto; margin-right: 18px;
+  padding: 3px 11px; border-radius: 20px;
+  background: rgba(191,90,242,.08); border: 1px solid rgba(191,90,242,.22);
+  font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px;
+                    animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+
+.sidebar {
+  position: sticky; top: 52px; height: calc(100vh - 52px);
+  overflow-y: auto; background: var(--ink2);
+  border-right: 1px solid var(--wire);
+  padding: 22px 0 50px;
+}
+.sb-section { margin-bottom: 4px; }
+.sb-head {
+  font-family: var(--mono); font-size: 9px; color: var(--dim);
+  letter-spacing: 2.5px; text-transform: uppercase;
+  padding: 14px 18px 5px;
+}
+.sb-a {
+  display: block; padding: 6px 18px;
+  font-family: var(--body); font-size: 12px; color: var(--mid);
+  border-left: 2px solid transparent;
+  cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45;
+}
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--violet); border-left-color: var(--violet); background: rgba(191,90,242,.04); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+
+.main { padding: 56px 70px 120px; max-width: 900px; }
+
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 5px 14px; border-radius: 3px; margin-bottom: 24px;
+  background: rgba(191,90,242,.07); border: 1px solid rgba(191,90,242,.18);
+  font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.hero h1 {
+  font-family: var(--head); font-size: clamp(34px,4vw,52px);
+  font-weight: 800; line-height: 1.08; letter-spacing: -1px;
+  margin-bottom: 20px; color: var(--white);
+}
+.hero h1 em { font-style: italic; color: var(--violet); font-weight: 600; }
+.hero .lead {
+  font-size: 15.5px; color: var(--mid); line-height: 1.84;
+  max-width: 640px; margin-bottom: 32px;
+}
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim);
+        display: flex; align-items: center; gap: 6px; }
+
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700;
+       color: var(--white); margin: 56px 0 20px;
+       padding-bottom: 12px; border-bottom: 1px solid var(--wire);
+       scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600;
+       color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code {
+  font-family: var(--mono); font-size: 12px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 2px 6px; border-radius: 3px;
+}
+
+.code {
+  background: #040408; border: 1px solid var(--wire);
+  border-radius: 10px; margin: 20px 0; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.4);
+}
+.code-top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; background: var(--ink3);
+  border-bottom: 1px solid var(--wire);
+}
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang {
+  font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy {
+  background: none; border: 1px solid var(--wire); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: all .14s; letter-spacing: .8px;
+}
+.copy:hover { border-color: var(--violet); color: var(--violet); }
+pre {
+  padding: 20px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0;
+  tab-size: 2;
+}
+.k { color: #ff79c6; } .f { color: #8be9fd; } .s { color: #f1fa8c; }
+.c { color: #525270; font-style: italic; } .n { color: #bd93f9; }
+.t { color: #ffb86c; } .a { color: #50fa7b; } .ev { color: #50fa7b; }
+.d { color: #8be9fd; } .v { color: #f8f8f2; }
+
+.box {
+  border-radius: 8px; padding: 15px 20px; margin: 20px 0;
+  border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start;
+}
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px;
+}
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code {
+  font-family: var(--mono); font-size: 11.5px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px;
+}
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); }
+.tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); }
+.warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); }
+.alert .box-title{ color: var(--rose); }
+.info { background: rgba(191,90,242,.05); border-color: var(--violet); }
+.info .box-title { color: var(--violet); }
+.key  { background: rgba(0,229,255,.05); border-color: var(--cyan); border-width: 2px; }
+.key .box-title  { color: var(--cyan); }
+
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--ink3); padding: 9px 14px; text-align: left;
+  font-family: var(--mono); font-size: 9.5px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  border: 1px solid var(--wire);
+}
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code {
+  font-family: var(--mono); font-size: 11px; color: var(--violet);
+  background: rgba(191,90,242,.07); padding: 1px 5px; border-radius: 3px;
+}
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 3px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+}
+.b-p { background: rgba(191,90,242,.1); color: var(--violet); }
+.b-t { background: rgba(255,179,0,.1);  color: var(--amber); }
+.b-r { background: rgba(255,77,109,.1); color: var(--rose); }
+.b-g { background: rgba(105,255,71,.1); color: var(--lime); }
+
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 17px; top: 36px; bottom: -6px;
+  width: 1px; background: var(--wire2);
+}
+.step-num {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.22);
+  color: var(--violet); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 18px; margin-top: 1px; z-index: 1;
+}
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code {
+  font-family: var(--mono); font-size: 11.5px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px;
+}
+
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+
+.quiz {
+  background: var(--ink2); border: 1px solid var(--wire2);
+  border-radius: 14px; margin: 52px 0; overflow: hidden;
+}
+.quiz-head {
+  padding: 20px 24px; background: rgba(191,90,242,.07);
+  border-bottom: 1px solid var(--wire2);
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--violet); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q { }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code {
+  font-family: var(--mono); font-size: 12px; color: var(--violet);
+  background: rgba(191,90,242,.09); padding: 1px 5px; border-radius: 3px;
+}
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--wire); font-size: 13px; color: var(--mid);
+  transition: all .14s; user-select: none; line-height: 1.58;
+}
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--plate); color: var(--dim);
+  font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp {
+  margin-top: 10px; padding: 11px 14px;
+  background: rgba(191,90,242,.04); border: 1px solid rgba(191,90,242,.12);
+  border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68;
+  display: none;
+}
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--violet); }
+.quiz-submit {
+  display: block; margin: 2px 24px 24px;
+  padding: 11px 24px; border-radius: 8px;
+  background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.28);
+  color: var(--violet); font-family: var(--mono); font-size: 11px;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  cursor: pointer; transition: all .14s;
+}
+.quiz-submit:hover { background: rgba(191,90,242,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score {
+  margin: 0 24px 24px; padding: 16px 20px;
+  background: var(--ink3); border: 1px solid var(--wire);
+  border-radius: 9px; display: none; align-items: center; gap: 20px;
+}
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--violet); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+.pnav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire);
+}
+.pnav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 8px; text-decoration: none;
+  font-family: var(--mono); font-size: 11px; color: var(--mid);
+  border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px;
+}
+.pnav a:hover { border-color: var(--violet); color: var(--violet); }
+.pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
+.pnav .next:hover { background: rgba(191,90,242,.14); }
+
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 30px 18px 60px; }
+  .diff { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 3</span>
+    <span class="sep">/</span>
+    <span class="cur">Day 11</span>
+  </div>
+  <div class="tb-badge">Week 3 — Advanced DApp</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="fhevmjs-intro">What is fhevmjs</a>
+    <a class="sb-a sub" data-id="instance">FhevmInstance</a>
+    <a class="sb-a sub" data-id="pubkey">Public Key Flow</a>
+    <a class="sb-a" data-id="install">Installation & Setup</a>
+    <a class="sb-a sub" data-id="nextjs">Next.js Setup</a>
+    <a class="sb-a sub" data-id="wagmi">Wagmi Integration</a>
+    <a class="sb-a" data-id="encrypt">Client-Side Encryption</a>
+    <a class="sb-a sub" data-id="input-proof">Input & ZK Proof</a>
+    <a class="sb-a sub" data-id="send-tx">Sending Encrypted Tx</a>
+    <a class="sb-a" data-id="reencrypt">Re-encryption Pattern</a>
+    <a class="sb-a sub" data-id="permit">EIP-712 Permit</a>
+    <a class="sb-a sub" data-id="decrypt-view">Decrypting View</a>
+    <a class="sb-a" data-id="react-hook">useEncryptedBalance Hook</a>
+    <a class="sb-a" data-id="errors">Common Errors</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127760; Day 11 of 20</div>
+  <h1>fhevmjs<br><em>Frontend Integration</em></h1>
+  <p class="lead">
+    Smart contracts handle encrypted state on-chain — but users need a way to submit
+    encrypted inputs and read their own private data. <strong>fhevmjs</strong> is the
+    TypeScript SDK that bridges the browser to FHEVM: it fetches the network public key,
+    encrypts user inputs with ZK proofs, and re-encrypts ciphertexts back to the user's
+    wallet key for private viewing. Today you build a full React/Next.js frontend for
+    your ConfidentialERC20.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#9881; fhevmjs SDK</div>
+    <div class="stat">&#128187; React + Next.js</div>
+    <div class="stat">&#9989; 6-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- ── WHAT IS FHEVMJS ──────────────────── -->
+<h2 class="sec" id="fhevmjs-intro">What is fhevmjs?</h2>
+<p>
+  <strong>fhevmjs</strong> is Zama's official JavaScript/TypeScript library for interacting with
+  FHEVM from a browser or Node.js environment. It handles three responsibilities that
+  your smart contract cannot do alone:
+</p>
+<ul>
+  <li><strong>Encryption at input time</strong> — converts a plaintext number into an FHEVM-compatible ciphertext before it ever leaves the browser.</li>
+  <li><strong>ZK proof generation</strong> — proves the ciphertext was honestly formed (no garbage inputs) without revealing the value.</li>
+  <li><strong>Re-encryption for viewing</strong> — re-wraps a stored ciphertext under the user's ephemeral key so only they can decrypt and display it.</li>
+</ul>
+
+<div class="box info">
+  <div class="box-ico">&#128273;</div>
+  <div class="box-inner">
+    <div class="box-title">Security Model</div>
+    <div class="box-text">
+      The FHEVM network public key encrypts all inputs. Only the KMS (a threshold MPC cluster)
+      holds the corresponding secret key. <code>fhevmjs</code> re-encryption creates a
+      temporary keypair in the browser — the re-encrypted value is only readable by that session.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="instance">FhevmInstance</h3>
+<p>
+  The central object is <code>FhevmInstance</code>. Once created, it caches the network
+  public key and exposes the encrypt/reencrypt APIs. You should create it once per session
+  and share it via React context.
+</p>
+
+<h3 class="sub" id="pubkey">Public Key Fetch Flow</h3>
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>App Starts</h4>
+      <p>Call <code>createInstance({ networkUrl, kmsContractAddress, aclContractAddress })</code>.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>SDK fetches FHE public key</h4>
+      <p>Makes an RPC call to the node to retrieve the TFHE bootstrapping public key (~7 MB, cached in memory).</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Instance ready</h4>
+      <p>Returns an <code>FhevmInstance</code> you can use for all encrypt/reencrypt calls in this session.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── INSTALLATION ──────────────────────── -->
+<h2 class="sec" id="install">Installation & Setup</h2>
+
+<h3 class="sub" id="nextjs">Next.js Project Setup</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">bash</div>
+    <div class="fname">terminal</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c"># Create Next.js app with TypeScript</span>
+npx create-next-app@latest fhevm-frontend \
+  --typescript --tailwind --app --no-src-dir
+
+<span class="k">cd</span> fhevm-frontend
+
+<span class="c"># Install fhevmjs and wallet dependencies</span>
+npm install fhevmjs@0.6.2 \
+  wagmi@2.14.x viem@2.x \
+  @tanstack/react-query
+
+<span class="c"># Peer dep needed for fhevmjs WASM bundle</span>
+npm install --save-dev @types/node</pre>
+</div>
+
+<p>
+  fhevmjs ships a WebAssembly (WASM) bundle for the TFHE crypto. Next.js needs a small
+  config tweak to handle WASM files:
+</p>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">next.config.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> <span class="k">type</span> { NextConfig } <span class="k">from</span> <span class="s">'next'</span>
+
+<span class="k">const</span> config: NextConfig = {
+  webpack: (cfg, { isServer }) => {
+    <span class="c">// Needed for fhevmjs WASM module</span>
+    cfg.experiments = { ...cfg.experiments, asyncWebAssembly: <span class="n">true</span> }
+    <span class="k">if</span> (!isServer) {
+      cfg.resolve.fallback = {
+        ...cfg.resolve.fallback,
+        fs: <span class="n">false</span>, path: <span class="n">false</span>, crypto: <span class="n">false</span>,
+      }
+    }
+    <span class="k">return</span> cfg
+  },
+}
+
+<span class="k">export default</span> config</pre>
+</div>
+
+<h3 class="sub" id="wagmi">Wagmi Provider Setup</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">app/providers.tsx</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="s">'use client'</span>
+<span class="k">import</span> { WagmiProvider, createConfig, http } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { QueryClient, QueryClientProvider } <span class="k">from</span> <span class="s">'@tanstack/react-query'</span>
+<span class="k">import</span> { injected } <span class="k">from</span> <span class="s">'wagmi/connectors'</span>
+<span class="k">import</span> { FhevmProvider } <span class="k">from</span> <span class="s">'./fhevm-context'</span>
+
+<span class="c">// Zama Devnet chain definition</span>
+<span class="k">const</span> zamaDevnet = {
+  id: <span class="n">9000</span>,
+  name: <span class="s">'Zama Devnet'</span>,
+  nativeCurrency: { name: <span class="s">'ZAMA'</span>, symbol: <span class="s">'ZAMA'</span>, decimals: <span class="n">18</span> },
+  rpcUrls: {
+    default: { http: [<span class="s">'https://devnet.zama.ai'</span>] },
+  },
+} <span class="k">as const</span>
+
+<span class="k">const</span> wagmiConfig = createConfig({
+  chains: [zamaDevnet],
+  connectors: [injected()],
+  transports: { [zamaDevnet.id]: http() },
+})
+
+<span class="k">const</span> queryClient = <span class="k">new</span> QueryClient()
+
+<span class="k">export function</span> <span class="f">Providers</span>({ children }: { children: React.ReactNode }) {
+  <span class="k">return</span> (
+    &lt;WagmiProvider config={wagmiConfig}&gt;
+      &lt;QueryClientProvider client={queryClient}&gt;
+        &lt;FhevmProvider&gt;
+          {children}
+        &lt;/FhevmProvider&gt;
+      &lt;/QueryClientProvider&gt;
+    &lt;/WagmiProvider&gt;
+  )
+}</pre>
+</div>
+
+<!-- ── CLIENT-SIDE ENCRYPTION ─────────────── -->
+<h2 class="sec" id="encrypt">Client-Side Encryption</h2>
+<p>
+  Before calling any FHEVM contract function that takes an encrypted argument, you must
+  encrypt the plaintext value in the browser using the network public key. The result is
+  a ciphertext <em>plus</em> a ZK proof that the input is well-formed.
+</p>
+
+<h3 class="sub" id="input-proof">Encrypting an Input & Generating ZK Proof</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">lib/encrypt.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { createInstance } <span class="k">from</span> <span class="s">'fhevmjs'</span>
+<span class="k">import type</span> { FhevmInstance } <span class="k">from</span> <span class="s">'fhevmjs'</span>
+
+<span class="k">let</span> _instance: FhevmInstance | <span class="t">null</span> = <span class="t">null</span>
+
+<span class="k">export async function</span> <span class="f">getFhevmInstance</span>(): Promise&lt;FhevmInstance&gt; {
+  <span class="k">if</span> (_instance) <span class="k">return</span> _instance
+
+  _instance = <span class="k">await</span> createInstance({
+    <span class="c">// The FHEVM node RPC endpoint</span>
+    networkUrl: <span class="s">'https://devnet.zama.ai'</span>,
+    <span class="c">// Deployed contract addresses on Zama Devnet</span>
+    kmsContractAddress:  <span class="s">'0x904Be0...YOUR_KMS_ADDR'</span>,
+    aclContractAddress:  <span class="s">'0xFee8C0...YOUR_ACL_ADDR'</span>,
+  })
+
+  <span class="k">return</span> _instance
+}
+
+<span class="c">/**
+ * Encrypt a uint64 value for use as a Solidity euint64 argument.
+ * Returns { handles: Uint8Array, inputProof: Uint8Array }
+ */</span>
+<span class="k">export async function</span> <span class="f">encryptAmount</span>(
+  value: <span class="t">bigint</span>,
+  contractAddress: <span class="t">string</span>,
+  userAddress: <span class="t">string</span>,
+): Promise&lt;{ handles: <span class="t">Uint8Array</span>; inputProof: <span class="t">Uint8Array</span> }&gt; {
+  <span class="k">const</span> instance = <span class="k">await</span> getFhevmInstance()
+
+  <span class="c">// Create encrypted input bound to this contract + user</span>
+  <span class="k">const</span> input = instance.createEncryptedInput(contractAddress, userAddress)
+  input.add64(value)               <span class="c">// encrypt as euint64</span>
+  <span class="k">const</span> encrypted = <span class="k">await</span> input.encrypt()
+
+  <span class="k">return</span> {
+    handles:    encrypted.handles[<span class="n">0</span>],   <span class="c">// bytes32 handle for the Solidity call</span>
+    inputProof: encrypted.inputProof,   <span class="c">// ZK proof bytes</span>
+  }
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">Binding is Critical</div>
+    <div class="box-text">
+      <code>createEncryptedInput(contractAddress, userAddress)</code> binds the ciphertext
+      to a specific contract <em>and</em> sender. If you submit it from a different wallet
+      or to a different contract, the ZK proof will fail on-chain and the transaction reverts.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="send-tx">Sending an Encrypted Transaction</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">components/TransferForm.tsx (excerpt)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { encryptAmount } <span class="k">from</span> <span class="s">'../lib/encrypt'</span>
+<span class="k">import</span> { useWriteContract, useAccount } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { TOKEN_ABI, TOKEN_ADDRESS } <span class="k">from</span> <span class="s">'../lib/contract'</span>
+
+<span class="k">export function</span> <span class="f">TransferForm</span>() {
+  <span class="k">const</span> { address } = useAccount()
+  <span class="k">const</span> { writeContract, isPending } = useWriteContract()
+
+  <span class="k">async function</span> <span class="f">handleTransfer</span>(to: <span class="t">string</span>, amount: <span class="t">bigint</span>) {
+    <span class="k">if</span> (!address) <span class="k">return</span>
+
+    <span class="c">// 1. Encrypt the amount in the browser</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> encryptAmount(
+      amount,
+      TOKEN_ADDRESS,
+      address,
+    )
+
+    <span class="c">// 2. Call transfer(address to, bytes32 encryptedAmount, bytes inputProof)</span>
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: <span class="s">'transfer'</span>,
+      args: [to, handles, inputProof],
+    })
+  }
+
+  <span class="k">return</span> (
+    &lt;<span class="t">button</span> onClick={() =&gt; handleTransfer(recipientAddr, <span class="n">100n</span>)} disabled={isPending}&gt;
+      {isPending ? <span class="s">'Encrypting + Sending...'</span> : <span class="s">'Transfer'</span>}
+    &lt;/<span class="t">button</span>&gt;
+  )
+}</pre>
+</div>
+
+<!-- ── RE-ENCRYPTION ──────────────────────── -->
+<h2 class="sec" id="reencrypt">Re-encryption Pattern</h2>
+<p>
+  Encrypted balances are stored on-chain as ciphertexts under the network public key.
+  To <em>display</em> a user's balance, you need to re-encrypt it under a key the user
+  controls. <strong>Re-encryption</strong> never decrypts the value on-chain — it simply
+  re-wraps the ciphertext for the user's eyes only.
+</p>
+
+<h3 class="sub" id="permit">EIP-712 Permit Signature</h3>
+<p>
+  The KMS requires proof that the user consents to the re-encryption. This is a standard
+  EIP-712 signature over the contract address + their public key. fhevmjs handles the
+  domain and type hash construction for you.
+</p>
+
+<h3 class="sub" id="decrypt-view">Full Re-encryption & Decrypt Flow</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">lib/reencrypt.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { getFhevmInstance } <span class="k">from</span> <span class="s">'./encrypt'</span>
+<span class="k">import</span> { useSignTypedData } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { readContract } <span class="k">from</span> <span class="s">'wagmi/actions'</span>
+
+<span class="k">export async function</span> <span class="f">getDecryptedBalance</span>(
+  contractAddress: <span class="t">string</span>,
+  contractAbi: <span class="t">any</span>[],
+  userAddress: <span class="t">string</span>,
+  signTypedData: (<span class="t">params</span>: <span class="t">any</span>) =&gt; Promise&lt;<span class="t">string</span>&gt;,
+  wagmiConfig: <span class="t">any</span>,
+): Promise&lt;<span class="t">bigint</span>&gt; {
+  <span class="k">const</span> instance = <span class="k">await</span> getFhevmInstance()
+
+  <span class="c">// Step 1: Generate ephemeral keypair + EIP-712 permit signature</span>
+  <span class="k">const</span> { publicKey, privateKey } = instance.generateKeypair()
+  <span class="k">const</span> { typedData } = await instance.createEIP712(publicKey, contractAddress)
+  <span class="k">const</span> signature = <span class="k">await</span> signTypedData(typedData)
+
+  <span class="c">// Step 2: Call balanceOf(address, bytes32 publicKey, bytes signature)</span>
+  <span class="k">const</span> reencryptedHandle = <span class="k">await</span> readContract(wagmiConfig, {
+    address: contractAddress <span class="k">as</span> <span class="t">`0x${string}`</span>,
+    abi: contractAbi,
+    functionName: <span class="s">'balanceOf'</span>,
+    args: [userAddress, publicKey, signature],
+  }) <span class="k">as</span> <span class="t">bigint</span>
+
+  <span class="c">// Step 3: Decrypt locally using the ephemeral private key</span>
+  <span class="k">const</span> plaintext = instance.decrypt(contractAddress, reencryptedHandle, privateKey)
+  <span class="k">return</span> plaintext
+}</pre>
+</div>
+
+<div class="box tip">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">Keypair Lifetime</div>
+    <div class="box-text">
+      Generate a fresh keypair per balance-fetch call. The ephemeral private key never
+      leaves the browser and should be discarded immediately after decryption. Do not
+      cache it in React state or localStorage.
+    </div>
+  </div>
+</div>
+
+<!-- ── REACT HOOK ─────────────────────────── -->
+<h2 class="sec" id="react-hook">useEncryptedBalance Hook</h2>
+<p>
+  Wrapping the re-encryption flow in a custom hook makes it trivial to use in any component.
+</p>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">hooks/useEncryptedBalance.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { useState, useCallback } <span class="k">from</span> <span class="s">'react'</span>
+<span class="k">import</span> { useAccount, useSignTypedData, useConfig } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { getDecryptedBalance } <span class="k">from</span> <span class="s">'../lib/reencrypt'</span>
+<span class="k">import</span> { TOKEN_ABI, TOKEN_ADDRESS } <span class="k">from</span> <span class="s">'../lib/contract'</span>
+
+<span class="k">export function</span> <span class="f">useEncryptedBalance</span>() {
+  <span class="k">const</span> [balance, setBalance] = useState&lt;<span class="t">bigint</span> | <span class="t">null</span>&gt;(<span class="t">null</span>)
+  <span class="k">const</span> [loading, setLoading] = useState(<span class="n">false</span>)
+  <span class="k">const</span> [error, setError] = useState&lt;<span class="t">string</span> | <span class="t">null</span>&gt;(<span class="t">null</span>)
+
+  <span class="k">const</span> { address } = useAccount()
+  <span class="k">const</span> { signTypedDataAsync } = useSignTypedData()
+  <span class="k">const</span> config = useConfig()
+
+  <span class="k">const</span> fetchBalance = useCallback(<span class="k">async</span> () => {
+    <span class="k">if</span> (!address) <span class="k">return</span>
+    setLoading(<span class="n">true</span>); setError(<span class="t">null</span>)
+    <span class="k">try</span> {
+      <span class="k">const</span> val = <span class="k">await</span> getDecryptedBalance(
+        TOKEN_ADDRESS, TOKEN_ABI, address, signTypedDataAsync, config,
+      )
+      setBalance(val)
+    } <span class="k">catch</span> (e: <span class="t">any</span>) {
+      setError(e.message ?? <span class="s">'Unknown error'</span>)
+    } <span class="k">finally</span> {
+      setLoading(<span class="n">false</span>)
+    }
+  }, [address, signTypedDataAsync, config])
+
+  <span class="k">return</span> { balance, loading, error, fetchBalance }
+}</pre>
+</div>
+
+<!-- ── COMMON ERRORS ──────────────────────── -->
+<h2 class="sec" id="errors">Common Errors & Fixes</h2>
+<div class="tw">
+  <table>
+    <thead>
+      <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>WebAssembly.instantiate not allowed</code></td>
+        <td>Next.js WASM not enabled</td>
+        <td>Add <code>asyncWebAssembly: true</code> to <code>webpack.experiments</code></td>
+      </tr>
+      <tr>
+        <td><code>Input proof verification failed</code></td>
+        <td>Wrong contract or sender address in <code>createEncryptedInput</code></td>
+        <td>Ensure <code>contractAddress</code> and <code>userAddress</code> match the actual tx</td>
+      </tr>
+      <tr>
+        <td><code>ACL: not allowed</code></td>
+        <td>Contract didn't call <code>TFHE.allow(handle, address)</code></td>
+        <td>Add ACL permission in your Solidity contract after storing the ciphertext</td>
+      </tr>
+      <tr>
+        <td><code>Signature mismatch</code> on balanceOf</td>
+        <td>EIP-712 domain mismatch</td>
+        <td>Ensure <code>contractAddress</code> passed to <code>createEIP712</code> matches the deployed address exactly</td>
+      </tr>
+      <tr>
+        <td><code>Module not found: fhevmjs</code></td>
+        <td>Import in Server Component</td>
+        <td>Add <code>'use client'</code> directive — fhevmjs is browser-only</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── LAB ───────────────────────────────── -->
+<h2 class="sec" id="lab">Lab 3A — ConfidentialERC20 Frontend</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Build a Next.js frontend for the ConfidentialERC20 contract you wrote in Week 2.
+      The UI must: (1) connect a wallet, (2) display the encrypted balance via re-encryption,
+      (3) send an encrypted transfer with ZK proof, (4) show pending / confirmed state.
+    </div>
+  </div>
+</div>
+
+<p>Your app should contain at minimum these files:</p>
+<ul>
+  <li><code>app/page.tsx</code> — root page with wallet connect button</li>
+  <li><code>components/BalanceCard.tsx</code> — uses <code>useEncryptedBalance</code>, shows decrypted balance with a "Reveal" button requiring wallet signature</li>
+  <li><code>components/TransferForm.tsx</code> — recipient address + amount inputs, encrypts on submit, shows tx hash</li>
+  <li><code>hooks/useEncryptedBalance.ts</code> — as shown above</li>
+  <li><code>lib/encrypt.ts</code> — singleton fhevmjs instance + <code>encryptAmount</code></li>
+  <li><code>lib/reencrypt.ts</code> — <code>getDecryptedBalance</code></li>
+</ul>
+
+<p><strong>Extension tasks (bonus):</strong></p>
+<ul>
+  <li>Add a mint form (owner only) that encrypts and mints tokens</li>
+  <li>Add a transaction history panel showing Transfer events (from/to addresses only — no amounts)</li>
+  <li>Handle network switching: warn the user if they're not on Zama Devnet</li>
+</ul>
+
+<!-- ── QUIZ ──────────────────────────────── -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 11 Quiz</div>
+      <div class="quiz-subtitle">6 questions · fhevmjs frontend integration</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 06</div>
+      <div class="q-q">What does <code>createEncryptedInput(contractAddress, userAddress)</code> do beyond just encrypting the value?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It signs the ciphertext using the user's private key</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It binds the ciphertext to a specific contract and sender, so the ZK proof is only valid for that exact combination</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It uploads the ciphertext to the FHEVM node for storage</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It requests a decryption permit from the KMS</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The binding prevents replay attacks. A ciphertext encrypted for contract A cannot be submitted to contract B, and a ciphertext meant for wallet X cannot be submitted by wallet Y. The ZK proof includes the binding as a public input.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 02 / 06</div>
+      <div class="q-q">Why must <code>fhevmjs</code> be used in a Client Component in Next.js (with the <code>'use client'</code> directive)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It requires access to the filesystem which is only available client-side</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Server Components don't support async functions</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>fhevmjs relies on WebAssembly and browser APIs (like <code>crypto.subtle</code>) that are not available in Node.js server-side rendering</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It needs to access the user's localStorage to cache the public key</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The TFHE operations are implemented in WASM, and the keypair generation uses browser crypto APIs. These are unavailable during SSR. Always import and use fhevmjs only in Client Components.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 06</div>
+      <div class="q-q">In the re-encryption flow, what is the purpose of the ephemeral keypair generated by <code>instance.generateKeypair()</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It is stored on-chain to allow future decryption requests</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It replaces the user's wallet key for signing transactions</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It is uploaded to the KMS so it can send the decrypted value back</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The KMS re-encrypts the on-chain ciphertext under this public key; the private key decrypts it locally in the browser</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The user never gets the original plaintext directly. The KMS re-encrypts under the ephemeral public key. The browser decrypts with the ephemeral private key. The private key should never be persisted.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 06</div>
+      <div class="q-q">What is the role of the EIP-712 signature in the <code>balanceOf</code> re-encryption call?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It proves to the KMS that the wallet owner consents to the re-encryption, preventing unauthorized parties from triggering re-encryption on someone else's balance</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It pays for the gas cost of the decryption</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It grants ACL permission in the on-chain ACL contract</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It replaces the transaction signature when calling view functions</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The EIP-712 permit is a consent mechanism. Without it, anyone could call <code>balanceOf</code> with an arbitrary public key and request the KMS to re-encrypt your balance to their key.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 05 / 06</div>
+      <div class="q-q">You encrypt a transfer amount with <code>contractAddress = "0xABC"</code> but accidentally deploy a new contract at <code>"0xDEF"</code>. What happens when you submit the transaction?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The transaction succeeds but the amount is silently set to zero</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The on-chain ZK proof verification fails and the transaction reverts</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ciphertext is decrypted and compared — it works if the value matches</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The transaction is rejected by the wallet before it's broadcast</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The ZK proof binds the ciphertext to the exact contract address. Submitting to a different contract causes the proof verification precompile to reject the input, reverting the transaction.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 06 / 06</div>
+      <div class="q-q">Which call is responsible for fetching the ~7 MB TFHE bootstrapping public key from the network?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>instance.generateKeypair()</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>instance.createEncryptedInput()</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>createInstance({ networkUrl, ... })</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>instance.createEIP712()</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> <code>createInstance</code> is async and performs an RPC call to fetch the FHE public key from the FHEVM node. This should be called once and the instance cached for the session. All subsequent operations are local.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/6</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day10.html">&#8592; Day 10 — Week 2 Capstone</a>
+  <a class="next" href="day12.html">Day 12 — Gateway Async Patterns &#8594;</a>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = ['intro','fhevmjs-intro','instance','pubkey','install','nextjs','wagmi',
+  'encrypt','input-proof','send-tx','reencrypt','permit','decrypt-view',
+  'react-hook','errors','lab','quiz'];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+
+const TOTAL = 6;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! On to Day 12.' :
+    pct >= 83   ? 'Excellent work!'        :
+    pct >= 50   ? 'Good — review the re-encryption section.' :
+                  'Re-read from the top.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
