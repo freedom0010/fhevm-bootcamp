@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 3 — Your First Encrypted Contract | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#070711;--ink2:#0d0d1a;--ink3:#141426;--plate:#1a1a2e;--plate2:#20203a;--wire:#2a2a45;--wire2:#383860;--green:#4ade80;--green2:#22c55e;--amber:#fbbf24;--rose:#f87171;--purple:#c084fc;--sky:#60a5fa;--teal:#2dd4bf;--dim:#6b6b95;--mid:#9898be;--bright:#ddddf5;--white:#f0f0ff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--green),var(--teal));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,7,17,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;gap:8px;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--green)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--green);border-left-color:var(--green);background:rgba(74,222,128,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--green2);border-left-color:var(--green2)}
+.main{padding:56px 70px 120px;max-width:900px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.16);font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--green);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}
+.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--green);background:rgba(74,222,128,.09);padding:2px 6px;border-radius:3px}
+.code{background:#040408;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s;letter-spacing:.8px}
+.copy:hover{border-color:var(--green);color:var(--green)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--green);background:rgba(74,222,128,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(45,212,191,.05);border-color:var(--teal)}.info .box-title{color:var(--teal)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.012)}
+td code{font-family:var(--mono);font-size:11px;color:var(--green);background:rgba(74,222,128,.07);padding:1px 5px;border-radius:3px}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.diff-card{background:#040408;border:1px solid var(--wire);border-radius:10px;overflow:hidden}
+.diff-label{padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:600;border-bottom:1px solid var(--wire)}
+.diff-label.bad{color:var(--rose);background:rgba(248,113,113,.06)}.diff-label.good{color:var(--green);background:rgba(74,222,128,.06)}
+.diff-card pre{font-size:11.5px;padding:14px}
+.flow{display:flex;flex-direction:column;margin:22px 0;gap:0}
+.flow-step{display:flex;gap:0;align-items:flex-start;position:relative}
+.flow-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;bottom:-6px;width:1px;background:var(--wire2)}
+.step-num{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);color:var(--green);font-family:var(--mono);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-right:18px;margin-top:1px;z-index:1}
+.step-body{padding-bottom:24px;flex:1}.step-body h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:5px}.step-body p{font-size:13px;margin-bottom:0;line-height:1.72}
+.step-body code{font-family:var(--mono);font-size:11.5px;color:var(--green);background:rgba(74,222,128,.09);padding:1px 5px;border-radius:3px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(192,132,252,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--purple);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q{}.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--green);background:rgba(74,222,128,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--green)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--green);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--green);color:var(--green)}.pnav .next{background:rgba(74,222,128,.07);border-color:rgba(74,222,128,.22);color:var(--green)}.pnav .next:hover{background:rgba(74,222,128,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.diff{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 1</span><span class="sep">/</span><span class="cur">Day 3</span></div>
+  <div class="tb-badge">Week 1 — Foundations</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="structure">Project Structure</a>
+  <a class="sb-a" data-id="imports">Imports &amp; Config</a>
+  <a class="sb-a sub" data-id="fhe-sol">FHE.sol Library</a>
+  <a class="sb-a sub" data-id="zama-cfg">ZamaConfig</a>
+  <a class="sb-a" data-id="types">Type System</a>
+  <a class="sb-a sub" data-id="euint">euint vs externalEuint</a>
+  <a class="sb-a sub" data-id="from-ext">fromExternal()</a>
+  <a class="sb-a" data-id="transform">Plain → Encrypted</a>
+  <a class="sb-a sub" data-id="diff">Side-by-Side Diff</a>
+  <a class="sb-a" data-id="full-contract">Full FHECounter</a>
+  <a class="sb-a sub" data-id="constructor">Constructor</a>
+  <a class="sb-a sub" data-id="increment">increment()</a>
+  <a class="sb-a sub" data-id="select-pattern">FHE.select Pattern</a>
+  <a class="sb-a" data-id="tests">TypeScript Tests</a>
+  <a class="sb-a sub" data-id="fhevm-inst">FhevmInstance</a>
+  <a class="sb-a sub" data-id="encrypt-inp">Encrypt Input</a>
+  <a class="sb-a sub" data-id="decrypt-res">Decrypt Result</a>
+  <a class="sb-a" data-id="run">Run &amp; Verify</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128296; Day 3 of 20</div>
+  <h1>Your First<br><em>Encrypted Contract</em></h1>
+  <p class="lead">Time to write actual code. Today you transform a plain Solidity counter into a fully encrypted one — step by step, line by line. By the end you'll have a running Hardhat test suite that encrypts inputs, calls your contract, and decrypts results using the fhevmjs SDK.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#128296; Solidity contract</div>
+    <div class="stat">&#128221; TypeScript tests</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="structure">Project Structure</h2>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Tree</span><span class="fname">Target layout for Day 3</span></div>
+  <pre>fhevm-bootcamp/
+&#9500;&#9472;&#9472; contracts/
+&#9474;   &#9500;&#9472;&#9472; Counter.sol          <span class="c"># plain starting point</span>
+&#9474;   &#9492;&#9472;&#9472; FHECounter.sol       <span class="c"># our encrypted version</span>
+&#9500;&#9472;&#9472; test/
+&#9474;   &#9492;&#9472;&#9472; FHECounter.test.ts   <span class="c"># TypeScript test suite</span>
+&#9500;&#9472;&#9472; scripts/
+&#9474;   &#9492;&#9472;&#9472; deploy.ts
+&#9492;&#9472;&#9472; hardhat.config.ts</pre>
+</div>
+
+<h2 class="sec" id="imports">Imports &amp; Network Config</h2>
+<h3 class="sub" id="fhe-sol">The FHE.sol Library</h3>
+<p>The <code>@fhevm/solidity</code> package contains everything you need. Three imports cover all cases:</p>
+<div class="tw"><table>
+  <thead><tr><th>Import</th><th>Provides</th></tr></thead>
+  <tbody>
+    <tr><td><code>@fhevm/solidity/lib/FHE.sol</code></td><td>All FHE ops: <code>add</code>, <code>sub</code>, <code>mul</code>, <code>gt</code>, <code>eq</code>, <code>select</code>, <code>allow</code>, <code>fromExternal</code>, <code>asEuintX</code>, …</td></tr>
+    <tr><td><code>@fhevm/solidity/config/ZamaConfig.sol</code></td><td>Base contract setting network-specific addresses (ACL, Gateway, precompile)</td></tr>
+    <tr><td><code>@fhevm/solidity/gateway/GatewayCaller.sol</code></td><td>Base contract for async Gateway decryption callbacks (Days 11+)</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="zama-cfg">Inheriting ZamaConfig</h3>
+<p>Every FHEVM contract inherits a config that sets the correct addresses for the target network. Your logic doesn't change — only the config:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Config per network</span></div>
+  <pre><span class="c">// Local Hardhat dev</span>
+<span class="k">contract</span> <span class="t">FHECounter</span> <span class="k">is</span> <span class="t">ZamaLocalConfig</span> { ... }
+
+<span class="c">// Zama Devnet</span>
+<span class="k">contract</span> <span class="t">FHECounter</span> <span class="k">is</span> <span class="t">ZamaDevnetConfig</span> { ... }
+
+<span class="c">// Ethereum Sepolia (production)</span>
+<span class="k">contract</span> <span class="t">FHECounter</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> { ... }</pre>
+</div>
+
+<h2 class="sec" id="types">The FHEVM Type System</h2>
+<h3 class="sub" id="euint">euint vs externalEuint — Two Formats, One Value</h3>
+<div class="box key">
+  <span class="box-ico">&#128273;</span>
+  <div class="box-inner">
+    <div class="box-title">Critical Distinction</div>
+    <div class="box-text">
+      <strong>euint32</strong> — internal on-chain handle. A 32-byte pointer to a ciphertext on the coprocessor. Used for storage variables, return values, and intermediate results inside your contract.<br><br>
+      <strong>externalEuint32</strong> — the user-submitted input format from fhevmjs. Contains the raw ciphertext blob. Must be validated and converted via <code>FHE.fromExternal()</code> before any FHE operation. Cannot be stored directly.
+    </div>
+  </div>
+</div>
+<div class="tw"><table>
+  <thead><tr><th>Type</th><th>Bits</th><th>Max Value</th><th>Gas (relative)</th><th>Best For</th></tr></thead>
+  <tbody>
+    <tr><td><code>ebool</code></td><td>1</td><td>true/false</td><td>1×</td><td>Conditions, flags</td></tr>
+    <tr><td><code>euint4</code></td><td>4</td><td>15</td><td>1×</td><td>Small enums, nibbles</td></tr>
+    <tr><td><code>euint8</code></td><td>8</td><td>255</td><td>2×</td><td>Percentages, ages</td></tr>
+    <tr><td><code>euint16</code></td><td>16</td><td>65,535</td><td>4×</td><td>Scores, ratings</td></tr>
+    <tr><td><code>euint32</code></td><td>32</td><td>~4.3B</td><td>8×</td><td>Timestamps, IDs</td></tr>
+    <tr><td><code>euint64</code></td><td>64</td><td>~1.8×10¹⁹</td><td>16×</td><td>Token balances (standard)</td></tr>
+    <tr><td><code>euint128</code></td><td>128</td><td>~3.4×10³⁸</td><td>24×</td><td>High-precision amounts</td></tr>
+    <tr><td><code>eaddress</code></td><td>160</td><td>N/A</td><td>20×</td><td>Encrypted Ethereum addresses</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="from-ext">fromExternal() — The Entry Gate</h3>
+<div class="box info">
+  <span class="box-ico">&#128274;</span>
+  <div class="box-inner">
+    <div class="box-title">What fromExternal() Validates</div>
+    <div class="box-text">
+      <code>FHE.fromExternal(encInput, proof)</code> verifies a zero-knowledge proof that the ciphertext was encrypted specifically for:<br>
+      • <strong>This contract address</strong> — prevents replay attacks to other contracts<br>
+      • <strong>msg.sender</strong> — prevents stealing and replaying another user's input<br>
+      • <strong>The exact ciphertext content</strong> — prevents tampering<br><br>
+      If any of these don't match, the transaction reverts. This is why users must re-encrypt for every new call.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="transform">Transforming Plain Counter → Encrypted Counter</h2>
+<h3 class="sub" id="diff">Side-by-Side: Every Change Explained</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; Counter.sol (plaintext)</div>
+    <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">contract</span> <span class="t">Counter</span> {
+  <span class="t">uint32</span> <span class="k">private</span> count;
+
+  <span class="k">function</span> <span class="f">add</span>(
+    <span class="t">uint32</span> amount
+  ) <span class="k">external</span> {
+    count += amount;
+  }
+
+  <span class="k">function</span> <span class="f">getCount</span>()
+    <span class="k">external view returns</span>(<span class="t">uint32</span>)
+  {
+    <span class="k">return</span> count;
+  }
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; FHECounter.sol (encrypted)</div>
+    <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+
+<span class="k">contract</span> <span class="t">FHECounter</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+  <span class="t">euint32</span> <span class="k">private</span> count;    <span class="c">// ← encrypted</span>
+
+  <span class="k">function</span> <span class="f">add</span>(
+    <span class="t">externalEuint32</span> calldata enc,
+    <span class="t">bytes</span> calldata proof
+  ) <span class="k">external</span> {
+    <span class="t">euint32</span> amt = FHE.<span class="f">fromExternal</span>(enc,proof);
+    count = FHE.<span class="f">add</span>(count, amt);
+    FHE.<span class="f">allowThis</span>(count);
+    FHE.<span class="f">allow</span>(count, msg.sender);
+  }
+
+  <span class="k">function</span> <span class="f">getCount</span>()
+    <span class="k">external view returns</span>(<span class="t">euint32</span>)
+  {
+    <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(count));
+    <span class="k">return</span> count;
+  }
+}</pre>
+  </div>
+</div>
+<p>Every change has a reason: <strong>imports</strong> add FHE ops + network config; <strong>euint32</strong> is the encrypted type; <strong>externalEuint32 + proof</strong> is the validated user input; <strong>fromExternal</strong> validates the ZK proof; <strong>allowThis + allow</strong> grant ACL permissions to the new handle.</p>
+
+<h2 class="sec" id="full-contract">The Complete FHECounter Contract</h2>
+<h3 class="sub" id="constructor">Constructor Pattern</h3>
+<p>Always initialize encrypted storage variables in the constructor — an uninitialized <code>euint32</code> is the zero handle (all bytes zero), which has no ACL grants and will cause reverts if used without initialization.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/FHECounter.sol</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+
+<span class="k">contract</span> <span class="t">FHECounter</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+
+    <span class="t">euint32</span> <span class="k">private</span> count;        <span class="c">// encrypted handle stored on-chain</span>
+    <span class="t">address</span> <span class="k">public immutable</span> owner;
+    <span class="t">uint32</span>  <span class="k">public</span> txCount;       <span class="c">// plaintext tx counter (public metadata)</span>
+
+    <span class="ev">event</span> <span class="f">Added</span>(<span class="t">address indexed</span> by);   <span class="c">// no amount — privacy</span>
+    <span class="ev">event</span> <span class="f">Reset</span>(<span class="t">address indexed</span> by);
+
+    <span class="k">constructor</span>() {
+        owner = msg.sender;
+        <span class="c">// MUST initialize: asEuint32(0) creates a proper handle for zero</span>
+        count = FHE.<span class="f">asEuint32</span>(<span class="n">0</span>);
+        FHE.<span class="f">allowThis</span>(count);          <span class="c">// contract can use it in future txs</span>
+        FHE.<span class="f">allow</span>(count, msg.sender);   <span class="c">// deployer can decrypt initial value</span>
+    }
+
+    <span class="c">/**
+     * @notice Add an encrypted amount to the counter.
+     * @param encAmount  User-encrypted value (from fhevmjs)
+     * @param proof      ZK proof binding ciphertext to this contract + caller
+     */</span>
+    <span class="k">function</span> <span class="f">add</span>(
+        <span class="t">externalEuint32</span> calldata encAmount,
+        <span class="t">bytes</span>           calldata proof
+    ) <span class="k">external</span> {
+        <span class="c">// Validate ZK proof and get an internal handle</span>
+        <span class="t">euint32</span> amount = FHE.<span class="f">fromExternal</span>(encAmount, proof);
+
+        <span class="c">// FHE addition — result is a brand-new handle</span>
+        count = FHE.<span class="f">add</span>(count, amount);
+
+        <span class="c">// ACL: grant permissions to the new handle</span>
+        FHE.<span class="f">allowThis</span>(count);
+        FHE.<span class="f">allow</span>(count, msg.sender);
+        FHE.<span class="f">allow</span>(count, owner);
+
+        txCount++;
+        <span class="k">emit</span> <span class="f">Added</span>(msg.sender);
+    }
+
+    <span class="c">// Read the encrypted count (only authorized callers)</span>
+    <span class="k">function</span> <span class="f">getCount</span>() <span class="k">external view returns</span> (<span class="t">euint32</span>) {
+        <span class="k">require</span>(
+            FHE.<span class="f">isSenderAllowed</span>(count),
+            <span class="s">"FHECounter: not authorized"</span>
+        );
+        <span class="k">return</span> count;
+    }
+
+    <span class="c">// Grant another address decryption access (owner only)</span>
+    <span class="k">function</span> <span class="f">grantAccess</span>(<span class="t">address</span> viewer) <span class="k">external</span> {
+        <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+        FHE.<span class="f">allow</span>(count, viewer);
+    }
+
+    <span class="c">// Reset counter to zero (owner only)</span>
+    <span class="k">function</span> <span class="f">reset</span>() <span class="k">external</span> {
+        <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+        count = FHE.<span class="f">asEuint32</span>(<span class="n">0</span>);
+        FHE.<span class="f">allowThis</span>(count);
+        FHE.<span class="f">allow</span>(count, owner);
+        <span class="k">emit</span> <span class="f">Reset</span>(msg.sender);
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="select-pattern">The FHE.select() Pattern — No if/else on Encrypted Values</h3>
+<div class="box alert">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">Critical Rule — Never Branch on Encrypted Booleans</div>
+    <div class="box-text">You cannot use <code>if (encBool)</code> — the EVM cannot evaluate an encrypted condition. Instead, always compute <em>both</em> branches and use <code>FHE.select(condition, ifTrue, ifFalse)</code> to pick the result. This is the single most important FHEVM programming pattern.</div>
+  </div>
+</div>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; WRONG — cannot branch on encrypted value</div>
+    <pre><span class="t">ebool</span> isPositive = FHE.<span class="f">gt</span>(balance, zero);
+<span class="c">// ❌ COMPILE ERROR or LOGIC ERROR:</span>
+<span class="k">if</span> (isPositive) {
+    result = FHE.<span class="f">add</span>(balance, amount);
+} <span class="k">else</span> {
+    result = balance;
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; CORRECT — use FHE.select()</div>
+    <pre><span class="t">ebool</span> isPositive = FHE.<span class="f">gt</span>(balance, zero);
+<span class="c">// ✓ Compute both branches, pick with select:</span>
+<span class="t">euint64</span> added   = FHE.<span class="f">add</span>(balance, amount);
+<span class="t">euint64</span> kept    = balance;
+result = FHE.<span class="f">select</span>(isPositive, added, kept);
+FHE.<span class="f">allowThis</span>(result);
+FHE.<span class="f">allow</span>(result, msg.sender);</pre>
+  </div>
+</div>
+
+<h2 class="sec" id="tests">TypeScript Test Suite</h2>
+<p>FHEVM tests require the <code>fhevmjs</code> SDK to encrypt inputs client-side before sending them to the contract. The flow is: create instance → encrypt inputs → call contract → decrypt result.</p>
+
+<h3 class="sub" id="fhevm-inst">Creating the FhevmInstance</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/helpers.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { createFhevmInstance, FhevmInstance } <span class="k">from</span> <span class="s">"fhevmjs"</span>;
+
+<span class="k">let</span> fhevmInstance: FhevmInstance;
+
+<span class="k">export async function</span> <span class="f">getFhevmInstance</span>(): <span class="t">Promise</span>&lt;FhevmInstance&gt; {
+  <span class="k">if</span> (fhevmInstance) <span class="k">return</span> fhevmInstance;
+
+  <span class="c">// Fetch network-specific FHE public key from the local node</span>
+  <span class="k">const</span> provider = ethers.provider;
+  fhevmInstance = <span class="k">await</span> <span class="f">createFhevmInstance</span>({
+    chainId: (<span class="k">await</span> provider.<span class="f">getNetwork</span>()).chainId,
+    networkUrl: provider._getConnection().url,
+    gatewayUrl: <span class="s">"http://localhost:7077"</span>,  <span class="c">// local gateway</span>
+    aclAddress: <span class="s">"0x339EcE85B9E11a3A3AA557582784a15d7F82AAf2"</span>,
+  });
+
+  <span class="k">return</span> fhevmInstance;
+}
+
+<span class="c">// Helper: encrypt a uint32 value for a specific contract + user</span>
+<span class="k">export async function</span> <span class="f">encryptUint32</span>(
+  value: <span class="t">number</span>,
+  contractAddress: <span class="t">string</span>,
+  userAddress: <span class="t">string</span>
+) {
+  <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+  <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(contractAddress, userAddress);
+  input.<span class="f">add32</span>(value);           <span class="c">// encrypt as euint32</span>
+  <span class="k">const</span> encrypted = <span class="k">await</span> input.<span class="f">encrypt</span>();
+  <span class="k">return</span> {
+    handles: encrypted.handles,   <span class="c">// the ciphertext</span>
+    inputProof: encrypted.inputProof  <span class="c">// ZK proof</span>
+  };
+}</pre>
+</div>
+
+<h3 class="sub" id="encrypt-inp">Full Test Suite</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/FHECounter.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { expect } <span class="k">from</span> <span class="s">"chai"</span>;
+<span class="k">import</span> { <span class="f">getFhevmInstance</span>, <span class="f">encryptUint32</span> } <span class="k">from</span> <span class="s">"./helpers"</span>;
+
+describe(<span class="s">"FHECounter"</span>, () => {
+  <span class="k">let</span> counter: <span class="k">any</span>;
+  <span class="k">let</span> owner: <span class="k">any</span>, alice: <span class="k">any</span>;
+
+  before(<span class="k">async</span> () => {
+    [owner, alice] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+
+    <span class="c">// Deploy the contract</span>
+    <span class="k">const</span> Factory = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"FHECounter"</span>);
+    counter = <span class="k">await</span> Factory.<span class="f">deploy</span>();
+    <span class="k">await</span> counter.<span class="f">waitForDeployment</span>();
+    console.<span class="f">log</span>(<span class="s">"  Contract deployed at:"</span>, <span class="k">await</span> counter.<span class="f">getAddress</span>());
+  });
+
+  it(<span class="s">"adds an encrypted value and txCount increments"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> addr = <span class="k">await</span> counter.<span class="f">getAddress</span>();
+
+    <span class="c">// Encrypt 42 for owner calling this contract</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> <span class="f">encryptUint32</span>(
+      <span class="n">42</span>, addr, owner.address
+    );
+
+    <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">add</span>(handles[<span class="n">0</span>], inputProof);
+
+    <span class="k">const</span> txCount = <span class="k">await</span> counter.<span class="f">txCount</span>();
+    expect(txCount).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">1n</span>);
+  });
+
+  it(<span class="s">"owner can retrieve and decrypt the count"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> counter.<span class="f">getAddress</span>();
+
+    <span class="c">// Get the encrypted handle from the contract</span>
+    <span class="k">const</span> handle = <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">getCount</span>();
+
+    <span class="c">// Re-encrypt under owner's keypair so they can decrypt locally</span>
+    <span class="k">const</span> { publicKey, privateKey } = instance.<span class="f">generateKeypair</span>();
+    <span class="k">const</span> eip712 = instance.<span class="f">createEIP712</span>(publicKey, addr);
+    <span class="k">const</span> sig = <span class="k">await</span> owner.<span class="f">signTypedData</span>(
+      eip712.domain, eip712.types, eip712.message
+    );
+    <span class="k">const</span> reencrypted = <span class="k">await</span> instance.<span class="f">reencrypt</span>(
+      handle, privateKey, publicKey, sig, addr, owner.address
+    );
+    <span class="k">const</span> decrypted = instance.<span class="f">decrypt</span>(addr, reencrypted);
+
+    console.<span class="f">log</span>(<span class="s">"  Decrypted count:"</span>, decrypted);
+    expect(decrypted).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">42</span>);
+  });
+
+  it(<span class="s">"alice cannot read the count (no ACL grant)"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> expect(
+      counter.<span class="f">connect</span>(alice).<span class="f">getCount</span>()
+    ).<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"FHECounter: not authorized"</span>);
+  });
+
+  it(<span class="s">"owner can grant alice access then alice reads"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">grantAccess</span>(alice.address);
+    <span class="c">// Now alice can call getCount without reverting</span>
+    <span class="k">const</span> handle = <span class="k">await</span> counter.<span class="f">connect</span>(alice).<span class="f">getCount</span>();
+    expect(handle).<span class="f">to</span>.<span class="f">not</span>.<span class="f">equal</span>(<span class="s">"0x"</span>);
+  });
+
+  it(<span class="s">"adds two values — count equals 42 + 10 = 52"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> counter.<span class="f">getAddress</span>();
+
+    <span class="c">// Add 10 more</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> <span class="f">encryptUint32</span>(<span class="n">10</span>, addr, owner.address);
+    <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">add</span>(handles[<span class="n">0</span>], inputProof);
+
+    <span class="c">// Decrypt and check</span>
+    <span class="k">const</span> handle = <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">getCount</span>();
+    <span class="k">const</span> { publicKey, privateKey } = instance.<span class="f">generateKeypair</span>();
+    <span class="k">const</span> eip712 = instance.<span class="f">createEIP712</span>(publicKey, addr);
+    <span class="k">const</span> sig = <span class="k">await</span> owner.<span class="f">signTypedData</span>(eip712.domain, eip712.types, eip712.message);
+    <span class="k">const</span> reenc = <span class="k">await</span> instance.<span class="f">reencrypt</span>(handle, privateKey, publicKey, sig, addr, owner.address);
+    expect(instance.<span class="f">decrypt</span>(addr, reenc)).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">52</span>);
+  });
+
+  it(<span class="s">"reset sets count to 0 (owner only)"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> expect(
+      counter.<span class="f">connect</span>(alice).<span class="f">reset</span>()
+    ).<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"Not owner"</span>);
+
+    <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">reset</span>();
+    expect(<span class="k">await</span> counter.<span class="f">txCount</span>()).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">2n</span>);
+    <span class="c">// txCount doesn't reset — only the encrypted value does</span>
+  });
+});</pre>
+</div>
+
+<h3 class="sub" id="decrypt-res">Re-encryption vs. Public Decryption</h3>
+<div class="tw"><table>
+  <thead><tr><th>Method</th><th>How It Works</th><th>When to Use</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Re-encryption</strong></td><td>KMS re-encrypts the value under the user's ephemeral public key; user decrypts locally. Plaintext never appears on-chain.</td><td>User viewing their own private value (balance, score, etc.)</td></tr>
+    <tr><td><strong>Public Decryption (Gateway callback)</strong></td><td>KMS decrypts and Gateway delivers plaintext to the contract. Plaintext appears in tx calldata.</td><td>Revealing a result publicly (auction winner, game outcome)</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="run">Run the Tests</h2>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Bash</span><span class="fname">Terminal</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c"># Terminal 1 — start node</span>
+npx hardhat node
+
+<span class="c"># Terminal 2 — compile and test</span>
+npx hardhat compile
+npx hardhat test test/FHECounter.test.ts --network hardhat
+
+<span class="c"># Expected output:</span>
+<span class="a">  FHECounter
+    ✓ adds an encrypted value and txCount increments (312ms)
+    ✓ owner can retrieve and decrypt the count (88ms)
+    ✓ alice cannot read the count (no ACL grant)
+    ✓ owner can grant alice access then alice reads (74ms)
+    ✓ adds two values — count equals 42 + 10 = 52 (95ms)
+    ✓ reset sets count to 0 (owner only)
+  6 passing (1.2s)</span></pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 3 Quiz — First Encrypted Contract</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">What is the difference between <code>euint32</code> and <code>externalEuint32</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>euint32</code> is for public values; <code>externalEuint32</code> is for private ones</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>euint32</code> stores 32 bits; <code>externalEuint32</code> stores 64 bits</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>euint32</code> is an internal on-chain handle; <code>externalEuint32</code> is the raw ciphertext format submitted by users that must be validated via <code>fromExternal()</code> before use</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>They are identical — the names are interchangeable</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> euint32 is a 32-byte handle (a pointer) to a ciphertext stored on the coprocessor. externalEuint32 is the raw ciphertext blob submitted by the user's browser via fhevmjs. Before any FHE operation, externalEuint32 must be converted to euint32 via <code>FHE.fromExternal()</code>, which also validates the ZK proof binding the ciphertext to this specific contract and caller.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Why does <code>FHE.fromExternal(enc, proof)</code> require a ZK proof?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To compress the ciphertext to a smaller on-chain representation</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To verify the ciphertext was encrypted specifically for this contract address and msg.sender — preventing replay attacks and input theft across contracts or callers</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>To check that the plaintext value is within the allowed range</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>To authorize the KMS to decrypt the input for verification</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The ZK proof (inputProof) proves that the ciphertext was encrypted for this specific contract address AND this specific msg.sender. Without it, an attacker could take someone else's encrypted input (e.g., "I have 1000 tokens") and replay it in a different transaction or against a different contract.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">You have <code>ebool isGt = FHE.gt(a, b)</code>. How do you use this condition to produce different results?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>if (isGt) { result = x; } else { result = y; }</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>result = isGt ? x : y;</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>result = FHE.ifElse(isGt, x, y);</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Compute both branches then: <code>result = FHE.select(isGt, x, y);</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> You cannot branch on an encrypted boolean — the EVM cannot evaluate it. FHE.select() evaluates both branches and uses the encrypted condition to pick one, without ever revealing which branch was taken. This is the fundamental pattern for conditional logic in FHEVM contracts.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">What happens if you declare <code>euint32 private count</code> but never call <code>FHE.asEuint32(0)</code> in the constructor?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The count is the zero handle (all bytes 0x00), which has no ACL grants — any FHE operation using it will revert on the ACL check</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It automatically initializes to an encrypted 0 with full ACL grants</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The Solidity compiler will reject uninitialized euint variables</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The contract will compile and work, but with lower gas efficiency</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> An uninitialized euint32 defaults to bytes32(0) — the zero handle. This handle has no ACL grants and no corresponding ciphertext on the coprocessor. Any FHE.add(count, ...) will fail the ACL check. Always initialize encrypted storage with FHE.asEuintX(0) and call allowThis().</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Which type would you choose to store an encrypted token balance that can reach up to 10¹⁸ (standard ERC-20 with 18 decimals)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>euint32</code> — sufficient for most balances</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>euint128</code> — maximum safety for all amounts</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>euint64</code> — max value ~1.8×10¹⁹ safely covers 10¹⁸, and uses 16× baseline gas vs euint128's 24×</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>euint256</code> — must match Solidity's uint256 for ERC-20 compatibility</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> euint64 has a max of ~1.8×10¹⁹, which safely covers 10¹⁸ (1 ETH in wei). It costs 16× baseline gas vs euint4's 1× baseline. euint128 would also work but wastes 50% more gas than necessary. euint256 is rarely needed and costs 2× euint128. Always use the smallest type that fits.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">In the test suite, what is the purpose of the re-encryption step (<code>instance.reencrypt()</code>)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It re-encrypts the value for storage efficiency</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It re-encrypts the ciphertext under the user's ephemeral public key, so the user can decrypt locally — the plaintext never appears on-chain</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It re-encrypts the value under a new key to prevent replay attacks</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It is a test-only helper that bypasses the KMS entirely</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Re-encryption is the privacy-preserving way for a user to view their own data. The KMS re-encrypts the ciphertext under the user's ephemeral keypair (generated fresh for each view request). The user decrypts locally using their private key. The plaintext never appears in any transaction or on-chain state.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">Why does the FHECounter emit <code>event Added(address indexed by)</code> but not the amount added?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Event parameters can only be of plaintext types — euint32 cannot be emitted</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Emitting the handle would expose the ciphertext to block explorers</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Gas optimization — emitting amounts costs too much</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Privacy design — emitting the encrypted amount as a handle would leak metadata about transaction patterns; only the caller address is revealed (which is already public on-chain)</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> While you technically could emit the handle, doing so reveals that a specific address added a specific (opaque) amount at a specific time. For privacy-sensitive contracts, even metadata leakage should be minimized. The event only records that an addition happened and by whom — the amount remains private.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">After calling <code>count = FHE.add(count, amount)</code>, which ACL calls are <em>required</em> at minimum to keep the contract functional?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.allowThis(count)</code> — without this, the contract cannot use the new handle in any future transaction</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.allow(count, msg.sender)</code> — without this the caller cannot decrypt</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Both <code>allowThis</code> and <code>allow(msg.sender)</code> are equally required</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>None — ACL grants are inherited from input handles automatically</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The bare minimum for a contract that stores and reuses an encrypted value is <code>FHE.allowThis()</code>. Without it, the contract cannot access the new handle on any subsequent transaction, breaking all future operations. <code>FHE.allow(count, msg.sender)</code> is best practice (so the caller can decrypt) but if you omit it, the contract still functions — only the caller can't view their value. <code>allowThis</code> is the truly critical one.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day02.html">&#8592; Day 2 — FHEVM Architecture</a>
+  <a class="next" href="day04.html">Day 4 — Encrypted ERC-20 &#8594;</a>
+</div>
+</main>
+</div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+const ids=['intro','structure','imports','fhe-sol','zama-cfg','types','euint','from-ext','transform','diff','full-contract','constructor','increment','select-pattern','tests','fhevm-inst','encrypt-inp','decrypt-res','run','quiz'];
+ids.forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Day 4!':pct>=87?'Excellent!':pct>=62?'Good — review explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body>
+</html>
