@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 4 — Encrypted ERC-20 | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#07070f;--ink2:#0c0c18;--ink3:#12121f;--plate:#181828;--wire:#252540;--wire2:#32324e;--acc:#f97316;--acc2:#ea580c;--green:#4ade80;--rose:#f87171;--purple:#c084fc;--sky:#60a5fa;--teal:#2dd4bf;--amber:#fbbf24;--dim:#6a6a90;--mid:#9898bc;--bright:#ddddf2;--white:#f0f0ff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--purple));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,7,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(249,115,22,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:900px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.16);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}
+.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(249,115,22,.09);padding:2px 6px;border-radius:3px}
+.code{background:#040408;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(249,115,22,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(249,115,22,.05);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(249,115,22,.07);padding:1px 5px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.card{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;padding:18px 20px}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.card p{font-size:13px;margin-bottom:8px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(192,132,252,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--purple);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q{}.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(249,115,22,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(249,115,22,.04);border:1px solid rgba(249,115,22,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(249,115,22,.07);border-color:rgba(249,115,22,.22);color:var(--acc)}.pnav .next:hover{background:rgba(249,115,22,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 1</span><span class="sep">/</span><span class="cur">Day 4</span></div>
+  <div class="tb-badge">Week 1 — Foundations</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="design">Design Decisions</a>
+  <a class="sb-a sub" data-id="erc20-diff">ERC-20 Differences</a>
+  <a class="sb-a sub" data-id="balance-type">euint64 for Balances</a>
+  <a class="sb-a" data-id="contract">ConfidentialERC20</a>
+  <a class="sb-a sub" data-id="storage">Storage Layout</a>
+  <a class="sb-a sub" data-id="mint">_mint()</a>
+  <a class="sb-a sub" data-id="transfer">transfer()</a>
+  <a class="sb-a sub" data-id="approve">approve() &amp; allowance</a>
+  <a class="sb-a sub" data-id="transferfrom">transferFrom()</a>
+  <a class="sb-a" data-id="overflow">Overflow Safety</a>
+  <a class="sb-a" data-id="acl-pattern">ACL Grant Pattern</a>
+  <a class="sb-a" data-id="tests">Test Suite</a>
+  <a class="sb-a sub" data-id="test-mint">Mint &amp; Balance</a>
+  <a class="sb-a sub" data-id="test-transfer">Transfer</a>
+  <a class="sb-a sub" data-id="test-allowance">Allowance</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128176; Day 4 of 20</div>
+  <h1>Encrypted<br><em>ERC-20 Token</em></h1>
+  <p class="lead">The ERC-20 standard is the backbone of DeFi — but its public balances expose everything. Today you build a fully encrypted token where balances, transfers, and allowances are all hidden from public view, while remaining fully composable with existing smart contract infrastructure.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#128176; ConfidentialERC20</div>
+    <div class="stat">&#128272; Encrypted allowances</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="design">Design Decisions</h2>
+<h3 class="sub" id="erc20-diff">How Confidential ERC-20 Differs from Standard ERC-20</h3>
+<div class="tw"><table>
+  <thead><tr><th>Feature</th><th>Standard ERC-20</th><th>Confidential ERC-20</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Balance storage</strong></td><td><code>mapping(address => uint256)</code></td><td><code>mapping(address => euint64)</code></td></tr>
+    <tr><td><strong>Transfer amount</strong></td><td>Plain <code>uint256</code></td><td>Encrypted <code>externalEuint64 + proof</code></td></tr>
+    <tr><td><strong>Allowance</strong></td><td>Plain <code>uint256</code></td><td>Encrypted <code>euint64</code></td></tr>
+    <tr><td><strong>Balance visible to</strong></td><td>Everyone (public)</td><td>Owner + approved addresses only</td></tr>
+    <tr><td><strong>Transfer()</strong> event</td><td>Includes amount</td><td>Emits only sender + recipient (no amount)</td></tr>
+    <tr><td><strong>Overflow protection</strong></td><td>SafeMath / Solidity 0.8</td><td>FHE.select() capped transfer pattern</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="balance-type">Why euint64 for Balances?</h3>
+<div class="box info">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">euint64 Sweet Spot for Tokens</div>
+    <div class="box-text">
+      Standard ERC-20 uses <code>uint256</code>, but FHEVM encrypting 256 bits costs far more gas. <code>euint64</code> (max ~1.8×10¹⁹) covers all practical token amounts with 18-decimal precision — e.g., 10⁹ tokens × 10¹⁸ decimals = 10²⁷, which would need euint128. For most tokens with capped supply under 10⁸ and 18 decimals, euint64 covers 10¹⁸ × 10⁸ = 10²⁶ — still too large. <strong>Use euint64 for tokens with supply ≤ 10 billion units (18 decimals), euint128 for larger.</strong>
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="contract">The ConfidentialERC20 Contract</h2>
+<h3 class="sub" id="storage">Storage Layout &amp; Events</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/ConfidentialERC20.sol (Part 1 — storage)</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+
+<span class="k">contract</span> <span class="t">ConfidentialERC20</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span> {
+
+    <span class="c">// ── Token metadata ────────────────────────────</span>
+    <span class="t">string</span>  <span class="k">public</span> name;
+    <span class="t">string</span>  <span class="k">public</span> symbol;
+    <span class="t">uint8</span>   <span class="k">public</span> decimals = <span class="n">6</span>;    <span class="c">// use 6 to keep amounts in euint64 range</span>
+    <span class="t">address</span> <span class="k">public</span> owner;
+
+    <span class="c">// ── Encrypted state ───────────────────────────</span>
+    <span class="c">// Encrypted balances: only owner + granted addresses can decrypt</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">private</span> _balances;
+
+    <span class="c">// Encrypted allowances: spender → owner → amount</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>)) <span class="k">private</span> _allowances;
+
+    <span class="c">// Plaintext total supply — intentionally public (sum of all balances)</span>
+    <span class="t">uint64</span> <span class="k">public</span> totalSupply;
+
+    <span class="c">// ── Events (no amounts — privacy design) ─────</span>
+    <span class="ev">event</span> <span class="f">Transfer</span>(<span class="t">address indexed</span> from, <span class="t">address indexed</span> to);
+    <span class="ev">event</span> <span class="f">Approval</span>(<span class="t">address indexed</span> owner, <span class="t">address indexed</span> spender);
+    <span class="ev">event</span> <span class="f">Mint</span>(<span class="t">address indexed</span> to, <span class="t">uint64</span> amount); <span class="c">// mint amount is public</span>
+
+    <span class="k">constructor</span>(<span class="t">string</span> <span class="k">memory</span> _name, <span class="t">string</span> <span class="k">memory</span> _symbol) {
+        name   = _name;
+        symbol = _symbol;
+        owner  = msg.sender;
+    }
+}</pre>
+</div>
+
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">totalSupply is Public — Is That OK?</div>
+    <div class="box-text">Yes — the total supply of a token is typically not sensitive information. Hiding it would also break composability (AMMs, oracles). What matters is that individual <em>balances</em> are private. This design mirrors how real-world confidential asset systems work: the total float is public, individual holdings are not.</div>
+  </div>
+</div>
+
+<h3 class="sub" id="mint">_mint() — Creating Tokens</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ConfidentialERC20.sol — mint</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Mint tokens to an address (owner only, plaintext amount)
+/// Mint amount is public — this is a deliberate design choice.
+/// The resulting balance remains encrypted.</span>
+<span class="k">function</span> <span class="f">mint</span>(<span class="t">address</span> to, <span class="t">uint64</span> amount) <span class="k">external</span> {
+    <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+    <span class="k">require</span>(amount &gt; <span class="n">0</span>, <span class="s">"Zero mint"</span>);
+
+    <span class="c">// Convert plaintext amount to an encrypted handle</span>
+    <span class="t">euint64</span> encAmount = FHE.<span class="f">asEuint64</span>(amount);
+
+    <span class="t">euint64</span> current = _balances[to];
+
+    <span class="k">if</span> (<span class="t">euint64</span>.<span class="f">unwrap</span>(current) == <span class="n">0</span>) {
+        <span class="c">// First mint: no existing balance, just assign</span>
+        _balances[to] = encAmount;
+    } <span class="k">else</span> {
+        <span class="c">// Add to existing encrypted balance</span>
+        _balances[to] = FHE.<span class="f">add</span>(_balances[to], encAmount);
+    }
+
+    <span class="c">// Grant ACL: recipient and contract can both access the new handle</span>
+    FHE.<span class="f">allowThis</span>(_balances[to]);
+    FHE.<span class="f">allow</span>(_balances[to], to);
+    FHE.<span class="f">allow</span>(_balances[to], owner);   <span class="c">// owner can audit balances</span>
+
+    totalSupply += amount;
+    <span class="k">emit</span> <span class="f">Mint</span>(to, amount);
+}
+
+<span class="c">/// @notice Returns the caller's encrypted balance handle.
+/// Only authorized addresses (those with ACL grants) can call this.</span>
+<span class="k">function</span> <span class="f">balanceOf</span>(<span class="t">address</span> account) <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+    <span class="k">require</span>(
+        msg.sender == account || FHE.<span class="f">isSenderAllowed</span>(_balances[account]),
+        <span class="s">"Not authorized to view balance"</span>
+    );
+    <span class="k">return</span> _balances[account];
+}</pre>
+</div>
+
+<h3 class="sub" id="transfer">transfer() — The Core Privacy Operation</h3>
+<p>This is the most complex function. We must handle three cases without branching on encrypted values: sender has enough funds, sender has less than amount (cap at balance), and maintaining both balances correctly.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ConfidentialERC20.sol — transfer</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Transfer encrypted tokens. The amount is provided encrypted.
+/// If amount &gt; balance, the transfer is capped at the sender's balance.
+/// (No revert — branching on encrypted bool is impossible.)</span>
+<span class="k">function</span> <span class="f">transfer</span>(
+    <span class="t">address</span>         to,
+    <span class="t">externalEuint64</span> calldata encAmount,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external returns</span> (<span class="t">bool</span>) {
+    <span class="k">require</span>(to != <span class="t">address</span>(<span class="n">0</span>), <span class="s">"Zero address"</span>);
+    <span class="k">require</span>(to != msg.sender,  <span class="s">"Self-transfer"</span>);
+
+    <span class="c">// 1. Validate input and get encrypted amount</span>
+    <span class="t">euint64</span> amount  = FHE.<span class="f">fromExternal</span>(encAmount, proof);
+    <span class="t">euint64</span> balance = _balances[msg.sender];
+
+    <span class="c">// 2. Compute: can sender afford it?</span>
+    <span class="t">ebool</span> canAfford = FHE.<span class="f">le</span>(amount, balance);  <span class="c">// amount &lt;= balance</span>
+
+    <span class="c">// 3. Actual transfer amount: min(amount, balance) — caps at balance
+    //    FHE.select(cond, ifTrue, ifFalse)</span>
+    <span class="t">euint64</span> actualAmount = FHE.<span class="f">select</span>(canAfford, amount, balance);
+
+    <span class="c">// 4. Update balances (never reverts — FHE.select handles underflow)</span>
+    _balances[msg.sender] = FHE.<span class="f">sub</span>(balance, actualAmount);
+    _balances[to]         = FHE.<span class="f">add</span>(_balances[to], actualAmount);
+
+    <span class="c">// 5. Grant ACL for both new balance handles</span>
+    FHE.<span class="f">allowThis</span>(_balances[msg.sender]);
+    FHE.<span class="f">allow</span>(_balances[msg.sender], msg.sender);
+    FHE.<span class="f">allow</span>(_balances[msg.sender], owner);
+
+    FHE.<span class="f">allowThis</span>(_balances[to]);
+    FHE.<span class="f">allow</span>(_balances[to], to);
+    FHE.<span class="f">allow</span>(_balances[to], owner);
+
+    <span class="k">emit</span> <span class="f">Transfer</span>(msg.sender, to);    <span class="c">// no amount in event</span>
+    <span class="k">return</span> <span class="k">true</span>;
+}</pre>
+</div>
+
+<div class="box alert">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">No Revert on Insufficient Balance</div>
+    <div class="box-text">Unlike standard ERC-20, we cannot revert on insufficient funds — that would leak information (the attacker learns their balance is below the amount). Instead, we cap the transfer at the sender's balance using <code>FHE.select(canAfford, amount, balance)</code>. The caller may send "0" if they had nothing. This is the standard confidential transfer pattern.</div>
+  </div>
+</div>
+
+<h3 class="sub" id="approve">approve() and Encrypted Allowances</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ConfidentialERC20.sol — approve</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Approve a spender with an encrypted allowance amount</span>
+<span class="k">function</span> <span class="f">approve</span>(
+    <span class="t">address</span>         spender,
+    <span class="t">externalEuint64</span> calldata encAmount,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external returns</span> (<span class="t">bool</span>) {
+    <span class="k">require</span>(spender != <span class="t">address</span>(<span class="n">0</span>), <span class="s">"Zero spender"</span>);
+
+    <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(encAmount, proof);
+    _allowances[msg.sender][spender] = amount;
+
+    <span class="c">// Both owner and spender need access to the allowance handle</span>
+    FHE.<span class="f">allowThis</span>(_allowances[msg.sender][spender]);
+    FHE.<span class="f">allow</span>(_allowances[msg.sender][spender], msg.sender);
+    FHE.<span class="f">allow</span>(_allowances[msg.sender][spender], spender);
+
+    <span class="k">emit</span> <span class="f">Approval</span>(msg.sender, spender);
+    <span class="k">return</span> <span class="k">true</span>;
+}
+
+<span class="k">function</span> <span class="f">allowance</span>(<span class="t">address</span> tokenOwner, <span class="t">address</span> spender)
+    <span class="k">external view returns</span> (<span class="t">euint64</span>)
+{
+    <span class="c">// Only tokenOwner or spender may read the allowance</span>
+    <span class="k">require</span>(
+        msg.sender == tokenOwner ||
+        msg.sender == spender   ||
+        FHE.<span class="f">isSenderAllowed</span>(_allowances[tokenOwner][spender]),
+        <span class="s">"Not authorized"</span>
+    );
+    <span class="k">return</span> _allowances[tokenOwner][spender];
+}</pre>
+</div>
+
+<h3 class="sub" id="transferfrom">transferFrom() — Spending an Allowance</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ConfidentialERC20.sol — transferFrom</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @notice Spend from an allowance.
+/// Amount is capped at min(requestedAmount, allowance, senderBalance).</span>
+<span class="k">function</span> <span class="f">transferFrom</span>(
+    <span class="t">address</span>         from,
+    <span class="t">address</span>         to,
+    <span class="t">externalEuint64</span> calldata encAmount,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external returns</span> (<span class="t">bool</span>) {
+    <span class="k">require</span>(to != <span class="t">address</span>(<span class="n">0</span>), <span class="s">"Zero address"</span>);
+
+    <span class="t">euint64</span> amount    = FHE.<span class="f">fromExternal</span>(encAmount, proof);
+    <span class="t">euint64</span> allowance = _allowances[from][msg.sender];
+    <span class="t">euint64</span> balance   = _balances[from];
+
+    <span class="c">// Cap at allowance, then cap at balance</span>
+    <span class="t">ebool</span>   withinAllowance = FHE.<span class="f">le</span>(amount, allowance);
+    <span class="t">euint64</span> cappedByAllowance = FHE.<span class="f">select</span>(withinAllowance, amount, allowance);
+
+    <span class="t">ebool</span>   withinBalance = FHE.<span class="f">le</span>(cappedByAllowance, balance);
+    <span class="t">euint64</span> actualAmount  = FHE.<span class="f">select</span>(withinBalance, cappedByAllowance, balance);
+
+    <span class="c">// Update balance and reduce allowance</span>
+    _balances[from]                    = FHE.<span class="f">sub</span>(balance,   actualAmount);
+    _balances[to]                      = FHE.<span class="f">add</span>(_balances[to], actualAmount);
+    _allowances[from][msg.sender]      = FHE.<span class="f">sub</span>(allowance, actualAmount);
+
+    <span class="c">// ACL grants for all three updated handles</span>
+    FHE.<span class="f">allowThis</span>(_balances[from]);
+    FHE.<span class="f">allow</span>(_balances[from], from);    FHE.<span class="f">allow</span>(_balances[from], owner);
+    FHE.<span class="f">allowThis</span>(_balances[to]);
+    FHE.<span class="f">allow</span>(_balances[to], to);       FHE.<span class="f">allow</span>(_balances[to], owner);
+    FHE.<span class="f">allowThis</span>(_allowances[from][msg.sender]);
+    FHE.<span class="f">allow</span>(_allowances[from][msg.sender], from);
+    FHE.<span class="f">allow</span>(_allowances[from][msg.sender], msg.sender);
+
+    <span class="k">emit</span> <span class="f">Transfer</span>(from, to);
+    <span class="k">return</span> <span class="k">true</span>;
+}</pre>
+</div>
+
+<h2 class="sec" id="overflow">Overflow &amp; Underflow Safety</h2>
+<p>Standard Solidity 0.8+ reverts on overflow/underflow. In FHEVM, we cannot revert on encrypted conditions — instead we use the capping pattern consistently:</p>
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Transfer Underflow</div>
+    <p><code>FHE.le(amount, balance)</code> returns encrypted bool. <code>FHE.select(canAfford, amount, balance)</code> caps actualAmount at the sender's balance. Result: sender's balance never goes negative.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Allowance Underflow</div>
+    <p>Same pattern in <code>transferFrom</code>: first cap at allowance, then cap at balance. The allowance decreases by exactly <code>actualAmount</code> — never more than the current allowance.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Mint Overflow</div>
+    <p>For minting, the <code>totalSupply</code> is plaintext and uses standard arithmetic. Encrypted balance addition cannot overflow euint64 in practice if total supply is bounded.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Why Not Revert?</div>
+    <p>Reverting on "amount > balance" would reveal that the sender's balance is below the requested amount — leaking private data. The cap-and-proceed pattern preserves privacy.</p>
+  </div>
+</div>
+
+<h2 class="sec" id="acl-pattern">The Standard ACL Grant Pattern</h2>
+<p>Every function that creates a new handle must follow this pattern. Memorize it — you'll write it hundreds of times:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Standard ACL pattern after any FHE op</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// After every FHE operation that creates a new handle:</span>
+_balances[addr] = FHE.<span class="f">add</span>(_balances[addr], amount);
+
+<span class="c">// 1. Contract must be able to use in future txs (REQUIRED)</span>
+FHE.<span class="f">allowThis</span>(_balances[addr]);
+
+<span class="c">// 2. The account owner can decrypt their own balance</span>
+FHE.<span class="f">allow</span>(_balances[addr], addr);
+
+<span class="c">// 3. Optional: grant audit access (e.g., contract owner, compliance)</span>
+FHE.<span class="f">allow</span>(_balances[addr], auditor);
+
+<span class="c">// 4. For allowances: both parties need access</span>
+FHE.<span class="f">allow</span>(_allowances[tokenOwner][spender], tokenOwner);
+FHE.<span class="f">allow</span>(_allowances[tokenOwner][spender], spender);</pre>
+</div>
+
+<h2 class="sec" id="tests">Test Suite</h2>
+<h3 class="sub" id="test-mint">Minting and Checking Balance</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/ConfidentialERC20.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { expect } <span class="k">from</span> <span class="s">"chai"</span>;
+<span class="k">import</span> { <span class="f">getFhevmInstance</span> } <span class="k">from</span> <span class="s">"./helpers"</span>;
+
+describe(<span class="s">"ConfidentialERC20"</span>, () => {
+  <span class="k">let</span> token: <span class="k">any</span>, owner: <span class="k">any</span>, alice: <span class="k">any</span>, bob: <span class="k">any</span>;
+
+  before(<span class="k">async</span> () => {
+    [owner, alice, bob] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"ConfidentialERC20"</span>);
+    token = <span class="k">await</span> F.<span class="f">deploy</span>(<span class="s">"ConfCoin"</span>, <span class="s">"CONF"</span>);
+    <span class="k">await</span> token.<span class="f">waitForDeployment</span>();
+  });
+
+  it(<span class="s">"mints to alice; totalSupply updates"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> token.<span class="f">connect</span>(owner).<span class="f">mint</span>(alice.address, <span class="n">1000n</span>);
+    expect(<span class="k">await</span> token.<span class="f">totalSupply</span>()).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">1000n</span>);
+  });
+
+  it(<span class="s">"alice decrypts her balance = 1000"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> token.<span class="f">getAddress</span>();
+
+    <span class="k">const</span> handle = <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">balanceOf</span>(alice.address);
+
+    <span class="k">const</span> { publicKey, privateKey } = instance.<span class="f">generateKeypair</span>();
+    <span class="k">const</span> eip712 = instance.<span class="f">createEIP712</span>(publicKey, addr);
+    <span class="k">const</span> sig    = <span class="k">await</span> alice.<span class="f">signTypedData</span>(eip712.domain, eip712.types, eip712.message);
+    <span class="k">const</span> reenc  = <span class="k">await</span> instance.<span class="f">reencrypt</span>(handle, privateKey, publicKey, sig, addr, alice.address);
+
+    expect(instance.<span class="f">decrypt</span>(addr, reenc)).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">1000</span>);
+  });
+
+  it(<span class="s">"bob cannot view alice balance"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> expect(token.<span class="f">connect</span>(bob).<span class="f">balanceOf</span>(alice.address))
+      .<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"Not authorized to view balance"</span>);
+  });
+});  </pre>
+</div>
+
+<h3 class="sub" id="test-transfer">Transfer Test</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">transfer test block</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>  it(<span class="s">"alice transfers 300 to bob; balances are correct"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> token.<span class="f">getAddress</span>();
+
+    <span class="c">// Encrypt 300 for alice→this contract</span>
+    <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">add64</span>(<span class="n">300</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+    <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">transfer</span>(bob.address, handles[<span class="n">0</span>], inputProof);
+
+    <span class="c">// Decrypt alice's balance (should be 700)</span>
+    <span class="k">const</span> hA = <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">balanceOf</span>(alice.address);
+    <span class="k">const</span> { publicKey: pkA, privateKey: skA } = instance.<span class="f">generateKeypair</span>();
+    <span class="k">const</span> e712A = instance.<span class="f">createEIP712</span>(pkA, addr);
+    <span class="k">const</span> sigA  = <span class="k">await</span> alice.<span class="f">signTypedData</span>(e712A.domain, e712A.types, e712A.message);
+    <span class="k">const</span> decA  = instance.<span class="f">decrypt</span>(addr, <span class="k">await</span> instance.<span class="f">reencrypt</span>(hA, skA, pkA, sigA, addr, alice.address));
+    expect(decA).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">700</span>);
+
+    <span class="c">// Decrypt bob's balance (should be 300)</span>
+    <span class="k">const</span> hB = <span class="k">await</span> token.<span class="f">connect</span>(bob).<span class="f">balanceOf</span>(bob.address);
+    <span class="k">const</span> { publicKey: pkB, privateKey: skB } = instance.<span class="f">generateKeypair</span>();
+    <span class="k">const</span> e712B = instance.<span class="f">createEIP712</span>(pkB, addr);
+    <span class="k">const</span> sigB  = <span class="k">await</span> bob.<span class="f">signTypedData</span>(e712B.domain, e712B.types, e712B.message);
+    <span class="k">const</span> decB  = instance.<span class="f">decrypt</span>(addr, <span class="k">await</span> instance.<span class="f">reencrypt</span>(hB, skB, pkB, sigB, addr, bob.address));
+    expect(decB).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">300</span>);
+  });
+
+  it(<span class="s">"transfer above balance is silently capped (no revert)"</span>, <span class="k">async</span> () => {
+    <span class="c">// Alice has 700 — try to transfer 9999</span>
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> token.<span class="f">getAddress</span>();
+    <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">add64</span>(<span class="n">9999</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+    <span class="c">// Should NOT revert — amount is capped at alice's balance (700)</span>
+    <span class="k">await</span> expect(
+      token.<span class="f">connect</span>(alice).<span class="f">transfer</span>(bob.address, handles[<span class="n">0</span>], inputProof)
+    ).<span class="f">to</span>.<span class="f">not</span>.<span class="f">be</span>.<span class="f">reverted</span>;
+  });</pre>
+</div>
+
+<h3 class="sub" id="test-allowance">Allowance Test</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">allowance test block</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>  it(<span class="s">"approve + transferFrom: bob spends alice's allowance"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> token.<span class="f">getAddress</span>();
+
+    <span class="c">// First re-mint alice to 500 for clean test</span>
+    <span class="k">await</span> token.<span class="f">connect</span>(owner).<span class="f">mint</span>(alice.address, <span class="n">500n</span>);
+
+    <span class="c">// Alice approves bob for 200</span>
+    <span class="k">const</span> appInp = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    appInp.<span class="f">add64</span>(<span class="n">200</span>);
+    <span class="k">const</span> { handles: aH, inputProof: aP } = <span class="k">await</span> appInp.<span class="f">encrypt</span>();
+    <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">approve</span>(bob.address, aH[<span class="n">0</span>], aP);
+
+    <span class="c">// Bob spends 150 from alice's allowance</span>
+    <span class="k">const</span> spendInp = instance.<span class="f">createEncryptedInput</span>(addr, bob.address);
+    spendInp.<span class="f">add64</span>(<span class="n">150</span>);
+    <span class="k">const</span> { handles: sH, inputProof: sP } = <span class="k">await</span> spendInp.<span class="f">encrypt</span>();
+    <span class="k">await</span> token.<span class="f">connect</span>(bob).<span class="f">transferFrom</span>(alice.address, bob.address, sH[<span class="n">0</span>], sP);
+
+    <span class="c">// Verify alice's balance decreased by 150</span>
+    <span class="c">// (we skip full decrypt here for brevity — see transfer test pattern above)</span>
+    console.<span class="f">log</span>(<span class="s">"  ✓ transferFrom succeeded"</span>);
+  });</pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 4 Quiz — Encrypted ERC-20</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">Why does the confidential <code>transfer()</code> cap at balance instead of reverting when <code>amount &gt; balance</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Reverting is not supported in FHEVM contracts</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Gas optimization — revert is more expensive than FHE.select()</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Reverting would reveal information: the attacker learns the sender's balance is below the amount, breaking privacy</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>EVM does not support reverts inside FHE operations</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> If the contract reverted with "insufficient balance", the caller would learn that their balance is below the attempted transfer amount — leaking the private balance range. By capping silently, the contract reveals nothing about the actual balance value.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">In <code>transfer()</code>, what does <code>FHE.select(canAfford, amount, balance)</code> return when the sender cannot afford the transfer?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Zero — the transfer is skipped entirely</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The sender's full balance — the entire balance is transferred (capped, not zero)</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The amount — the same value is used regardless of condition</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>An error handle that signals the operation to be retried</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> FHE.select(condition, ifTrue, ifFalse): when canAfford is false, it returns the ifFalse branch which is the sender's balance. So the entire remaining balance is transferred, not zero. This prevents underflow while ensuring the recipient always gets something meaningful.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">The confidential Transfer event emits <code>Transfer(from, to)</code> without the amount. What metadata is still leaked?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — the transaction is fully private</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The amount — it can be inferred from gas usage</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The recipient's balance range</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The sender and recipient addresses, the timestamp, and the fact that a transfer occurred — which is still meaningful on-chain metadata</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Even without the amount, on-chain events reveal: who sent, who received, when, and that a transfer happened. This creates a transaction graph that can be analyzed. For truly private transfers you would need network-level privacy (Tor, etc.) as well. FHEVM hides amounts but not addresses.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">Why must both the token owner AND the spender receive ACL grants on an encrypted allowance handle?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The spender needs to read the allowance to compute their remaining spending capacity; the owner needs it to manage (revoke/update) the allowance in future transactions</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Both must sign transactions that modify the allowance</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The KMS requires two-party authorization before decrypting allowance values</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>ACL grants are always applied in pairs by the FHEVM Executor</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The token owner needs ACL access to be able to update or revoke the allowance (they need to read it to compute the new value). The spender needs it to be able to check their remaining allowance and pass the handle into transferFrom(). Without both grants, either party would fail their ACL check.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Why is <code>totalSupply</code> kept as a plaintext <code>uint64</code> rather than being encrypted?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>FHEVM cannot add encrypted values to get a total</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Encrypting totalSupply would exceed the euint64 range</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Total supply is not sensitive, composability with AMMs/oracles requires it to be readable, and hiding it would break price discovery</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Plaintext totalSupply is required by the ERC-20 standard</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Total supply is an economic fact that needs to be public for markets to function. DeFi protocols, price oracles, and AMMs all need to know total supply. Encrypting it would prevent composability without providing meaningful privacy benefits — the total circulating amount is generally expected to be transparent.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">In <code>transferFrom()</code>, you apply two sequential caps: first cap at allowance, then cap at balance. Why two separate steps?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>One FHE.select() can only compare two values at a time — two steps are needed for three values</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Each constraint is independent: the spender may only use up to the authorized allowance, and the balance owner may only send what they have — both limits must be enforced separately</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The coprocessor processes operations in sequential order and cannot combine comparisons</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It is a gas optimization — a single three-way comparison costs more</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> These are two independent authorization constraints: (1) the spender can only spend up to what they were authorized (allowance cap), and (2) the token owner can only transfer what they actually have (balance cap). Both must be enforced separately because either could be the binding constraint depending on the state.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">Why is <code>decimals = 6</code> recommended for confidential tokens using <code>euint64</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>6 decimals is the only value supported by the fhevmjs SDK</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Higher decimals increase the gas cost of FHE operations</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>6 decimals is the ERC-20 standard for stablecoins</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>With 18 decimals, even 10 billion tokens would need ~10²⁷ storage — far beyond euint64's max of ~1.8×10¹⁹. Using 6 decimals means 1 token = 10⁶ units, keeping total supply well within euint64</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> With 18 decimals and any meaningful supply, you'd overflow euint64. With 6 decimals (like USDC), 10 trillion tokens worth would be 10¹⁸ — within euint64's range. If you need 18 decimals, use euint128 (max ~3.4×10³⁸), accepting the higher gas cost.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">After calling <code>FHE.sub(_balances[from], actualAmount)</code> in <code>transfer()</code>, what is the minimum set of ACL calls needed?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.allowThis(_balances[from])</code> and <code>FHE.allow(_balances[from], from)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Only <code>FHE.allowThis(_balances[from])</code> — the address grant is optional</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>No ACL calls needed — FHE.sub() preserves existing grants</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Only <code>FHE.allow(_balances[from], from)</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> FHE.sub() creates a brand-new handle with zero ACL grants. At minimum: (1) allowThis() so the contract can use this balance in future transactions, and (2) allow(from) so the account holder can decrypt their own balance. Without allowThis(), the contract breaks on the next transaction. Without allow(from), the user can't see their balance.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day03.html">&#8592; Day 3 — First Encrypted Contract</a>
+  <a class="next" href="day05.html">Day 5 — Encrypted Voting &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','design','erc20-diff','balance-type','contract','storage','mint','transfer','approve','transferfrom','overflow','acl-pattern','tests','test-mint','test-transfer','test-allowance','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Day 5!':pct>=87?'Excellent!':pct>=62?'Good — review explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
