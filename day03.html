@@ -75,13 +75,13 @@ td code{font-family:var(--mono);font-size:11px;color:var(--green);background:rgb
 .quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
 .quiz-head{padding:20px 24px;background:rgba(192,132,252,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
 .quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
-.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--purple);letter-spacing:-.2px}
-.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
-.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+
+
+
 .q{}.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
 .q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
 .q-q code{font-family:var(--mono);font-size:12px;color:var(--green);background:rgba(74,222,128,.09);padding:1px 5px;border-radius:3px}
-.q-opts{display:flex;flex-direction:column;gap:7px}
+
 .q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
 .q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
 .q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
@@ -89,15 +89,84 @@ td code{font-family:var(--mono);font-size:11px;color:var(--green);background:rgb
 .q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
 .q-exp{margin-top:10px;padding:11px 14px;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
 .q-exp.show{display:block}.q-exp strong{color:var(--green)}
-.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
-.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+
+
 .score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
-.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--green);letter-spacing:-1px}
-.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.score.show{display:flex}
+.score-right{display:flex;flex-direction:column;gap:3px}
 .pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
 .pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
 .pnav a:hover{border-color:var(--green);color:var(--green)}.pnav .next{background:rgba(74,222,128,.07);border-color:rgba(74,222,128,.22);color:var(--green)}.pnav .next:hover{background:rgba(74,222,128,.14)}
 @media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.diff{grid-template-columns:1fr}}
+
+/* ═══ QUIZ COMPONENT ══════════════════════════════════════ */
+.qz{background:var(--bg2,#0d0d1a);border:1px solid var(--b2,var(--border,#2a2a45));border-radius:12px;margin:48px 0;overflow:hidden}
+.qz-head{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--b2,var(--border,#2a2a45))}
+.qz-icon{font-size:22px;flex-shrink:0}
+.qz-title{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:18px;font-weight:700;color:var(--acc,var(--purple,var(--amber,#ffb300)));letter-spacing:-.2px}
+.qz-sub{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#6b6b95));margin-top:3px;letter-spacing:.5px}
+.qz-list{padding:0 24px;display:flex;flex-direction:column}
+.qz-q{padding:26px 0;border-bottom:1px solid var(--b2,var(--border,#1e1e36))}
+.qz-q:last-child{border-bottom:none}
+.qz-qnum{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#5a5a82));letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.qz-qtext{font-size:14px;color:var(--text,var(--white,#f0f0ff));line-height:1.65;margin-bottom:14px;font-weight:500}
+.qz-qtext code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,var(--amber,#ffb300));background:rgba(255,179,0,.08);padding:1px 6px;border-radius:3px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border,#2a2a45);cursor:pointer;font-size:13px;color:var(--text2,var(--mid,#9898be));line-height:1.6;transition:border-color .14s,background .14s,color .14s;user-select:none}
+.qz-opt:hover{border-color:var(--b2,#353560);background:rgba(255,255,255,.02);color:var(--text,#e0e0ff)}
+.qz-opt.sel{border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.05);color:var(--text,#f0f0ff)}
+.qz-opt.sel .qz-ltr{background:rgba(255,179,0,.18);color:var(--acc,#ffb300)}
+.qz-ltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg3,var(--plate,#1a1a30));color:var(--text3,#6b6b95);transition:all .14s}
+.qz-opt code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-exp{display:none}
+.qz-foot{padding:18px 24px;border-top:1px solid var(--b2,var(--border,#2a2a45));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.qz-prog{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--text3,#5a5a82);letter-spacing:.5px}
+.qz-btn{padding:11px 28px;border-radius:7px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:var(--acc,#ffb300);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.qz-btn:hover:not(:disabled){background:rgba(255,179,0,.2);border-color:var(--acc,#ffb300)}
+.qz-btn:disabled{opacity:.3;cursor:not-allowed}
+/* results overlay */
+.qz-ov{position:fixed;inset:0;z-index:9999;background:var(--bg,var(--ink,#070711));overflow-y:auto;display:none;flex-direction:column}
+.qz-ov.open{display:flex}
+.qz-ob{position:sticky;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(7,7,17,.97);border-bottom:1px solid var(--border,#2a2a45);backdrop-filter:blur(16px);z-index:10}
+.qz-ob-back{padding:5px 16px;border-radius:6px;border:1px solid var(--border,#2a2a45);background:none;color:var(--text3,#6b6b95);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;cursor:pointer;letter-spacing:.5px;transition:all .14s}
+.qz-ob-back:hover{border-color:var(--acc,#ffb300);color:var(--acc,#ffb300)}
+.qz-ob-pill{margin-left:auto;padding:3px 14px;border-radius:20px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--acc,#ffb300)}
+.qz-oh{display:flex;align-items:center;gap:32px;padding:40px 48px 32px;border-bottom:1px solid var(--border,#2a2a45)}
+.qz-oring{flex-shrink:0}
+.qz-oht{flex:1}
+.qz-oscore{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:56px;font-weight:800;color:var(--text,#f0f0ff);letter-spacing:-3px;line-height:1}
+.qz-oscore sup{font-size:28px;color:var(--acc,#ffb300);vertical-align:super;letter-spacing:0}
+.qz-omsg{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--text2,#9898be);margin:10px 0 12px;letter-spacing:.3px;line-height:1.7}
+.qz-obadge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.gb-s{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.25)}
+.gb-a{background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.22)}
+.gb-b{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.25)}
+.gb-c{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.qz-ocards{padding:32px 48px 80px;display:flex;flex-direction:column;gap:20px}
+.qz-oc{border:1px solid var(--border,#2a2a45);border-radius:12px;overflow:hidden}
+.qz-oc.oc-ok{border-left:3px solid #69ff47}
+.qz-oc.oc-no{border-left:3px solid #ff4d6d}
+.qz-och{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--b2,#1e1e36);background:var(--bg2,#0d0d1a)}
+.qz-ocn{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,#5a5a82);flex-shrink:0;padding-top:2px;letter-spacing:1.5px}
+.qz-ocq{font-size:13px;color:var(--text,#f0f0ff);flex:1;line-height:1.6}
+.qz-ocq code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocv{flex-shrink:0;padding:3px 10px;border-radius:10px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1px}
+.ocv-ok{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.2)}
+.ocv-no{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.2)}
+.qz-ocopts{padding:12px 20px;background:var(--bg3,#111128);display:flex;flex-direction:column;gap:7px}
+.qz-oco{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:7px;font-size:13px;color:var(--text2,#6b6b95);border:1px solid transparent;line-height:1.6}
+.qz-oco.oo-r{border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.05);color:var(--text,#f0f0ff)}
+.qz-oco.oo-w{border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;text-decoration:line-through;opacity:.8}
+.qz-oco code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg2,#1e1e36);color:var(--text3,#5a5a82)}
+.qz-oco.oo-r .qz-ocltr{background:rgba(105,255,71,.18);color:#69ff47}
+.qz-oco.oo-w .qz-ocltr{background:rgba(255,77,109,.14);color:#ff4d6d}
+.qz-ocexp{margin:0 20px 16px;padding:13px 16px;background:var(--bg2,#0d0d1a);border:1px solid var(--border,#2a2a45);border-radius:8px;font-size:13px;color:var(--text2,#9898be);line-height:1.75}
+.qz-ocexp strong{color:var(--acc,#ffb300)}
+.qz-ocexp em{color:var(--text,#c0c0e0)}
+.qz-ocexp code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+@media(max-width:720px){.qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px}.qz-ocards{padding:20px 16px 60px}.qz-oscore{font-size:44px}}
+/* ════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>
@@ -564,121 +633,105 @@ npx hardhat test test/FHECounter.test.ts --network hardhat
   6 passing (1.2s)</span></pre>
 </div>
 
-<h2 class="sec" id="quiz">Knowledge Check</h2>
-<div class="quiz">
-  <div class="quiz-head">
-    <div class="quiz-icon">&#128221;</div>
-    <div>
-      <div class="quiz-title">Day 3 Quiz — First Encrypted Contract</div>
-      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
+    <div><div class="qz-title">Day 03 Quiz — Toolchain & First Contract</div><div class="qz-sub">8 questions · hardhat-fhevm setup</div></div>
+  </div>
+  <div class="qz-list">
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 01 / 08</div>
+      <div class="qz-qtext">What is the difference between <code>euint32</code> and <code>externalEuint32</code>?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>euint32</code> is for public values; <code>externalEuint32</code> is for private ones</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>euint32</code> stores 32 bits; <code>externalEuint32</code> stores 64 bits</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>euint32</code> is an internal on-chain handle; <code>externalEuint32</code> is the raw ciphertext format submitted by users that must be validated via <code>fromExternal()</code> before use</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>They are identical — the names are interchangeable</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> euint32 is a 32-byte handle (a pointer) to a ciphertext stored on the coprocessor. externalEuint32 is the raw ciphertext blob submitted by the user's browser via fhevmjs. Before any FHE operation, externalEuint32 must be converted to euint32 via <code>FHE.fromExternal()</code>, which also validates the ZK proof binding the ciphertext to this specific contract and caller.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 02 / 08</div>
+      <div class="qz-qtext">Why does <code>FHE.fromExternal(enc, proof)</code> require a ZK proof?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>To compress the ciphertext to a smaller on-chain representation</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>To verify the ciphertext was encrypted specifically for this contract address and msg.sender — preventing replay attacks and input theft across contracts or callers</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>To check that the plaintext value is within the allowed range</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>To authorize the KMS to decrypt the input for verification</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> The ZK proof (inputProof) proves that the ciphertext was encrypted for this specific contract address AND this specific msg.sender. Without it, an attacker could take someone else's encrypted input (e.g., "I have 1000 tokens") and replay it in a different transaction or against a different contract.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 03 / 08</div>
+      <div class="qz-qtext">You have <code>ebool isGt = FHE.gt(a, b)</code>. How do you use this condition to produce different results?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>if (isGt) { result = x; } else { result = y; }</code></div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>result = isGt ? x : y;</code></div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>result = FHE.ifElse(isGt, x, y);</code></div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Compute both branches then: <code>result = FHE.select(isGt, x, y);</code></div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> You cannot branch on an encrypted boolean — the EVM cannot evaluate it. FHE.select() evaluates both branches and uses the encrypted condition to pick one, without ever revealing which branch was taken. This is the fundamental pattern for conditional logic in FHEVM contracts.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 04 / 08</div>
+      <div class="qz-qtext">What happens if you declare <code>euint32 private count</code> but never call <code>FHE.asEuint32(0)</code> in the constructor?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The count is the zero handle (all bytes 0x00), which has no ACL grants — any FHE operation using it will revert on the ACL check</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It automatically initializes to an encrypted 0 with full ACL grants</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The Solidity compiler will reject uninitialized euint variables</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The contract will compile and work, but with lower gas efficiency</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> An uninitialized euint32 defaults to bytes32(0) — the zero handle. This handle has no ACL grants and no corresponding ciphertext on the coprocessor. Any FHE.add(count, ...) will fail the ACL check. Always initialize encrypted storage with FHE.asEuintX(0) and call allowThis().</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 05 / 08</div>
+      <div class="qz-qtext">Which type would you choose to store an encrypted token balance that can reach up to 10¹⁸ (standard ERC-20 with 18 decimals)?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>euint32</code> — sufficient for most balances</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>euint128</code> — maximum safety for all amounts</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>euint64</code> — max value ~1.8×10¹⁹ safely covers 10¹⁸, and uses 16× baseline gas vs euint128's 24×</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>euint256</code> — must match Solidity's uint256 for ERC-20 compatibility</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> euint64 has a max of ~1.8×10¹⁹, which safely covers 10¹⁸ (1 ETH in wei). It costs 16× baseline gas vs euint4's 1× baseline. euint128 would also work but wastes 50% more gas than necessary. euint256 is rarely needed and costs 2× euint128. Always use the smallest type that fits.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 06 / 08</div>
+      <div class="qz-qtext">In the test suite, what is the purpose of the re-encryption step (<code>instance.reencrypt()</code>)?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It re-encrypts the value for storage efficiency</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It re-encrypts the ciphertext under the user's ephemeral public key, so the user can decrypt locally — the plaintext never appears on-chain</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It re-encrypts the value under a new key to prevent replay attacks</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It is a test-only helper that bypasses the KMS entirely</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Re-encryption is the privacy-preserving way for a user to view their own data. The KMS re-encrypts the ciphertext under the user's ephemeral keypair (generated fresh for each view request). The user decrypts locally using their private key. The plaintext never appears in any transaction or on-chain state.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 07 / 08</div>
+      <div class="qz-qtext">Why does the FHECounter emit <code>event Added(address indexed by)</code> but not the amount added?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Event parameters can only be of plaintext types — euint32 cannot be emitted</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Emitting the handle would expose the ciphertext to block explorers</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Gas optimization — emitting amounts costs too much</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Privacy design — emitting the encrypted amount as a handle would leak metadata about transaction patterns; only the caller address is revealed (which is already public on-chain)</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> While you technically could emit the handle, doing so reveals that a specific address added a specific (opaque) amount at a specific time. For privacy-sensitive contracts, even metadata leakage should be minimized. The event only records that an addition happened and by whom — the amount remains private.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 08 / 08</div>
+      <div class="qz-qtext">After calling <code>count = FHE.add(count, amount)</code>, which ACL calls are <em>required</em> at minimum to keep the contract functional?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>FHE.allowThis(count)</code> — without this, the contract cannot use the new handle in any future transaction</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>FHE.allow(count, msg.sender)</code> — without this the caller cannot decrypt</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Both <code>allowThis</code> and <code>allow(msg.sender)</code> are equally required</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>None — ACL grants are inherited from input handles automatically</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> The bare minimum for a contract that stores and reuses an encrypted value is <code>FHE.allowThis()</code>. Without it, the contract cannot access the new handle on any subsequent transaction, breaking all future operations. <code>FHE.allow(count, msg.sender)</code> is best practice (so the caller can decrypt) but if you omit it, the contract still functions — only the caller can't view their value. <code>allowThis</code> is the truly critical one.</div>
     </div>
   </div>
-  <div class="quiz-body" id="qbody">
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 01 / 08</div>
-      <div class="q-q">What is the difference between <code>euint32</code> and <code>externalEuint32</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>euint32</code> is for public values; <code>externalEuint32</code> is for private ones</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>euint32</code> stores 32 bits; <code>externalEuint32</code> stores 64 bits</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>euint32</code> is an internal on-chain handle; <code>externalEuint32</code> is the raw ciphertext format submitted by users that must be validated via <code>fromExternal()</code> before use</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>They are identical — the names are interchangeable</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> euint32 is a 32-byte handle (a pointer) to a ciphertext stored on the coprocessor. externalEuint32 is the raw ciphertext blob submitted by the user's browser via fhevmjs. Before any FHE operation, externalEuint32 must be converted to euint32 via <code>FHE.fromExternal()</code>, which also validates the ZK proof binding the ciphertext to this specific contract and caller.</div>
-    </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 02 / 08</div>
-      <div class="q-q">Why does <code>FHE.fromExternal(enc, proof)</code> require a ZK proof?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To compress the ciphertext to a smaller on-chain representation</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To verify the ciphertext was encrypted specifically for this contract address and msg.sender — preventing replay attacks and input theft across contracts or callers</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>To check that the plaintext value is within the allowed range</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>To authorize the KMS to decrypt the input for verification</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> The ZK proof (inputProof) proves that the ciphertext was encrypted for this specific contract address AND this specific msg.sender. Without it, an attacker could take someone else's encrypted input (e.g., "I have 1000 tokens") and replay it in a different transaction or against a different contract.</div>
-    </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 08</div>
-      <div class="q-q">You have <code>ebool isGt = FHE.gt(a, b)</code>. How do you use this condition to produce different results?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>if (isGt) { result = x; } else { result = y; }</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>result = isGt ? x : y;</code></div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>result = FHE.ifElse(isGt, x, y);</code></div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Compute both branches then: <code>result = FHE.select(isGt, x, y);</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> You cannot branch on an encrypted boolean — the EVM cannot evaluate it. FHE.select() evaluates both branches and uses the encrypted condition to pick one, without ever revealing which branch was taken. This is the fundamental pattern for conditional logic in FHEVM contracts.</div>
-    </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 04 / 08</div>
-      <div class="q-q">What happens if you declare <code>euint32 private count</code> but never call <code>FHE.asEuint32(0)</code> in the constructor?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The count is the zero handle (all bytes 0x00), which has no ACL grants — any FHE operation using it will revert on the ACL check</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It automatically initializes to an encrypted 0 with full ACL grants</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The Solidity compiler will reject uninitialized euint variables</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The contract will compile and work, but with lower gas efficiency</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> An uninitialized euint32 defaults to bytes32(0) — the zero handle. This handle has no ACL grants and no corresponding ciphertext on the coprocessor. Any FHE.add(count, ...) will fail the ACL check. Always initialize encrypted storage with FHE.asEuintX(0) and call allowThis().</div>
-    </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 08</div>
-      <div class="q-q">Which type would you choose to store an encrypted token balance that can reach up to 10¹⁸ (standard ERC-20 with 18 decimals)?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>euint32</code> — sufficient for most balances</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>euint128</code> — maximum safety for all amounts</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>euint64</code> — max value ~1.8×10¹⁹ safely covers 10¹⁸, and uses 16× baseline gas vs euint128's 24×</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>euint256</code> — must match Solidity's uint256 for ERC-20 compatibility</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> euint64 has a max of ~1.8×10¹⁹, which safely covers 10¹⁸ (1 ETH in wei). It costs 16× baseline gas vs euint4's 1× baseline. euint128 would also work but wastes 50% more gas than necessary. euint256 is rarely needed and costs 2× euint128. Always use the smallest type that fits.</div>
-    </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 06 / 08</div>
-      <div class="q-q">In the test suite, what is the purpose of the re-encryption step (<code>instance.reencrypt()</code>)?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It re-encrypts the value for storage efficiency</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It re-encrypts the ciphertext under the user's ephemeral public key, so the user can decrypt locally — the plaintext never appears on-chain</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It re-encrypts the value under a new key to prevent replay attacks</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It is a test-only helper that bypasses the KMS entirely</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Re-encryption is the privacy-preserving way for a user to view their own data. The KMS re-encrypts the ciphertext under the user's ephemeral keypair (generated fresh for each view request). The user decrypts locally using their private key. The plaintext never appears in any transaction or on-chain state.</div>
-    </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 07 / 08</div>
-      <div class="q-q">Why does the FHECounter emit <code>event Added(address indexed by)</code> but not the amount added?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Event parameters can only be of plaintext types — euint32 cannot be emitted</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Emitting the handle would expose the ciphertext to block explorers</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Gas optimization — emitting amounts costs too much</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Privacy design — emitting the encrypted amount as a handle would leak metadata about transaction patterns; only the caller address is revealed (which is already public on-chain)</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> While you technically could emit the handle, doing so reveals that a specific address added a specific (opaque) amount at a specific time. For privacy-sensitive contracts, even metadata leakage should be minimized. The event only records that an addition happened and by whom — the amount remains private.</div>
-    </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 08 / 08</div>
-      <div class="q-q">After calling <code>count = FHE.add(count, amount)</code>, which ACL calls are <em>required</em> at minimum to keep the contract functional?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.allowThis(count)</code> — without this, the contract cannot use the new handle in any future transaction</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.allow(count, msg.sender)</code> — without this the caller cannot decrypt</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Both <code>allowThis</code> and <code>allow(msg.sender)</code> are equally required</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>None — ACL grants are inherited from input handles automatically</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> The bare minimum for a contract that stores and reuses an encrypted value is <code>FHE.allowThis()</code>. Without it, the contract cannot access the new handle on any subsequent transaction, breaking all future operations. <code>FHE.allow(count, msg.sender)</code> is best practice (so the caller can decrypt) but if you omit it, the contract still functions — only the caller can't view their value. <code>allowThis</code> is the truly critical one.</div>
-    </div>
-
-  </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/8</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="day03-prog">0 / 8 answered</span>
+    <button class="qz-btn" id="day03-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
@@ -694,9 +747,129 @@ const sba=document.querySelectorAll('.sb-a[data-id]');
 const ids=['intro','structure','imports','fhe-sol','zama-cfg','types','euint','from-ext','transform','diff','full-contract','constructor','increment','select-pattern','tests','fhevm-inst','encrypt-inp','decrypt-res','run','quiz'];
 ids.forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
 sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
-document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
-function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Day 4!':pct>=87?'Excellent!':pct>=62?'Good — review explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
-function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+(function() {
+  var ID      = 'day03';
+  var optEls  = document.querySelectorAll('#quiz .qz-opt');
+  var btnEl   = document.getElementById(ID + '-btn');
+  var progEl  = document.getElementById(ID + '-prog');
+  var total   = document.querySelectorAll('#quiz .qz-q').length;
+
+  function picked() { return document.querySelectorAll('#quiz .qz-q .qz-opt.sel').length; }
+
+  function refresh() {
+    if (btnEl)  btnEl.disabled       = (picked() < total);
+    if (progEl) progEl.textContent   = picked() + ' / ' + total + ' answered';
+  }
+
+  for (var i = 0; i < optEls.length; i++) {
+    optEls[i].addEventListener('click', function() {
+      var q = this.closest('.qz-q');
+      if (!q) return;
+      var s = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < s.length; j++) s[j].classList.remove('sel');
+      this.classList.add('sel');
+      refresh();
+    });
+  }
+
+  if (btnEl) btnEl.addEventListener('click', function() {
+    if (this.disabled) return;
+    render();
+  });
+
+  function render() {
+    var qEls = document.querySelectorAll('#quiz .qz-q');
+    var ok   = 0;
+    var html = '';
+
+    for (var i = 0; i < qEls.length; i++) {
+      var q     = qEls[i];
+      var ans   = q.getAttribute('data-ans');
+      var selEl = q.querySelector('.qz-opt.sel');
+      var selV  = selEl ? selEl.getAttribute('data-v') : null;
+      var isOk  = selV === ans;
+      if (isOk) ok++;
+
+      var qtEl  = q.querySelector('.qz-qtext');
+      var expEl = q.querySelector('.qz-exp');
+      var qText = qtEl  ? qtEl.innerHTML  : '';
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      var rows  = '';
+      var oEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < oEls.length; j++) {
+        var o    = oEls[j];
+        var v    = o.getAttribute('data-v');
+        var lEl  = o.querySelector('.qz-ltr');
+        var lTx  = lEl ? lEl.textContent : v;
+        var cl   = o.cloneNode(true);
+        var lc   = cl.querySelector('.qz-ltr');
+        if (lc)  lc.parentNode.removeChild(lc);
+        var cls  = v === ans ? 'oo-r' : (v === selV ? 'oo-w' : '');
+        rows += '<div class="qz-oco ' + cls + '"><span class="qz-ocltr">' + lTx + '</span>' + cl.innerHTML.trim() + '</div>';
+      }
+
+      html += '<div class="qz-oc ' + (isOk ? 'oc-ok' : 'oc-no') + '">'
+        + '<div class="qz-och"><span class="qz-ocn">Q' + (i+1) + '</span>'
+        + '<div class="qz-ocq">' + qText + '</div>'
+        + '<span class="qz-ocv ' + (isOk?'ocv-ok':'ocv-no') + '">' + (isOk?'✓ Correct':'✗ Wrong') + '</span></div>'
+        + '<div class="qz-ocopts">' + rows + '</div>'
+        + (exp ? '<div class="qz-ocexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var pct  = Math.round(ok / total * 100);
+    var circ = 251.3;
+    var off  = circ - (pct/100)*circ;
+    var rc   = pct===100?'#69ff47':pct>=80?'#00e5ff':pct>=60?'#ffb300':'#ff4d6d';
+    var bdg  = pct===100?'<span class="qz-obadge gb-s">🏆 Perfect Score</span>'
+              :pct>=80  ?'<span class="qz-obadge gb-a">✓ Excellent</span>'
+              :pct>=60  ?'<span class="qz-obadge gb-b">~ Needs Review</span>'
+              :'<span class="qz-obadge gb-c">↺ Try Again</span>';
+    var msg  = pct===100?'Flawless — every concept nailed.'
+              :pct>=80  ?'Strong work. Check any flagged questions.'
+              :pct>=60  ?'Good base — re-read sections for wrong answers.'
+              :'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-oring">'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+rc+'" stroke-width="7"'
+      +' stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"'
+      +' transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/></svg>';
+
+    var ov = document.getElementById(ID+'-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = ID+'-ov';
+      ov.className = 'qz-ov';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="qz-ob">'
+      +'<button class="qz-ob-back" id="'+ID+'-close">← Back to Quiz</button>'
+      +'<span class="qz-ob-pill">'+ok+'/'+total+' correct &nbsp;·&nbsp; '+pct+'%</span>'
+      +'</div>'
+      +'<div class="qz-oh">'+ring
+      +'<div class="qz-oht"><div class="qz-oscore">'+ok+'<sup>/'+total+'</sup></div>'
+      +'<div class="qz-omsg">'+msg+'</div>'+bdg+'</div></div>'
+      +'<div class="qz-ocards">'+html+'</div>';
+
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(ID+'-close').addEventListener('click', function() {
+      ov.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
+    });
+  }
+
+  refresh();
+})();
+
+
 </script>
 </body>
 </html>
