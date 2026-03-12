@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 7 — Gas Optimization | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#07070f;--ink2:#0c0c18;--ink3:#121220;--plate:#181828;--wire:#252540;--wire2:#32324e;--acc:#34d399;--acc2:#059669;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--purple:#c084fc;--sky:#60a5fa;--dim:#636380;--mid:#9898bc;--bright:#dcdcf2;--white:#eeeeff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--sky));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,7,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(52,211,153,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:920px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:2px 6px;border-radius:3px}
+.code{background:#03050a;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(52,211,153,.05);border-color:var(--acc)}.tip .box-title{color:var(--acc)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(96,165,250,.05);border-color:var(--sky)}.info .box-title{color:var(--sky)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(52,211,153,.07);padding:1px 5px;border-radius:3px}
+td strong{color:var(--bright)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.card{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;padding:18px 20px}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.card p{font-size:13px;margin-bottom:8px}
+.bar-wrap{margin:22px 0}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.bar-label{font-family:var(--mono);font-size:11px;color:var(--mid);width:110px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:20px;background:var(--ink3);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.85);font-weight:600;transition:width .6s ease}
+.bar-note{font-family:var(--mono);font-size:10px;color:var(--dim);width:60px;flex-shrink:0}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.diff-card{background:#040408;border:1px solid var(--wire);border-radius:10px;overflow:hidden}
+.diff-label{padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:600;border-bottom:1px solid var(--wire)}
+.diff-label.bad{color:var(--rose);background:rgba(248,113,113,.06)}.diff-label.good{color:var(--acc);background:rgba(52,211,153,.06)}
+.diff-card pre{font-size:11.5px;padding:14px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(192,132,252,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--purple);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.22);color:var(--acc)}.pnav .next:hover{background:rgba(52,211,153,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.grid2,.diff{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 2</span><span class="sep">/</span><span class="cur">Day 7</span></div>
+  <div class="tb-badge">Week 2 — Patterns</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="cost-model">FHE Cost Model</a>
+  <a class="sb-a sub" data-id="op-table">Operation Table</a>
+  <a class="sb-a sub" data-id="vs-evm">FHE vs EVM Cost</a>
+  <a class="sb-a" data-id="type-sizing">Type Sizing</a>
+  <a class="sb-a sub" data-id="pick-type">Choosing the Right Type</a>
+  <a class="sb-a" data-id="batch">Batching Operations</a>
+  <a class="sb-a sub" data-id="acl-batch">Batching ACL Grants</a>
+  <a class="sb-a sub" data-id="multi-input">Multi-Input Encryption</a>
+  <a class="sb-a" data-id="avoid-patterns">Anti-Patterns</a>
+  <a class="sb-a sub" data-id="redundant">Redundant ACL</a>
+  <a class="sb-a sub" data-id="unnecessary">Unnecessary FHE Ops</a>
+  <a class="sb-a" data-id="storage">Storage Layout</a>
+  <a class="sb-a sub" data-id="packing">Handle Packing</a>
+  <a class="sb-a" data-id="profiling">Profiling &amp; Benchmarks</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#9889; Day 7 of 20</div>
+  <h1>Gas Optimization<br><em>for FHE Contracts</em></h1>
+  <p class="lead">FHE operations cost 10–1000× more gas than their plaintext equivalents. A naive encrypted ERC-20 can cost $50 per transfer on mainnet. Today you learn the systematic techniques — type sizing, batching, storage layout, and ACL hygiene — that bring that cost down to $2–5.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#9889; Cost model &amp; benchmarks</div>
+    <div class="stat">&#128200; Before/after comparisons</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="cost-model">The FHE Gas Cost Model</h2>
+<p>Every FHE operation dispatches to the precompile at <code>0x000...005d</code>, which charges gas based on <strong>operand bit-width</strong> and <strong>operation complexity</strong>. Understanding this model is the foundation of all optimization.</p>
+
+<h3 class="sub" id="op-table">Operation Cost Table (relative units)</h3>
+<div class="tw"><table>
+  <thead><tr><th>Operation</th><th>euint8</th><th>euint16</th><th>euint32</th><th>euint64</th><th>euint128</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>add / sub</code></td><td>1×</td><td>2×</td><td>4×</td><td>8×</td><td>16×</td><td>Linear with bit-width</td></tr>
+    <tr><td><code>mul</code></td><td>2×</td><td>4×</td><td>8×</td><td>16×</td><td>32×</td><td>2× add at same width</td></tr>
+    <tr><td><code>gt / lt / ge / le</code></td><td>1.5×</td><td>3×</td><td>6×</td><td>12×</td><td>24×</td><td>Comparison circuits</td></tr>
+    <tr><td><code>eq / ne</code></td><td>1×</td><td>2×</td><td>4×</td><td>8×</td><td>16×</td><td>Same as add</td></tr>
+    <tr><td><code>select</code></td><td>1×</td><td>2×</td><td>4×</td><td>8×</td><td>16×</td><td>Mux circuit</td></tr>
+    <tr><td><code>not / and / or / xor</code></td><td>0.5×</td><td>1×</td><td>2×</td><td>4×</td><td>8×</td><td>Bitwise — cheapest</td></tr>
+    <tr><td><code>fromExternal</code></td><td>5×</td><td>5×</td><td>5×</td><td>5×</td><td>5×</td><td>ZK proof verification — flat</td></tr>
+    <tr><td><code>asEuintX</code></td><td>0.2×</td><td>0.2×</td><td>0.2×</td><td>0.2×</td><td>0.2×</td><td>Trivial encryption — very cheap</td></tr>
+    <tr><td><code>allow / allowThis</code></td><td colspan="5" style="text-align:center">Flat ~0.1× — just a storage write to ACL contract</td><td>Not FHE compute</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box key">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">The Golden Rule</div>
+    <div class="box-text"><strong>Use the smallest type that fits your value range.</strong> Upgrading from euint32 to euint64 doubles the cost of every operation. Upgrading from euint64 to euint128 adds 50% more. Never default to euint256 — it doesn't exist in FHEVM (max is euint256 but practically euint128 for most ops).</div>
+  </div>
+</div>
+
+<h3 class="sub" id="vs-evm">FHE vs EVM Gas: Real Numbers</h3>
+<div class="bar-wrap">
+  <div class="bar-row">
+    <div class="bar-label">uint256 add</div>
+    <div class="bar-track"><div class="bar-fill" style="width:0.5%;background:#4ade80">3</div></div>
+    <div class="bar-note">3 gas</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">euint8 add</div>
+    <div class="bar-track"><div class="bar-fill" style="width:2%;background:#34d399">~150</div></div>
+    <div class="bar-note">~150</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">euint32 add</div>
+    <div class="bar-track"><div class="bar-fill" style="width:8%;background:#fbbf24">~600</div></div>
+    <div class="bar-note">~600</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">euint64 add</div>
+    <div class="bar-track"><div class="bar-fill" style="width:16%;background:#f97316">~1200</div></div>
+    <div class="bar-note">~1200</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">euint64 mul</div>
+    <div class="bar-track"><div class="bar-fill" style="width:32%;background:#ef4444">~2400</div></div>
+    <div class="bar-note">~2400</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">euint128 mul</div>
+    <div class="bar-track"><div class="bar-fill" style="width:64%;background:#dc2626">~4800</div></div>
+    <div class="bar-note">~4800</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">fromExternal</div>
+    <div class="bar-track"><div class="bar-fill" style="width:80%;background:#9333ea">~6000</div></div>
+    <div class="bar-note">~6000</div>
+  </div>
+</div>
+<p>A basic <code>transfer()</code> in ConfidentialERC20 does: 1 fromExternal + 2 comparisons + 2 selects + 4 adds + 8 ACL calls. On euint64 that's roughly <strong>20,000–30,000 gas in FHE precompile alone</strong>, plus standard EVM execution overhead.</p>
+
+<h2 class="sec" id="type-sizing">Type Sizing Strategy</h2>
+<h3 class="sub" id="pick-type">Choosing the Minimum Sufficient Type</h3>
+<div class="tw"><table>
+  <thead><tr><th>Use Case</th><th>Max Value</th><th>Type</th><th>Savings vs euint64</th></tr></thead>
+  <tbody>
+    <tr><td>Boolean flag / condition</td><td>true/false</td><td><code>ebool</code></td><td>8× cheaper</td></tr>
+    <tr><td>Rating, percentage, small enum</td><td>255</td><td><code>euint8</code></td><td>8× cheaper</td></tr>
+    <tr><td>Score, level, small counter</td><td>65,535</td><td><code>euint16</code></td><td>4× cheaper</td></tr>
+    <tr><td>Timestamp (unix seconds to 2106)</td><td>~4.3B</td><td><code>euint32</code></td><td>2× cheaper</td></tr>
+    <tr><td>Token balance (6 decimals, &lt;10T)</td><td>~1.8×10¹⁹</td><td><code>euint64</code></td><td>baseline</td></tr>
+    <tr><td>Token balance (18 decimals, large supply)</td><td>~3.4×10³⁸</td><td><code>euint128</code></td><td>1.5× more expensive</td></tr>
+    <tr><td>Ethereum address</td><td>160 bits</td><td><code>eaddress</code></td><td>use when needed</td></tr>
+  </tbody>
+</table></div>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; Over-typed (wastes gas)</div>
+    <pre><span class="c">// Using euint64 for a 0-100 score</span>
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint64</span>) scores;
+
+<span class="k">function</span> <span class="f">addScore</span>(
+  <span class="t">externalEuint64</span> calldata enc,
+  <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+  <span class="t">euint64</span> s = FHE.<span class="f">fromExternal</span>(enc, proof);
+  scores[msg.sender] = FHE.<span class="f">add</span>(scores[msg.sender], s);
+  <span class="c">// ~1200 gas for the add alone</span>
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Right-sized (8× cheaper add)</div>
+    <pre><span class="c">// euint8 for 0-100 score</span>
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint8</span>) scores;
+
+<span class="k">function</span> <span class="f">addScore</span>(
+  <span class="t">externalEuint8</span> calldata enc,
+  <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+  <span class="t">euint8</span> s = FHE.<span class="f">fromExternal</span>(enc, proof);
+  scores[msg.sender] = FHE.<span class="f">add</span>(scores[msg.sender], s);
+  <span class="c">// ~150 gas for the add — 8× cheaper</span>
+}</pre>
+  </div>
+</div>
+
+<h2 class="sec" id="batch">Batching Operations</h2>
+<h3 class="sub" id="acl-batch">Batching ACL Grants</h3>
+<p>Each <code>FHE.allow()</code> call writes to the ACL contract — a separate storage write. When granting access to multiple addresses, order matters for gas: SSTORE to a warm slot is cheaper. Group all grants together right after an operation.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">ACL grant batching pattern</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// ❌ SLOW: interleaved FHE ops and ACL calls (cold slots between each)</span>
+_balances[from] = FHE.<span class="f">sub</span>(bal, amount);
+FHE.<span class="f">allowThis</span>(_balances[from]);
+FHE.<span class="f">allow</span>(_balances[from], from);
+_balances[to] = FHE.<span class="f">add</span>(_balances[to], amount);
+FHE.<span class="f">allowThis</span>(_balances[to]);
+FHE.<span class="f">allow</span>(_balances[to], to);
+
+<span class="c">// ✓ FASTER: all FHE ops first, then all ACL grants together</span>
+<span class="t">euint64</span> newFrom = FHE.<span class="f">sub</span>(bal, amount);
+<span class="t">euint64</span> newTo   = FHE.<span class="f">add</span>(_balances[to], amount);
+
+<span class="c">// Assign storage ONCE per slot</span>
+_balances[from] = newFrom;
+_balances[to]   = newTo;
+
+<span class="c">// Then all ACL grants (ACL contract stays warm in this tx)</span>
+FHE.<span class="f">allowThis</span>(newFrom); FHE.<span class="f">allow</span>(newFrom, from);
+FHE.<span class="f">allowThis</span>(newTo);   FHE.<span class="f">allow</span>(newTo,   to);</pre>
+</div>
+
+<h3 class="sub" id="multi-input">Multi-Input Encryption: Encrypt Multiple Values in One Proof</h3>
+<p>When a user needs to send multiple encrypted values in one transaction, use <code>createEncryptedInput()</code> with multiple <code>.add*()</code> calls. One proof covers all values — far cheaper than separate <code>fromExternal()</code> calls per value.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">Multi-input encryption (client-side)</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+<span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(contractAddr, userAddr);
+
+<span class="c">// Encrypt multiple values — ONE proof covers all</span>
+input.<span class="f">add64</span>(<span class="n">1000</span>);   <span class="c">// handles[0] — amount</span>
+input.<span class="f">add32</span>(<span class="n">86400</span>);  <span class="c">// handles[1] — duration in seconds</span>
+input.<span class="f">add8</span>(<span class="n">5</span>);      <span class="c">// handles[2] — percentage</span>
+input.<span class="f">addBool</span>(<span class="k">true</span>); <span class="c">// handles[3] — flag</span>
+
+<span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+<span class="c">// Send all 4 encrypted values + ONE proof to the contract</span>
+<span class="k">await</span> contract.<span class="f">complexOperation</span>(
+  handles[<span class="n">0</span>], handles[<span class="n">1</span>], handles[<span class="n">2</span>], handles[<span class="n">3</span>],
+  inputProof   <span class="c">// single proof for all 4 values</span>
+);</pre>
+</div>
+
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Receiving multi-input in contract</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Contract receives all values + one shared proof</span>
+<span class="k">function</span> <span class="f">complexOperation</span>(
+    <span class="t">externalEuint64</span> calldata encAmount,
+    <span class="t">externalEuint32</span> calldata encDuration,
+    <span class="t">externalEuint8</span>  calldata encPct,
+    <span class="t">externalEbool</span>   calldata encFlag,
+    <span class="t">bytes</span>           calldata proof   <span class="c">// one proof for all four</span>
+) <span class="k">external</span> {
+    <span class="t">euint64</span> amount   = FHE.<span class="f">fromExternal</span>(encAmount,   proof);
+    <span class="t">euint32</span> duration = FHE.<span class="f">fromExternal</span>(encDuration, proof);
+    <span class="t">euint8</span>  pct      = FHE.<span class="f">fromExternal</span>(encPct,      proof);
+    <span class="t">ebool</span>   flag     = FHE.<span class="f">fromExternal</span>(encFlag,     proof);
+    <span class="c">// The ZK proof validation is amortized across all 4 fromExternal calls</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="avoid-patterns">Anti-Patterns to Avoid</h2>
+<h3 class="sub" id="redundant">Redundant ACL Grants</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Redundant ACL — before &amp; after</span></div>
+  <pre><span class="c">// ❌ WASTEFUL: re-granting on every call even if handle hasn't changed</span>
+<span class="k">function</span> <span class="f">readBalance</span>() <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+    FHE.<span class="f">allow</span>(_balances[msg.sender], msg.sender); <span class="c">// ← WRONG in view fn</span>
+    <span class="k">return</span> _balances[msg.sender];
+}
+
+<span class="c">// ✓ CORRECT: grant only when handle changes (write functions only)</span>
+<span class="k">function</span> <span class="f">readBalance</span>() <span class="k">external view returns</span> (<span class="t">euint64</span>) {
+    <span class="k">require</span>(FHE.<span class="f">isSenderAllowed</span>(_balances[msg.sender]), <span class="s">"No access"</span>);
+    <span class="k">return</span> _balances[msg.sender]; <span class="c">// no ACL grant in view — it's read-only</span>
+}
+
+<span class="c">// ❌ WASTEFUL: granting to same address twice in one function</span>
+FHE.<span class="f">allow</span>(handle, addr);
+FHE.<span class="f">allow</span>(handle, addr); <span class="c">// ← duplicate, costs gas and does nothing new</span>
+
+<span class="c">// ❌ WASTEFUL: allowThis() when handle is never stored</span>
+<span class="t">euint64</span> temp = FHE.<span class="f">add</span>(a, b);
+FHE.<span class="f">allowThis</span>(temp);          <span class="c">// ← pointless if temp is only used locally</span>
+<span class="k">return</span> FHE.<span class="f">gt</span>(temp, threshold); <span class="c">// temp not stored — allowThis was wasted</span></pre>
+</div>
+
+<h3 class="sub" id="unnecessary">Unnecessary FHE Operations</h3>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; Unnecessary FHE comparison</div>
+    <pre><span class="c">// Checking zero with FHE.eq() costs ~600 gas</span>
+<span class="t">euint64</span> zero = FHE.<span class="f">asEuint64</span>(0);
+<span class="t">ebool</span> isEmpty = FHE.<span class="f">eq</span>(_balances[user], zero);
+<span class="c">// Then requesting a decrypt just to check...</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Use plaintext guard where possible</div>
+    <pre><span class="c">// Track a plaintext "has deposited" flag instead</span>
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="k">bool</span>) hasBalance;
+
+<span class="c">// Check costs 200 gas (SLOAD) vs 600+ (FHE.eq)</span>
+<span class="k">require</span>(hasBalance[user], <span class="s">"No balance"</span>);</pre>
+  </div>
+</div>
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; Recomputing constant FHE values</div>
+    <pre><span class="k">function</span> <span class="f">addFee</span>() <span class="k">external</span> {
+  <span class="c">// Recreates FHE constant every call</span>
+  <span class="t">euint64</span> fee = FHE.<span class="f">asEuint64</span>(100);
+  bal = FHE.<span class="f">add</span>(bal, fee);
+  FHE.<span class="f">allowThis</span>(bal);
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Cache constant handles in storage</div>
+    <pre><span class="t">euint64</span> <span class="k">private</span> FEE_HANDLE; <span class="c">// set once in constructor</span>
+
+<span class="k">constructor</span>() {
+  FEE_HANDLE = FHE.<span class="f">asEuint64</span>(100);
+  FHE.<span class="f">allowThis</span>(FEE_HANDLE);
+}
+<span class="k">function</span> <span class="f">addFee</span>() <span class="k">external</span> {
+  bal = FHE.<span class="f">add</span>(bal, FEE_HANDLE); <span class="c">// reuse</span>
+  FHE.<span class="f">allowThis</span>(bal);
+}</pre>
+  </div>
+</div>
+
+<h2 class="sec" id="storage">Storage Layout Optimization</h2>
+<h3 class="sub" id="packing">Handle Packing and Struct Layout</h3>
+<p>An <code>euintX</code> handle is always 32 bytes on-chain (a bytes32 pointer to the ciphertext). You cannot pack two handles into one slot the way you can with uint128 pairs. However, you can minimize cold SLOADs by grouping related handles in structs and accessing them in sequence:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Struct layout for related encrypted fields</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// ❌ SCATTERED: separate mappings = cold SLOAD for each field</span>
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint64</span>) private _balances;
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint64</span>) private _lockedBalances;
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">euint32</span>) private _lastActivity;
+
+<span class="c">// ✓ GROUPED: struct keeps related handles together
+// Accessing one field warms the struct's storage region</span>
+<span class="k">struct</span> <span class="t">Account</span> {
+    <span class="t">euint64</span> balance;
+    <span class="t">euint64</span> locked;
+    <span class="t">euint32</span> lastActivity;
+    <span class="t">bool</span>    initialized;   <span class="c">// plaintext flag packed with euint (different slot)</span>
+}
+<span class="k">mapping</span>(<span class="t">address</span> => <span class="t">Account</span>) private _accounts;
+
+<span class="c">// Now a transfer touches one struct → related slots are in same storage area</span>
+<span class="k">function</span> <span class="f">transfer</span>(<span class="t">address</span> to, <span class="t">externalEuint64</span> calldata enc, <span class="t">bytes</span> calldata proof) <span class="k">external</span> {
+    <span class="t">Account</span> <span class="k">storage</span> fromAcc = _accounts[msg.sender];
+    <span class="t">Account</span> <span class="k">storage</span> toAcc   = _accounts[to];
+    <span class="t">euint64</span> amount = FHE.<span class="f">fromExternal</span>(enc, proof);
+    <span class="t">euint64</span> actual = FHE.<span class="f">select</span>(FHE.<span class="f">le</span>(amount, fromAcc.balance), amount, fromAcc.balance);
+    fromAcc.balance = FHE.<span class="f">sub</span>(fromAcc.balance, actual);
+    toAcc.balance   = FHE.<span class="f">add</span>(toAcc.balance,   actual);
+    <span class="c">// ACL grants...</span>
+}</pre>
+</div>
+
+<h2 class="sec" id="profiling">Profiling &amp; Benchmarks</h2>
+<p>Use Hardhat's built-in gas reporter to measure FHE costs. Add <code>hardhat-gas-reporter</code> to your project:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Bash</span><span class="fname">Setup gas reporting</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>npm install --save-dev hardhat-gas-reporter
+
+<span class="c"># hardhat.config.ts</span>
+gasReporter: {
+  enabled: <span class="k">true</span>,
+  currency: <span class="s">'USD'</span>,
+  gasPrice: <span class="n">20</span>,    <span class="c">// gwei</span>
+  coinmarketcap: process.env.CMC_API_KEY,
+  outputFile: <span class="s">'gas-report.txt'</span>,
+}
+
+<span class="c"># Run with gas report</span>
+REPORT_GAS=true npx hardhat test</pre>
+</div>
+
+<div class="tw"><table>
+  <thead><tr><th>Function</th><th>Unoptimized</th><th>Optimized</th><th>Savings</th></tr></thead>
+  <tbody>
+    <tr><td><code>transfer()</code> euint64</td><td>~245,000 gas</td><td>~185,000 gas</td><td>~24%</td></tr>
+    <tr><td><code>transfer()</code> euint32</td><td>~140,000 gas</td><td>~105,000 gas</td><td>~25%</td></tr>
+    <tr><td><code>castVote()</code> ebool</td><td>~90,000 gas</td><td>~68,000 gas</td><td>~24%</td></tr>
+    <tr><td><code>placeBid()</code> euint64</td><td>~75,000 gas</td><td>~58,000 gas</td><td>~23%</td></tr>
+    <tr><td><code>fromExternal()</code> (shared proof)</td><td>5× per call</td><td>1× amortized</td><td>~80% on 4 inputs</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box tip">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Quick Wins Checklist</div>
+    <div class="box-text">
+      ✓ Use smallest type that fits your range<br>
+      ✓ Cache constant FHE handles (fees, zero, one) in constructor<br>
+      ✓ Batch all ACL grants after all FHE ops in each function<br>
+      ✓ Never call <code>allow()</code> in view functions<br>
+      ✓ Use plaintext guards where possible (hasDeposited, hasVoted)<br>
+      ✓ Use multi-input encryption for functions taking &gt;1 encrypted param<br>
+      ✓ Group related encrypted fields in structs
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 7 Quiz — Gas Optimization</div>
+      <div class="quiz-subtitle">8 questions · select one answer each</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">You store a player's score (0–200) as <code>euint64</code>. What is the approximate gas penalty compared to using <code>euint8</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>2× more expensive — euint64 is 2× wider than euint8 by name</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>8× more expensive — the add/compare cost scales linearly with bit-width (8 bits → 64 bits = 8× multiplier)</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The same — FHE precompile charges a flat fee regardless of type</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>4× more expensive — euint64 uses 4 more bytes than euint8</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Gas scales linearly with bit-width for arithmetic and comparison ops. euint8 = 1× baseline, euint16 = 2×, euint32 = 4×, euint64 = 8×. For a score capped at 200, euint8 (max 255) fits perfectly and costs 8× less per operation than euint64.</div>
+    </div>
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Why is <code>FHE.asEuint64(0)</code> called in the constructor to cache <code>ZERO_HANDLE</code>, rather than calling it inline in every function?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>asEuint64() can only be called once per contract</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ZK proof for a trivial encryption is too expensive per-call</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Each inline call pays ~0.2× FHE cost plus an SSTORE for the new handle. Caching it once means all subsequent calls use a single warm SLOAD (~0.01×) instead</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>You can only have one zero handle per contract due to ciphertext uniqueness</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> FHE.asEuint64(0) is cheap (~0.2× baseline) but still creates a new handle and costs an SSTORE each time. In a frequently-called function, caching in constructor means subsequent calls pay only an SLOAD (warm ~100 gas) instead of a new FHE op + SSTORE.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">What is the key benefit of multi-input encryption (multiple <code>.add*()</code> calls on one <code>createEncryptedInput</code>)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The client-side encryption is faster when batched</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Multiple encrypted values can share one storage slot on-chain</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ciphertext sizes are smaller when combined</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>One ZK proof covers all values — each <code>fromExternal()</code> on the same proof amortizes the ~6000-gas ZK verification cost across all inputs</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> fromExternal() with a shared proof amortizes the ZK verification across all inputs encrypted together. Sending N values each with a separate proof costs N × ~6000 gas for verification alone. With one shared proof and multi-input, you pay verification once plus a small per-value cost — roughly 80% savings on 4 inputs.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">You call <code>FHE.allow(handle, addr)</code> twice for the same handle and address in one function. What is the net effect?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Identical outcome but double the gas — the second call writes the same value to the same ACL slot, achieving nothing but wasting an SSTORE</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The second call strengthens the grant with a higher permission level</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The second call fails silently — ACL ignores duplicate grants</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The grant is extended in time</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> ACL grants are idempotent — granting the same address access to the same handle twice produces the same result as once, but costs SSTORE gas both times. Auditing your code for duplicate allow() calls is a quick win.</div>
+    </div>
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Which operation has the FLATTEST cost regardless of bit-width?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>FHE.add()</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>FHE.mul()</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>FHE.fromExternal()</code> — ZK proof verification is a fixed cost (~6000 gas) regardless of whether the encrypted value is euint8 or euint128</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>FHE.select()</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> fromExternal() verifies a ZK proof that binds the ciphertext to contract+caller. This verification circuit has fixed complexity regardless of the value's bit-width. In contrast, all arithmetic operations (add, sub, mul, select) scale with bit-width because the homomorphic computation has more "wires" to evaluate.</div>
+    </div>
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">Why should you never call <code>FHE.allowThis()</code> on a handle that is only used as a temporary local variable and never stored?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>allowThis() on local variables causes a Solidity compiler error</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ACL storage write costs gas but provides no benefit — the handle will never be accessed in a future transaction since it isn't stored anywhere</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Local handles expire at end of function and the ACL entry becomes invalid</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>allowThis() is reserved for the contract owner only</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> allowThis() writes to the ACL contract (SSTORE). If the handle is a temp variable used only within the current function and never written to storage, no future transaction can ever reference it — so the ACL grant costs gas and provides zero benefit. Only grant allowThis() to handles you STORE.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">A contract checks whether a user has any balance before proceeding. What is the most gas-efficient approach?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Use <code>FHE.gt(_balances[user], FHE.asEuint64(0))</code> and request a Gateway decrypt to check the result</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Use <code>FHE.ne(_balances[user], FHE.asEuint64(0))</code> inline</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Read the handle directly and check if it equals bytes32(0)</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Maintain a plaintext <code>mapping(address => bool) hasDeposited</code> that is set on first deposit — a single SLOAD (~2100 cold / 100 warm gas) vs 600+ gas for an FHE comparison</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Whenever a plaintext boolean flag can substitute for an FHE comparison, use it. Tracking "has deposited" as a plain bool costs one SLOAD (~100 warm gas) compared to FHE.gt() + asEuint64(0) which costs 600–1200+ gas. The general principle: use FHE only for operations that must be confidential.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">Which of the following correctly describes the gas cost of <code>FHE.mul()</code> compared to <code>FHE.add()</code> at the same bit-width?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>mul() costs approximately 2× add() at the same bit-width — multiplication circuits are more complex than addition circuits in FHE</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>They cost the same — FHE operations are priced per bit-width regardless of operation type</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>mul() costs 10× add() — polynomial multiplication in Ring-LWE is extremely expensive</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>mul() is actually cheaper than add() because it uses a different circuit path</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Multiplication in FHE uses a more complex circuit than addition (roughly 2× the gate count at the same width). euint64 add ≈ 8× baseline, euint64 mul ≈ 16× baseline. Avoid mul() where possible — use bit-shifts or pre-computed constants instead when multiplying by known values.</div>
+    </div>
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right"><div class="score-label">questions correct</div><div class="score-msg" id="smsg"></div></div>
+  </div>
+</div>
+<div class="pnav">
+  <a href="day06.html">&#8592; Day 6 — Sealed-Bid Auction</a>
+  <a class="next" href="day08.html">Day 8 — Access Control Patterns &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','cost-model','op-table','vs-evm','type-sizing','pick-type','batch','acl-batch','multi-input','avoid-patterns','redundant','unnecessary','storage','packing','profiling','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect score!':pct>=75?'Great work!':pct>=50?'Good — review the explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
