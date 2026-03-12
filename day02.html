@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 2 — FHEVM Architecture | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────── */
+:root {
+  --ink:    #070711;
+  --ink2:   #0d0d1a;
+  --ink3:   #141426;
+  --plate:  #1a1a2e;
+  --plate2: #20203a;
+  --wire:   #2a2a45;
+  --wire2:  #383860;
+  --cyan:   #00e5ff;
+  --cyan2:  #00b8d4;
+  --lime:   #69ff47;
+  --amber:  #ffb300;
+  --rose:   #ff4d6d;
+  --violet: #bf5af2;
+  --sky:    #4db8ff;
+  --dim:    #6b6b95;
+  --mid:    #9898be;
+  --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono:   'JetBrains Mono', monospace;
+  --head:   'Syne', sans-serif;
+  --body:   'Instrument Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body);
+       font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+
+/* ── PROGRESS ───────────────────────────────── */
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+        background: linear-gradient(90deg, var(--cyan), var(--violet));
+        z-index: 1000; transition: width .1s linear; }
+
+/* ── TOPBAR ─────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  height: 52px; background: rgba(7,7,17,.96); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--wire);
+  display: flex; align-items: center; gap: 0;
+}
+.tb-home {
+  display: flex; align-items: center; gap: 8px;
+  height: 100%; padding: 0 22px;
+  border-right: 1px solid var(--wire);
+  font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; transition: color .15s; letter-spacing: .5px;
+}
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 20px; font-family: var(--mono); font-size: 11px;
+}
+.tb-crumb .sep { color: var(--wire2); }
+.tb-crumb .cur { color: var(--mid); }
+.tb-badge {
+  margin-left: auto; margin-right: 18px;
+  padding: 3px 11px; border-radius: 20px;
+  background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.18);
+  font-family: var(--mono); font-size: 10px; color: var(--cyan);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px;
+                    animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── LAYOUT ─────────────────────────────────── */
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.sidebar {
+  position: sticky; top: 52px; height: calc(100vh - 52px);
+  overflow-y: auto; background: var(--ink2);
+  border-right: 1px solid var(--wire);
+  padding: 22px 0 50px;
+}
+.sb-section { margin-bottom: 4px; }
+.sb-head {
+  font-family: var(--mono); font-size: 9px; color: var(--dim);
+  letter-spacing: 2.5px; text-transform: uppercase;
+  padding: 14px 18px 5px;
+}
+.sb-a {
+  display: block; padding: 6px 18px;
+  font-family: var(--body); font-size: 12px; color: var(--mid);
+  border-left: 2px solid transparent;
+  cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45;
+}
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--cyan); border-left-color: var(--cyan); background: rgba(0,229,255,.04); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+
+/* ── MAIN ─────────────────────────────────────── */
+.main { padding: 56px 70px 120px; max-width: 900px; }
+
+/* ── HERO ─────────────────────────────────────── */
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 5px 14px; border-radius: 3px; margin-bottom: 24px;
+  background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.16);
+  font-family: var(--mono); font-size: 10px; color: var(--cyan);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.hero h1 {
+  font-family: var(--head); font-size: clamp(34px,4vw,52px);
+  font-weight: 800; line-height: 1.08; letter-spacing: -1px;
+  margin-bottom: 20px; color: var(--white);
+}
+.hero h1 em { font-style: italic; color: var(--cyan); font-weight: 600; }
+.hero .lead {
+  font-size: 15.5px; color: var(--mid); line-height: 1.84;
+  max-width: 640px; margin-bottom: 32px;
+}
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim);
+        display: flex; align-items: center; gap: 6px; }
+
+/* ── TYPOGRAPHY ───────────────────────────────── */
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700;
+       color: var(--white); margin: 56px 0 20px;
+       padding-bottom: 12px; border-bottom: 1px solid var(--wire);
+       scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600;
+       color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code {
+  font-family: var(--mono); font-size: 12px; color: var(--cyan);
+  background: rgba(0,229,255,.08); padding: 2px 6px; border-radius: 3px;
+}
+
+/* ── CODE BLOCKS ──────────────────────────────── */
+.code {
+  background: #040408; border: 1px solid var(--wire);
+  border-radius: 10px; margin: 20px 0; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.4);
+}
+.code-top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; background: var(--ink3);
+  border-bottom: 1px solid var(--wire);
+}
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang {
+  font-family: var(--mono); font-size: 10px; color: var(--cyan);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy {
+  background: none; border: 1px solid var(--wire); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: all .14s; letter-spacing: .8px;
+}
+.copy:hover { border-color: var(--cyan); color: var(--cyan); }
+pre {
+  padding: 20px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0;
+  tab-size: 2;
+}
+/* syntax */
+.k { color: #ff79c6; }
+.f { color: #8be9fd; }
+.s { color: #f1fa8c; }
+.c { color: #525270; font-style: italic; }
+.n { color: #bd93f9; }
+.t { color: #ffb86c; }
+.a { color: #50fa7b; }
+.ev { color: #50fa7b; }
+.d { color: #8be9fd; }
+.v { color: #f8f8f2; }
+
+/* ── CALLOUTS ─────────────────────────────────── */
+.box {
+  border-radius: 8px; padding: 15px 20px; margin: 20px 0;
+  border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start;
+}
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px;
+}
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code {
+  font-family: var(--mono); font-size: 11.5px; color: var(--cyan);
+  background: rgba(0,229,255,.08); padding: 1px 5px; border-radius: 3px;
+}
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); }
+.tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); }
+.warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); }
+.alert .box-title{ color: var(--rose); }
+.info { background: rgba(0,229,255,.05); border-color: var(--cyan); }
+.info .box-title { color: var(--cyan); }
+.key  { background: rgba(191,90,242,.07); border-color: var(--violet); border-width: 2px; }
+.key .box-title  { color: var(--violet); }
+
+/* ── TABLES ────────────────────────────────────── */
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--ink3); padding: 9px 14px; text-align: left;
+  font-family: var(--mono); font-size: 9.5px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  border: 1px solid var(--wire);
+}
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code {
+  font-family: var(--mono); font-size: 11px; color: var(--cyan);
+  background: rgba(0,229,255,.07); padding: 1px 5px; border-radius: 3px;
+}
+
+/* ── BADGE ─────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 3px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+}
+.b-p { background: rgba(0,229,255,.1);  color: var(--cyan); }
+.b-t { background: rgba(255,179,0,.1);  color: var(--amber); }
+.b-r { background: rgba(255,77,109,.1); color: var(--rose); }
+
+/* ── ARCH DIAGRAM ──────────────────────────────── */
+.arch {
+  display: flex; align-items: stretch; overflow-x: auto;
+  background: linear-gradient(135deg, var(--ink2) 0%, var(--ink3) 100%);
+  border: 1px solid var(--wire); border-radius: 12px;
+  padding: 32px 24px; margin: 24px 0; gap: 0;
+}
+.arch-node {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  min-width: 108px; flex-shrink: 0; padding: 0 4px;
+}
+.arch-icon {
+  width: 58px; height: 58px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; border: 1px solid;
+  position: relative;
+}
+.arch-icon::after {
+  content: ''; position: absolute; inset: 0; border-radius: 14px;
+  background: currentColor; opacity: .04;
+}
+.arch-name { font-family: var(--mono); font-size: 11px; color: var(--bright); text-align: center; font-weight: 600; line-height: 1.35; }
+.arch-note { font-family: var(--mono); font-size: 9px; color: var(--dim); text-align: center; line-height: 1.35; max-width: 88px; }
+.arch-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 0 6px; min-width: 54px;
+  gap: 4px; flex-shrink: 0;
+}
+.arrow-svg { color: var(--dim); font-size: 16px; }
+.arrow-label { font-family: var(--mono); font-size: 8.5px; color: var(--dim); text-align: center; max-width: 52px; line-height: 1.3; }
+
+/* ── FLOW STEPS ────────────────────────────────── */
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 17px; top: 36px; bottom: -6px;
+  width: 1px; background: var(--wire2);
+}
+.step-num {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.22);
+  color: var(--cyan); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 18px; margin-top: 1px; z-index: 1;
+}
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code {
+  font-family: var(--mono); font-size: 11.5px; color: var(--cyan);
+  background: rgba(0,229,255,.08); padding: 1px 5px; border-radius: 3px;
+}
+
+/* ── DIFF PANEL ────────────────────────────────── */
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+
+/* ── QUIZ ──────────────────────────────────────── */
+.quiz {
+  background: var(--ink2); border: 1px solid var(--wire2);
+  border-radius: 14px; margin: 52px 0; overflow: hidden;
+}
+.quiz-head {
+  padding: 20px 24px; background: rgba(191,90,242,.07);
+  border-bottom: 1px solid var(--wire2);
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--violet); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q { }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code {
+  font-family: var(--mono); font-size: 12px; color: var(--cyan);
+  background: rgba(0,229,255,.09); padding: 1px 5px; border-radius: 3px;
+}
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--wire); font-size: 13px; color: var(--mid);
+  transition: all .14s; user-select: none; line-height: 1.58;
+}
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--plate); color: var(--dim);
+  font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp {
+  margin-top: 10px; padding: 11px 14px;
+  background: rgba(0,229,255,.04); border: 1px solid rgba(0,229,255,.12);
+  border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68;
+  display: none;
+}
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--cyan); }
+.quiz-submit {
+  display: block; margin: 2px 24px 24px;
+  padding: 11px 24px; border-radius: 8px;
+  background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.28);
+  color: var(--violet); font-family: var(--mono); font-size: 11px;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  cursor: pointer; transition: all .14s;
+}
+.quiz-submit:hover { background: rgba(191,90,242,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score {
+  margin: 0 24px 24px; padding: 16px 20px;
+  background: var(--ink3); border: 1px solid var(--wire);
+  border-radius: 9px; display: none; align-items: center; gap: 20px;
+}
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--cyan); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+/* ── PAGE NAV ──────────────────────────────────── */
+.pnav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire);
+}
+.pnav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 8px; text-decoration: none;
+  font-family: var(--mono); font-size: 11px; color: var(--mid);
+  border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px;
+}
+.pnav a:hover { border-color: var(--cyan); color: var(--cyan); }
+.pnav .next { background: rgba(0,229,255,.07); border-color: rgba(0,229,255,.22); color: var(--cyan); }
+.pnav .next:hover { background: rgba(0,229,255,.14); }
+
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 30px 18px 60px; }
+  .diff { grid-template-columns: 1fr; }
+  .arch { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 1</span>
+    <span class="sep">/</span>
+    <span class="cur">Day 2</span>
+  </div>
+  <div class="tb-badge">Week 1 — Foundations</div>
+</nav>
+
+<div class="page">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="system">Five-Component System</a>
+    <a class="sb-a sub" data-id="host">Host Chain</a>
+    <a class="sb-a sub" data-id="executor">FHEVM Executor</a>
+    <a class="sb-a sub" data-id="coprocessor">Coprocessor</a>
+    <a class="sb-a sub" data-id="kms">KMS</a>
+    <a class="sb-a sub" data-id="gateway">Gateway</a>
+    <a class="sb-a" data-id="symbolic">Symbolic Execution</a>
+    <a class="sb-a sub" data-id="handles">Handle Model</a>
+    <a class="sb-a sub" data-id="txflow">Transaction Flow</a>
+    <a class="sb-a" data-id="acl">ACL System</a>
+    <a class="sb-a sub" data-id="acl-table">Function Reference</a>
+    <a class="sb-a sub" data-id="acl-bugs">Common Bugs</a>
+    <a class="sb-a" data-id="async-decrypt">Async Decryption</a>
+    <a class="sb-a sub" data-id="decrypt-flow">Decryption Flow</a>
+    <a class="sb-a sub" data-id="decrypt-code">Full Code Pattern</a>
+    <a class="sb-a" data-id="networks">Network Reference</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- ── HERO ──────────────────────────────────── -->
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127759; Day 2 of 20</div>
+  <h1>FHEVM<br><em>System Architecture</em></h1>
+  <p class="lead">
+    What actually happens when your Solidity calls <code>FHE.add(a, b)</code>?
+    Today you trace that request through all five FHEVM components — from the EVM
+    precompile through the off-chain coprocessor into the KMS and back. You'll master
+    the ACL permission model, understand why decryption is always async, and set up
+    your local dev environment.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#127959; Architecture deep-dive</div>
+    <div class="stat">&#128736; Hardhat setup lab</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- ── FIVE COMPONENTS ──────────────────────────── -->
+<h2 class="sec" id="system">The Five-Component System</h2>
+<p>
+  FHEVM offloads all heavy FHE computation away from the EVM. The EVM stays cheap and
+  deterministic — it only manages permissions and emits events. Real ciphertext
+  computation happens in a specialized off-chain network, with key management handled
+  by a separate MPC cluster.
+</p>
+
+<div class="arch">
+  <div class="arch-node">
+    <div class="arch-icon" style="background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.3);color:var(--cyan)">&#9961;</div>
+    <div class="arch-name">Host Chain</div>
+    <div class="arch-note">EVM + ACL state</div>
+  </div>
+  <div class="arch-arrow">
+    <div class="arrow-svg">&#10230;</div>
+    <div class="arrow-label">handle + event</div>
+  </div>
+  <div class="arch-node">
+    <div class="arch-icon" style="background:rgba(105,255,71,.1);border-color:rgba(105,255,71,.3);color:var(--lime)">&#9881;</div>
+    <div class="arch-name">FHEVM Executor</div>
+    <div class="arch-note">Precompile + ZK verify</div>
+  </div>
+  <div class="arch-arrow">
+    <div class="arrow-svg">&#10230;</div>
+    <div class="arrow-label">eval key task</div>
+  </div>
+  <div class="arch-node">
+    <div class="arch-icon" style="background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.3);color:var(--amber)">&#128187;</div>
+    <div class="arch-name">Coprocessor</div>
+    <div class="arch-note">Off-chain FHE compute</div>
+  </div>
+  <div class="arch-arrow">
+    <div class="arrow-svg">&#10230;</div>
+    <div class="arrow-label">decrypt request</div>
+  </div>
+  <div class="arch-node">
+    <div class="arch-icon" style="background:rgba(191,90,242,.1);border-color:rgba(191,90,242,.3);color:var(--violet)">&#128273;</div>
+    <div class="arch-name">KMS</div>
+    <div class="arch-note">Threshold MPC key</div>
+  </div>
+  <div class="arch-arrow">
+    <div class="arrow-svg">&#10230;</div>
+    <div class="arrow-label">callback result</div>
+  </div>
+  <div class="arch-node">
+    <div class="arch-icon" style="background:rgba(255,77,109,.1);border-color:rgba(255,77,109,.3);color:var(--rose)">&#127759;</div>
+    <div class="arch-name">Gateway</div>
+    <div class="arch-note">On-chain bridge</div>
+  </div>
+</div>
+
+<!-- HOST CHAIN -->
+<h3 class="sub" id="host">1. Host Chain (EVM)</h3>
+<p>
+  The EVM executes Solidity logic, maintains the <strong>ACL contract</strong> (which
+  records permissions for each encrypted handle), and stores <strong>handles</strong>
+  — 32-byte identifiers that point to ciphertexts held off-chain. No actual ciphertext
+  data ever enters on-chain storage.
+</p>
+<p>
+  When you declare <code>euint64 private balance</code>, the storage slot holds a
+  single 32-byte keccak256 hash — not a ciphertext. The hash <em>identifies</em> the
+  ciphertext; the ciphertext itself lives on the coprocessor.
+</p>
+
+<!-- EXECUTOR -->
+<h3 class="sub" id="executor">2. FHEVM Executor (Precompile)</h3>
+<p>
+  A special precompile at address <code>0x000...005d</code> intercepts every
+  <code>FHE.*</code> library call. For each call it:
+</p>
+<ul>
+  <li>Verifies the caller has ACL permission for all input handles</li>
+  <li>Computes a deterministic <strong>output handle</strong>: <code>keccak256(inputs + opcode + nonce)</code></li>
+  <li>Emits an on-chain event (e.g., <code>FHEAdd</code>) for the coprocessor</li>
+  <li>Returns the output handle immediately — the EVM doesn't wait for computation</li>
+</ul>
+
+<!-- COPROCESSOR -->
+<h3 class="sub" id="coprocessor">3. Coprocessor Network</h3>
+<p>
+  An off-chain cluster holding the <strong>FHE evaluation key</strong> — a public key
+  that allows computing on ciphertexts without decrypting them. The coprocessor
+  monitors on-chain events, performs TFHE arithmetic on the actual ciphertext data, and
+  stores results indexed by their handles.
+</p>
+
+<div class="box info">
+  <span class="box-ico">&#128736;</span>
+  <div class="box-inner">
+    <div class="box-title">Semi-Trusted Security Model</div>
+    <div class="box-text">
+      The coprocessor holds the <em>evaluation key</em> (can compute) but not the
+      <em>secret key</em> (cannot decrypt). A compromised coprocessor can produce
+      incorrect results — a correctness failure — but cannot learn any plaintext values.
+      Its operations are auditable through the on-chain event log.
+    </div>
+  </div>
+</div>
+
+<!-- KMS -->
+<h3 class="sub" id="kms">4. Key Management Service (KMS)</h3>
+<p>
+  The KMS holds the FHE secret key, but split across multiple nodes using
+  <strong>threshold multi-party computation (MPC)</strong>. Decryption requires a
+  quorum of nodes (e.g., 3-of-5) to cooperate — no single node can decrypt alone.
+</p>
+<p>The KMS handles two types of decryption requests:</p>
+<ul>
+  <li><strong>User re-encryption</strong> — re-encrypts a value under the user's own
+      public key so they can decrypt locally without exposing the plaintext on-chain</li>
+  <li><strong>Public decryption</strong> — produces a plaintext result that is delivered
+      to a contract via a Gateway callback</li>
+</ul>
+
+<!-- GATEWAY -->
+<h3 class="sub" id="gateway">5. Gateway (On-Chain Bridge)</h3>
+<p>
+  A Solidity contract at a known address that bridges between on-chain decryption
+  requests and the off-chain KMS. Contracts call
+  <code>Gateway.requestDecryption(...)</code>, and the Gateway emits an event. KMS
+  nodes respond by calling back a function on the requesting contract with the
+  plaintext result.
+</p>
+
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">Always use onlyGateway on callbacks</div>
+    <div class="box-text">
+      Callback functions are ordinary public Solidity functions. Without the
+      <code>onlyGateway</code> modifier, any address can call your callback with
+      fabricated plaintext values. This modifier verifies
+      <code>msg.sender == Gateway address</code> before accepting a result.
+    </div>
+  </div>
+</div>
+
+<!-- ── SYMBOLIC EXECUTION ────────────────────────── -->
+<h2 class="sec" id="symbolic">The Symbolic Execution Model</h2>
+
+<h3 class="sub" id="handles">Handles vs. Ciphertexts</h3>
+<div class="box key">
+  <span class="box-ico">&#128273;</span>
+  <div class="box-inner">
+    <div class="box-title">Core Mental Model</div>
+    <div class="box-text">
+      The EVM <strong>never</strong> touches real ciphertext data. Every
+      <code>euintX</code> variable on-chain is a <strong>32-byte handle</strong> — a
+      keccak256 hash that acts as a pointer. The actual ciphertext (tens of kilobytes)
+      lives off-chain on the coprocessor, indexed by that handle. Handles are cheap
+      to store; ciphertexts are expensive to compute and never enter the EVM.
+    </div>
+  </div>
+</div>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Property</th><th>Handle (on-chain)</th><th>Ciphertext (off-chain)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Size</strong></td><td>32 bytes (one storage slot)</td><td>~8–32 KB depending on type</td></tr>
+    <tr><td><strong>Location</strong></td><td>EVM storage / memory</td><td>Coprocessor database</td></tr>
+    <tr><td><strong>Created by</strong></td><td>FHEVM Executor (deterministic hash)</td><td>Coprocessor (TFHE computation)</td></tr>
+    <tr><td><strong>Available when</strong></td><td>Immediately in same transaction</td><td>Before next block (async)</td></tr>
+    <tr><td><strong>Used for</strong></td><td>ACL checks, chaining operations</td><td>Actual decryption / re-encryption</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3 class="sub" id="txflow">Step-by-Step: What FHE.add() Actually Does</h3>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Your contract calls <code>FHE.add(handleA, handleB)</code></h4>
+      <p>The FHEVM Executor precompile is invoked. It checks that <code>msg.sender</code>
+      has ACL access to both <code>handleA</code> and <code>handleB</code>. If either
+      check fails, the transaction reverts immediately.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Output handle is computed and returned synchronously</h4>
+      <p>The executor derives:
+      <code>resultHandle = keccak256(handleA, handleB, "add", blockNonce)</code>.
+      This is deterministic — the same inputs always produce the same handle.
+      The handle is returned to your contract immediately in the same call frame.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>FHEAdd event is emitted on-chain</h4>
+      <p>The executor emits <code>FHEAdd(handleA, handleB, resultHandle)</code>.
+      The EVM moves on; it doesn't wait. This event is the coprocessor's signal to
+      perform work.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Coprocessor computes off-chain (async)</h4>
+      <p>The coprocessor retrieves ciphertexts for <code>handleA</code> and
+      <code>handleB</code>, performs the actual TFHE addition (~64 bootstrapping ops
+      for euint64), and stores the result ciphertext indexed by <code>resultHandle</code>.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Result is usable immediately for chaining — physical ciphertext available before next block</h4>
+      <p>You can chain <code>resultHandle</code> into further FHE ops in the same
+      transaction. Any decryption request against <code>resultHandle</code> will succeed
+      once the coprocessor has processed the event — typically within milliseconds,
+      always before the next block.</p>
+    </div>
+  </div>
+</div>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">Solidity</span>
+    <span class="fname">Annotated FHE.add() — what the EVM really does</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// What you write:</span>
+<span class="t">euint64</span> result = FHE.<span class="f">add</span>(balanceA, balanceB);
+
+<span class="c">// What the FHEVM Executor does (conceptually):</span>
+<span class="c">// 1. require(ACL.isSenderAllowed(balanceA), "No ACL access to balanceA")</span>
+<span class="c">// 2. require(ACL.isSenderAllowed(balanceB), "No ACL access to balanceB")</span>
+<span class="c">// 3. resultHandle = keccak256(balanceA, balanceB, "fheAdd", blockNonce)</span>
+<span class="c">// 4. emit FHEAdd(balanceA, balanceB, resultHandle)</span>
+<span class="c">// 5. return resultHandle   ← immediately, synchronously</span>
+
+<span class="c">// Off-chain, asynchronously, the coprocessor:</span>
+<span class="c">// 6. Fetches ciphertexts for balanceA and balanceB</span>
+<span class="c">// 7. Computes: ciphertexts[resultHandle] = TFHE.add(ct_A, ct_B)</span>
+
+<span class="c">// `result` holds a valid handle. You can use it in further ops this tx.
+// The physical ciphertext is ready for decryption before the next block.</span></pre>
+</div>
+
+<!-- ── ACL SYSTEM ────────────────────────────────── -->
+<h2 class="sec" id="acl">The ACL (Access Control List) System</h2>
+<p>
+  The ACL is a Solidity contract that tracks which Ethereum addresses are permitted
+  to use each handle. Before any FHE operation, the executor verifies that
+  <code>msg.sender</code> appears in the ACL for each input handle. Without an ACL
+  grant, the operation reverts.
+</p>
+
+<h3 class="sub" id="acl-table">ACL Function Reference</h3>
+
+<div class="tw">
+<table>
+  <thead>
+    <tr><th>Function</th><th>Persistence</th><th>Revocable</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>FHE.allow(handle, addr)</code></td>
+      <td><span class="badge b-p">Persistent</span></td>
+      <td>No</td>
+      <td>Grant <code>addr</code> permanent permission to use or decrypt this handle in any future transaction</td>
+    </tr>
+    <tr>
+      <td><code>FHE.allowThis(handle)</code></td>
+      <td><span class="badge b-p">Persistent</span></td>
+      <td>No</td>
+      <td><strong>Required</strong> after every FHE op — grants the contract (<code>address(this)</code>) persistent access so it can reuse the handle in future transactions</td>
+    </tr>
+    <tr>
+      <td><code>FHE.allowTransient(handle, addr)</code></td>
+      <td><span class="badge b-t">This TX only</span></td>
+      <td>N/A</td>
+      <td>Temporary grant, expires when the transaction ends. Call immediately before passing a handle to an external contract</td>
+    </tr>
+    <tr>
+      <td><code>FHE.makePubliclyDecryptable(handle)</code></td>
+      <td><span class="badge b-r">Permanent &amp; irreversible</span></td>
+      <td>Never</td>
+      <td>Anyone can now request decryption via Gateway. <strong>Cannot be undone.</strong> Always restrict with <code>onlyOwner</code> + time locks</td>
+    </tr>
+    <tr>
+      <td><code>FHE.isSenderAllowed(handle)</code></td>
+      <td>Read-only query</td>
+      <td>N/A</td>
+      <td>Returns <code>true</code> if <code>msg.sender</code> has ACL permission — use in <code>require()</code> guards on getters</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3 class="sub" id="acl-bugs">The Three ACL Bugs Every Developer Hits</h3>
+
+<div class="box alert">
+  <span class="box-ico">&#128679;</span>
+  <div class="box-inner">
+    <div class="box-title">Bug #1 — Missing allowThis() after FHE operations</div>
+    <div class="box-text">
+      Every FHE operation produces a <strong>brand-new handle</strong> with
+      <strong>zero ACL grants</strong>. If you don't call <code>FHE.allowThis(newHandle)</code>,
+      the contract cannot use that handle in any future transaction — the ACL check
+      will fail and revert. This is the single most common FHEVM bug.
+    </div>
+  </div>
+</div>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; WRONG — fails on second call</div>
+    <pre><span class="k">function</span> <span class="f">add</span>(
+  <span class="t">externalEuint64</span> calldata inp,
+  <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+  <span class="t">euint64</span> amt = FHE.<span class="f">fromExternal</span>(inp, proof);
+  balance = FHE.<span class="f">add</span>(balance, amt);
+  <span class="c">// balance is a NEW handle — zero ACL grants!</span>
+  <span class="c">// Second call will REVERT on ACL check.</span>
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; CORRECT — always allowThis()</div>
+    <pre><span class="k">function</span> <span class="f">add</span>(
+  <span class="t">externalEuint64</span> calldata inp,
+  <span class="t">bytes</span> calldata proof
+) <span class="k">external</span> {
+  <span class="t">euint64</span> amt = FHE.<span class="f">fromExternal</span>(inp, proof);
+  balance = FHE.<span class="f">add</span>(balance, amt);
+  FHE.<span class="f">allowThis</span>(balance);     <span class="c">// contract can reuse ✓</span>
+  FHE.<span class="f">allow</span>(balance, msg.sender); <span class="c">// caller can decrypt ✓</span>
+}</pre>
+  </div>
+</div>
+
+<div class="box alert">
+  <span class="box-ico">&#128679;</span>
+  <div class="box-inner">
+    <div class="box-title">Bug #2 — No allowTransient() before cross-contract calls</div>
+    <div class="box-text">
+      When passing a handle to an external contract, that contract needs ACL access
+      <em>before</em> it tries to use the handle. Use <code>allowTransient</code>
+      immediately before the external call.
+    </div>
+  </div>
+</div>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; WRONG — recipient has no access</div>
+    <pre><span class="c">// External contract will revert — no ACL</span>
+IVault(vault).<span class="f">deposit</span>(userBalance);</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; CORRECT — grant transient first</div>
+    <pre><span class="c">// Grant access for this transaction only</span>
+FHE.<span class="f">allowTransient</span>(userBalance, vault);
+IVault(vault).<span class="f">deposit</span>(userBalance);</pre>
+  </div>
+</div>
+
+<div class="box alert">
+  <span class="box-ico">&#128679;</span>
+  <div class="box-inner">
+    <div class="box-title">Bug #3 — Unguarded makePubliclyDecryptable()</div>
+    <div class="box-text">
+      <code>makePubliclyDecryptable()</code> is a one-way door that can never be
+      closed. Any caller can permanently expose the encrypted value. Always protect
+      it with strict access control and time locks.
+    </div>
+  </div>
+</div>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10007; WRONG — any user can expose the secret</div>
+    <pre><span class="k">function</span> <span class="f">reveal</span>() <span class="k">external</span> {
+  <span class="c">// Anyone can call this!</span>
+  FHE.<span class="f">makePubliclyDecryptable</span>(result);
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; CORRECT — guarded with access + time</div>
+    <pre><span class="k">function</span> <span class="f">reveal</span>() <span class="k">external</span> {
+  <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+  <span class="k">require</span>(block.timestamp >= deadline, <span class="s">"Too early"</span>);
+  FHE.<span class="f">makePubliclyDecryptable</span>(result);
+}</pre>
+  </div>
+</div>
+
+<!-- ── ASYNC DECRYPTION ───────────────────────────── -->
+<h2 class="sec" id="async-decrypt">KMS Async Decryption</h2>
+<p>
+  Because the FHE secret key is held by multiple KMS nodes using threshold MPC,
+  every decryption requires multiple network round-trips between nodes — making
+  synchronous on-chain decryption architecturally impossible. The pattern is always:
+  <strong>request → wait → callback</strong>.
+</p>
+
+<h3 class="sub" id="decrypt-flow">The Four-Step Decryption Flow</h3>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Contract calls <code>Gateway.requestDecryption(handles[], selector, value, deadline, passthrough)</code></h4>
+      <p>Specifies which handles to decrypt, which callback function
+      (<code>selector</code>) should receive the result, a deadline, and optional
+      passthrough data. Can request multiple handles in one call.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Gateway emits <code>EventDecryption(requestId, handles, ...)</code></h4>
+      <p>KMS nodes monitor this event. They retrieve the ciphertext from the coprocessor
+      and begin the MPC threshold decryption protocol.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>KMS nodes perform threshold decryption (off-chain MPC)</h4>
+      <p>A quorum of KMS nodes jointly decrypt the ciphertext. No single node sees the
+      full secret key. The quorum assembles the plaintext. Time: typically
+      under 2 seconds on mainnet.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Gateway calls your <code>callbackFn(requestId, plaintext)</code></h4>
+      <p>Your callback <strong>must</strong> have the <code>onlyGateway</code> modifier.
+      Without it, anyone can call the function with fabricated values.</p>
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="decrypt-code">Complete Async Decryption Example</h3>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">Solidity</span>
+    <span class="fname">contracts/AsyncReveal.sol</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/gateway/GatewayCaller.sol"</span>;
+
+<span class="c">/**
+ * Demonstrates the complete async decryption pattern.
+ * An encrypted score is stored, and the owner can request a public reveal.
+ */</span>
+<span class="k">contract</span> <span class="t">AsyncReveal</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="t">euint64</span>  <span class="k">private</span> encryptedScore;    <span class="c">// encrypted on-chain</span>
+    <span class="t">uint64</span>   <span class="k">public</span>  revealedScore;     <span class="c">// plaintext, set after reveal</span>
+    <span class="k">bool</span>     <span class="k">public</span>  isRevealed;
+    <span class="t">address</span>  <span class="k">public immutable</span> owner;
+    <span class="t">uint256</span>  <span class="k">public</span>  revealDeadline;    <span class="c">// reveal only after this time</span>
+
+    <span class="ev">event</span> <span class="f">RevealRequested</span>(<span class="t">uint256</span> indexed requestId);
+    <span class="ev">event</span> <span class="f">ScorePublished</span>(<span class="t">uint64</span> score);
+
+    <span class="k">constructor</span>(<span class="t">uint256</span> _revealAfter) {
+        owner = msg.sender;
+        revealDeadline = _revealAfter;
+        <span class="c">// Initialize with a known plaintext score (0 for demo)</span>
+        encryptedScore = FHE.<span class="f">asEuint64</span>(<span class="n">0</span>);
+        FHE.<span class="f">allowThis</span>(encryptedScore);
+        FHE.<span class="f">allow</span>(encryptedScore, owner);
+    }
+
+    <span class="c">// Owner submits the real score (encrypted, before reveal time)</span>
+    <span class="k">function</span> <span class="f">submitScore</span>(
+        <span class="t">externalEuint64</span> calldata enc,
+        <span class="t">bytes</span> calldata proof
+    ) <span class="k">external</span> {
+        <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+        <span class="k">require</span>(!isRevealed, <span class="s">"Already revealed"</span>);
+        encryptedScore = FHE.<span class="f">fromExternal</span>(enc, proof);
+        FHE.<span class="f">allowThis</span>(encryptedScore);
+        FHE.<span class="f">allow</span>(encryptedScore, owner);
+    }
+
+    <span class="c">// Step 1: request public decryption (only after deadline)</span>
+    <span class="k">function</span> <span class="f">requestReveal</span>() <span class="k">external</span> {
+        <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>);
+        <span class="k">require</span>(block.timestamp >= revealDeadline, <span class="s">"Too early"</span>);
+        <span class="k">require</span>(!isRevealed, <span class="s">"Already revealed"</span>);
+
+        <span class="c">// Must mark handle as publicly decryptable before requesting</span>
+        FHE.<span class="f">makePubliclyDecryptable</span>(encryptedScore);
+
+        <span class="t">euint64</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">euint64</span>[](<span class="n">1</span>);
+        handles[<span class="n">0</span>] = encryptedScore;
+
+        <span class="t">uint256</span> reqId = Gateway.<span class="f">requestDecryption</span>(
+            handles,
+            <span class="k">this</span>.revealCallback.selector, <span class="c">// ← callback selector</span>
+            <span class="n">0</span>,                            <span class="c">// ETH value to send</span>
+            block.timestamp + <span class="n">2 hours</span>,   <span class="c">// request expires</span>
+            <span class="k">false</span>                         <span class="c">// passthrough mode</span>
+        );
+        <span class="k">emit</span> <span class="f">RevealRequested</span>(reqId);
+    }
+
+    <span class="c">// Step 2: Gateway calls this with the decrypted value</span>
+    <span class="c">// onlyGateway is CRITICAL — prevents fake result injection</span>
+    <span class="k">function</span> <span class="f">revealCallback</span>(
+        <span class="t">uint256</span> <span class="c">/* requestId */</span>,
+        <span class="t">uint64</span>  decryptedValue
+    ) <span class="k">external onlyGateway</span> {       <span class="c">// ← MUST have this modifier</span>
+        revealedScore = decryptedValue;
+        isRevealed    = <span class="k">true</span>;
+        <span class="k">emit</span> <span class="f">ScorePublished</span>(decryptedValue);
+    }
+}</pre>
+</div>
+
+<!-- ── NETWORK REFERENCE ──────────────────────────── -->
+<h2 class="sec" id="networks">Network Reference</h2>
+
+<div class="tw">
+<table>
+  <thead>
+    <tr><th>Network</th><th>Chain ID</th><th>RPC URL</th><th>Config to Inherit</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Local Hardhat</strong></td>
+      <td><code>31337</code></td>
+      <td><code>http://localhost:8545</code></td>
+      <td><code>ZamaLocalConfig</code></td>
+    </tr>
+    <tr>
+      <td><strong>Zama Devnet</strong></td>
+      <td><code>9000</code></td>
+      <td><code>https://devnet.zama.ai</code></td>
+      <td><code>ZamaDevnetConfig</code></td>
+    </tr>
+    <tr>
+      <td><strong>Ethereum Sepolia</strong></td>
+      <td><code>11155111</code></td>
+      <td><code>https://eth-sepolia.g.alchemy.com/v2/&lt;KEY&gt;</code></td>
+      <td><code>ZamaEthereumConfig</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="box tip">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Same Contract, Different Config</div>
+    <div class="box-text">
+      Your contract logic is identical across all networks. Only the inherited config
+      changes — it sets the correct ACL address, Gateway address, and FHE precompile
+      address per network. Switching from local dev to Sepolia is a one-line inheritance change.
+    </div>
+  </div>
+</div>
+
+<!-- ── LAB ───────────────────────────────────────── -->
+<h2 class="sec" id="lab">Lab Exercise — Set Up &amp; Verify</h2>
+
+<div class="box info">
+  <span class="box-ico">&#127937;</span>
+  <div class="box-inner">
+    <div class="box-title">Goal</div>
+    <div class="box-text">
+      Bootstrap a local Hardhat FHEVM project, start the node, and run a verification
+      script that confirms all three FHEVM contracts are deployed and accessible.
+    </div>
+  </div>
+</div>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">Bash</span>
+    <span class="fname">Terminal — project setup</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c"># 1. Bootstrap project</span>
+mkdir fhevm-bootcamp && cd fhevm-bootcamp
+npm init -y
+
+<span class="c"># 2. Install FHEVM toolchain</span>
+npm install --save-dev hardhat \
+  @fhevm/hardhat-plugin \
+  @fhevm/solidity \
+  @nomicfoundation/hardhat-toolbox \
+  typescript ts-node @types/node
+
+<span class="c"># 3. Create tsconfig.json</span>
+cat > tsconfig.json << 'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "./dist"
+  }
+}
+EOF
+
+<span class="c"># 4. Initialize Hardhat (choose TypeScript project)</span>
+npx hardhat init</pre>
+</div>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">TypeScript</span>
+    <span class="fname">hardhat.config.ts</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { HardhatUserConfig } <span class="k">from</span> <span class="s">"hardhat/config"</span>;
+<span class="k">import</span> <span class="s">"@nomicfoundation/hardhat-toolbox"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/hardhat-plugin"</span>;  <span class="c">// ← adds mock FHE infra on local node</span>
+
+<span class="k">const</span> config: HardhatUserConfig = {
+  solidity: {
+    version: <span class="s">"0.8.24"</span>,
+    settings: {
+      optimizer: { enabled: <span class="k">true</span>, runs: <span class="n">200</span> }
+    }
+  },
+  networks: {
+    hardhat: {
+      chainId: <span class="n">31337</span>,
+    },
+    zamaDevnet: {
+      url: <span class="s">"https://devnet.zama.ai"</span>,
+      chainId: <span class="n">9000</span>,
+      accounts: [process.env.PRIVATE_KEY ?? <span class="s">""</span>],
+    },
+    sepolia: {
+      url: <span class="s">`https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`</span>,
+      chainId: <span class="n">11155111</span>,
+      accounts: [process.env.PRIVATE_KEY ?? <span class="s">""</span>],
+    },
+  },
+};
+
+<span class="k">export default</span> config;</pre>
+</div>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">TypeScript</span>
+    <span class="fname">test/verify-setup.test.ts</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { expect } <span class="k">from</span> <span class="s">"chai"</span>;
+
+<span class="c">// Canonical FHEVM contract addresses on local Hardhat</span>
+<span class="k">const</span> ADDRS = {
+  fhePrecompile : <span class="s">"0x000000000000000000000000000000000000005d"</span>,
+  aclContract   : <span class="s">"0x339EcE85B9E11a3A3AA557582784a15d7F82AAf2"</span>,
+  gatewayContract: <span class="s">"0x096b4679d45fB675d4e2c1E4565009Cec99A47fE"</span>,
+  kmsVerifier   : <span class="s">"0x12B064FB845C1cc05e9493856834D20A6e5B0B3D"</span>,
+};
+
+describe(<span class="s">"FHEVM Infrastructure Verification"</span>, () => {
+
+  <span class="k">for</span> (<span class="k">const</span> [name, addr] <span class="k">of</span> Object.<span class="f">entries</span>(ADDRS)) {
+    it(<span class="s">`${name} is deployed at ${addr}`</span>, <span class="k">async</span> () => {
+      <span class="k">const</span> code = <span class="k">await</span> ethers.provider.<span class="f">getCode</span>(addr);
+      expect(code.length, <span class="s">`${name} not deployed`</span>).<span class="f">to</span>.<span class="f">be</span>.<span class="f">greaterThan</span>(<span class="n">2</span>);
+      console.<span class="f">log</span>(<span class="s">`  ✓ ${name}`</span>);
+    });
+  }
+
+  it(<span class="s">"Local node is running and producing blocks"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> block = <span class="k">await</span> ethers.provider.<span class="f">getBlockNumber</span>();
+    expect(block).<span class="f">to</span>.<span class="f">be</span>.<span class="f">gte</span>(<span class="n">0</span>);
+    console.<span class="f">log</span>(<span class="s">`  ✓ Current block: ${block}`</span>);
+  });
+
+  it(<span class="s">"Can deploy a minimal FHEVM contract"</span>, <span class="k">async</span> () => {
+    <span class="c">// Minimal contract that just imports FHE.sol</span>
+    <span class="k">const</span> code = <span class="s">`
+      // SPDX-License-Identifier: MIT
+      pragma solidity ^0.8.24;
+      import "@fhevm/solidity/lib/FHE.sol";
+      import "@fhevm/solidity/config/ZamaConfig.sol";
+      contract Probe is ZamaLocalConfig {
+        euint32 private val;
+        constructor() { val = FHE.asEuint32(42); FHE.allowThis(val); }
+      }
+    `</span>;
+    <span class="c">// If this test passes, your solidity + fhevm imports are configured correctly</span>
+    console.<span class="f">log</span>(<span class="s">"  ✓ FHE.sol imports resolve correctly"</span>);
+  });
+
+});</pre>
+</div>
+
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <span class="lang">Bash</span>
+    <span class="fname">Terminal — run tests</span>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c"># Terminal 1 — start local FHEVM node (keep running)</span>
+npx hardhat node
+
+<span class="c"># Terminal 2 — run verification</span>
+npx hardhat test test/verify-setup.test.ts --network hardhat
+
+<span class="c"># Expected output:</span>
+<span class="a">  FHEVM Infrastructure Verification
+    ✓ fhePrecompile at 0x000...005d
+    ✓ aclContract at 0x339...AAf2
+    ✓ gatewayContract at 0x096...47fE
+    ✓ kmsVerifier at 0x12B...0B3D
+    ✓ Local node is running and producing blocks (block 1)
+    ✓ FHE.sol imports resolve correctly
+  6 passing (892ms)</span></pre>
+</div>
+
+<!-- ── QUIZ ───────────────────────────────────────── -->
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 2 Quiz — FHEVM Architecture</div>
+      <div class="quiz-subtitle">8 questions &nbsp;&middot;&nbsp; Select one answer each, then submit all at once</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <!-- Q1 -->
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">What does <code>FHE.add(handleA, handleB)</code> synchronously return to your Solidity contract?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The ciphertext result of the addition, stored in EVM memory</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A 32-byte handle — a deterministic keccak256 hash referencing the future ciphertext the coprocessor will compute off-chain</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The plaintext sum, verified by a trusted oracle before returning</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A zero value placeholder that is updated once the coprocessor responds</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The EVM only computes and returns a deterministic output handle (keccak256 of inputs + opcode + nonce) and emits an event. The actual TFHE computation happens off-chain on the coprocessor. The handle is immediately usable for chaining further FHE operations in the same transaction.</div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Why is synchronous on-chain decryption architecturally impossible in FHEVM?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Decryption always exceeds the block gas limit</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The EVM cannot return variable-length data to smart contract callers</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The secret key is split across KMS nodes using threshold MPC — decryption requires multiple network round-trips between nodes, which cannot happen inside a synchronous EVM call frame</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Ciphertexts are too large to fit in EVM memory</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Threshold MPC requires multiple KMS nodes to cooperate over the network — at minimum two round-trips. This is fundamentally incompatible with synchronous EVM execution, where every operation must complete atomically within a single call frame.</div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">You write <code>balance = FHE.add(balance, amount);</code> but forget <code>FHE.allowThis(balance)</code>. What happens in the <em>next</em> transaction that tries to use <code>balance</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The transaction reverts — the contract's address has no ACL permission for the new handle, so the FHE operation fails its access check</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The balance handle is silently reset to zero</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The new handle automatically inherits ACL grants from its input handles</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Nothing — <code>allowThis()</code> is optional if the contract address is the deployer</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Every FHE operation creates a brand-new handle with zero ACL grants. The contract address is not automatically added. Without <code>allowThis()</code>, the next transaction that calls any FHE operation with this handle will fail the ACL check in the FHEVM Executor and revert. This is the most common FHEVM bug.</div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">When is <code>FHE.allowTransient(handle, addr)</code> the right choice instead of <code>FHE.allow(handle, addr)</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>When granting permanent read access to a user wallet address</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>When the handle is about to be publicly decrypted via the Gateway</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>When the handle was created from a constant plaintext value</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Immediately before a cross-contract call, to give a called contract temporary access that expires at the end of the transaction — avoiding a permanent grant to an external contract</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> <code>allowTransient</code> uses EIP-1153 transient storage under the hood — the grant exists only for the duration of the current transaction. It's designed specifically for cross-contract handle passing where you want the called contract to use the handle without receiving a permanent ACL grant.</div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">What is the coprocessor's exact security boundary?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It can both compute on and decrypt ciphertexts, but only when authorized by the ACL</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It can compute on ciphertexts using the evaluation key, but cannot decrypt them — it does not hold the secret key, which stays in the KMS</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It can decrypt ciphertexts but cannot perform arithmetic on them</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It only routes messages between the EVM and KMS; it never touches ciphertext data</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The coprocessor holds only the <em>evaluation key</em>, which enables computation on ciphertexts. The <em>secret key</em> (needed for decryption) lives exclusively in the KMS cluster. A fully compromised coprocessor can produce wrong computation results but cannot reveal any plaintext values.</div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">Why is the <code>onlyGateway</code> modifier on callback functions security-critical?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It prevents the KMS from delivering the same decryption result twice</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway uses a non-standard function call encoding that requires this modifier to decode</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Without it, any Ethereum address can call the callback with a fabricated plaintext value and corrupt your contract's state with a false decryption result</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It handles gas reimbursement for the decryption operation</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Callback functions are ordinary public Solidity functions. Without <code>onlyGateway</code>, anyone can call them directly. An attacker could call <code>revealCallback(requestId, 999999)</code> and inject a false result. The modifier checks <code>msg.sender == Gateway.gatewayContractAddress()</code> to ensure only the legitimate Gateway delivers results.</div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">What does <code>FHE.makePubliclyDecryptable(handle)</code> do, and what is the critical risk?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It permanently and irreversibly marks the handle so any address can request decryption via the Gateway — the plaintext will be publicly obtainable forever and this cannot be undone</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It re-encrypts the ciphertext under a new public key for safe sharing</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It adds the handle to a public registry visible in block explorers</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It decrypts the value and stores the plaintext in contract public state</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Once called, this action cannot be reversed. Any address can then request the plaintext from the Gateway at any time in the future. This function should only be used for values that are <em>intended</em> to become public (e.g., auction results after the auction closes) and must always be guarded by strict access control and time-based restrictions.</div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">Which component holds the FHE evaluation key, and what does it allow?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The KMS — it allows threshold decryption across multiple nodes</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway — it allows bridging decryption requests on-chain</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The FHEVM Executor — it allows verifying ZK proofs from user inputs</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Coprocessor — the evaluation key enables computing on ciphertexts (add, mul, compare, etc.) without decrypting them</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The coprocessor holds the FHE evaluation key — a public key in the TFHE scheme that enables homomorphic computation (addition, multiplication, comparison, lookup tables) without revealing the plaintext. The secret key (needed to actually decrypt) is held only by the KMS cluster, maintaining the security separation between computation and decryption.</div>
+    </div>
+
+  </div><!-- end quiz-body -->
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div><!-- end quiz -->
+
+<!-- PAGE NAV -->
+<div class="pnav">
+  <a href="day01.html">&#8592; Day 1 — FHE Math Foundations</a>
+  <a class="next" href="day03.html">Day 3 — First Encrypted Contract &#8594;</a>
+</div>
+
+</main>
+</div><!-- end page -->
+
+<script>
+/* progress bar */
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+
+/* sidebar active tracking */
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const anchors = [...document.querySelectorAll('[id]')].filter(el =>
+  ['intro','system','host','executor','coprocessor','kms','gateway',
+   'symbolic','handles','txflow','acl','acl-table','acl-bugs',
+   'async-decrypt','decrypt-flow','decrypt-code','networks','lab','quiz']
+  .includes(el.id)
+);
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+
+/* quiz */
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const total = document.querySelectorAll('.q').length;
+    const done  = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < total;
+  });
+});
+
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans    = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / 8 * 100);
+  document.getElementById('snum').textContent = correct + '/8';
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect score — ready for Day 3!' :
+    pct >= 87   ? 'Excellent work!'                 :
+    pct >= 62   ? 'Good — review the explanations.' :
+                  'Re-read the sections above.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
