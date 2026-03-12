@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 5 — Encrypted Voting | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#060610;--ink2:#0b0b18;--ink3:#101020;--plate:#161628;--wire:#222238;--wire2:#30304a;--acc:#818cf8;--acc2:#6366f1;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--teal:#2dd4bf;--pink:#f472b6;--dim:#65658a;--mid:#9494b8;--bright:#dcdcf0;--white:#eeeeff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--pink));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(6,6,16,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(129,140,248,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:900px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.16);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}
+.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(129,140,248,.09);padding:2px 6px;border-radius:3px}
+.code{background:#040408;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(129,140,248,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(129,140,248,.06);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(244,114,182,.07);border-color:var(--pink);border-width:2px}.key .box-title{color:var(--pink)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(129,140,248,.07);padding:1px 5px;border-radius:3px}
+.flow{display:flex;flex-direction:column;margin:22px 0;gap:0}
+.flow-step{display:flex;gap:0;align-items:flex-start;position:relative}
+.flow-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;bottom:-6px;width:1px;background:var(--wire2)}
+.step-num{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.22);color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-right:18px;margin-top:1px;z-index:1}
+.step-body{padding-bottom:24px;flex:1}.step-body h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:5px}.step-body p{font-size:13px;margin-bottom:0;line-height:1.72}
+.step-body code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(129,140,248,.09);padding:1px 5px;border-radius:3px}
+.phase{display:flex;gap:0;margin:22px 0;border:1px solid var(--wire);border-radius:10px;overflow:hidden}
+.phase-item{flex:1;padding:16px 18px;border-right:1px solid var(--wire)}.phase-item:last-child{border-right:none}
+.phase-label{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.phase-name{font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:6px}
+.phase-desc{font-size:12px;color:var(--mid);line-height:1.6}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(244,114,182,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--pink);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q{}.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(129,140,248,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(129,140,248,.04);border:1px solid rgba(129,140,248,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.28);color:var(--pink);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(244,114,182,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(129,140,248,.07);border-color:rgba(129,140,248,.22);color:var(--acc)}.pnav .next:hover{background:rgba(129,140,248,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.phase{flex-direction:column}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 1</span><span class="sep">/</span><span class="cur">Day 5</span></div>
+  <div class="tb-badge">Week 1 — Foundations</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="why">Why Encrypt Votes?</a>
+  <a class="sb-a" data-id="lifecycle">Proposal Lifecycle</a>
+  <a class="sb-a" data-id="contract">PrivateVoting Contract</a>
+  <a class="sb-a sub" data-id="storage">Storage &amp; Events</a>
+  <a class="sb-a sub" data-id="create">createProposal()</a>
+  <a class="sb-a sub" data-id="vote">castVote()</a>
+  <a class="sb-a sub" data-id="tally">requestTally()</a>
+  <a class="sb-a sub" data-id="callback">tallyCallback()</a>
+  <a class="sb-a" data-id="patterns">Key Patterns</a>
+  <a class="sb-a sub" data-id="double-vote">Anti-Double-Vote</a>
+  <a class="sb-a sub" data-id="state-machine">State Machine</a>
+  <a class="sb-a sub" data-id="quorum">Quorum Without Count</a>
+  <a class="sb-a" data-id="tests">Test Suite</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127873; Day 5 of 20</div>
+  <h1>Encrypted<br><em>Voting System</em></h1>
+  <p class="lead">On-chain voting today is broken by design — anyone can see how delegates vote, creating coercion risk and strategic voting. Today you build a private voting system where individual votes are hidden until after the poll closes, using FHEVM to tally results without ever revealing individual choices.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#127873; PrivateVoting contract</div>
+    <div class="stat">&#128200; Async tally via Gateway</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="why">Why Encrypt Votes?</h2>
+<p>Public on-chain voting has three serious problems:</p>
+<ul>
+  <li><strong>Coercion</strong> — voters can be bribed or threatened based on their visible vote history</li>
+  <li><strong>Strategic voting</strong> — voters change behavior when they can see others' votes in real time</li>
+  <li><strong>Front-running</strong> — late voters have unfair information advantages over early voters</li>
+</ul>
+<div class="box key">
+  <span class="box-ico">&#128274;</span>
+  <div class="box-inner">
+    <div class="box-title">FHEVM Solution</div>
+    <div class="box-text">
+      Individual votes are encrypted with <code>ebool</code>. The tally contract accumulates encrypted YES/NO counts using <code>FHE.add()</code>. Nobody can see vote counts until the poll closes. After closing, the owner requests public decryption via the Gateway — revealing only the aggregate totals, never individual votes.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="lifecycle">Proposal Lifecycle</h2>
+<div class="phase">
+  <div class="phase-item">
+    <div class="phase-label">Phase 1</div>
+    <div class="phase-name" style="color:var(--acc)">&#128295; Created</div>
+    <div class="phase-desc">Proposal exists, voting not yet open. Owner sets title, description, and voting window.</div>
+  </div>
+  <div class="phase-item">
+    <div class="phase-label">Phase 2</div>
+    <div class="phase-name" style="color:var(--green)">&#9989; Active</div>
+    <div class="phase-desc">Voting open. Eligible voters cast encrypted votes. Tally accumulates silently.</div>
+  </div>
+  <div class="phase-item">
+    <div class="phase-label">Phase 3</div>
+    <div class="phase-name" style="color:var(--amber)">&#128274; Closed</div>
+    <div class="phase-desc">Voting window ended. Owner calls requestTally(). No new votes accepted.</div>
+  </div>
+  <div class="phase-item">
+    <div class="phase-label">Phase 4</div>
+    <div class="phase-name" style="color:var(--pink)">&#128200; Tallied</div>
+    <div class="phase-desc">Gateway callback delivers plaintext totals. Results are public and final.</div>
+  </div>
+</div>
+
+<h2 class="sec" id="contract">The PrivateVoting Contract</h2>
+<h3 class="sub" id="storage">Storage Layout &amp; Events</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/PrivateVoting.sol — storage</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/gateway/GatewayCaller.sol"</span>;
+
+<span class="k">contract</span> <span class="t">PrivateVoting</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="k">enum</span> <span class="t">ProposalState</span> { Created, Active, Closed, Tallied }
+
+    <span class="k">struct</span> <span class="t">Proposal</span> {
+        <span class="t">string</span>        title;
+        <span class="t">string</span>        description;
+        <span class="t">uint256</span>       startTime;
+        <span class="t">uint256</span>       endTime;
+        <span class="t">euint32</span>       yesCount;    <span class="c">// encrypted running total</span>
+        <span class="t">euint32</span>       noCount;     <span class="c">// encrypted running total</span>
+        <span class="t">uint32</span>        totalVoters; <span class="c">// plaintext count of who voted (not how)</span>
+        <span class="t">ProposalState</span> state;
+        <span class="c">// Results after tally (plaintext, only set post-reveal):</span>
+        <span class="t">uint32</span>        finalYes;
+        <span class="t">uint32</span>        finalNo;
+    }
+
+    <span class="k">mapping</span>(<span class="t">uint256</span> =&gt; <span class="t">Proposal</span>)    <span class="k">public</span>  proposals;
+    <span class="k">mapping</span>(<span class="t">uint256</span> =&gt; <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="k">bool</span>)) <span class="k">private</span> hasVoted;
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="k">bool</span>)        <span class="k">public</span>  isEligible;
+    <span class="k">mapping</span>(<span class="t">uint256</span> =&gt; <span class="t">uint256</span>)     <span class="k">private</span> tallyRequestId; <span class="c">// requestId → proposalId</span>
+    <span class="k">mapping</span>(<span class="t">uint256</span> =&gt; <span class="t">uint256</span>)     <span class="k">private</span> requestToProposal;
+
+    <span class="t">uint256</span> <span class="k">public</span> proposalCount;
+    <span class="t">address</span> <span class="k">public immutable</span> owner;
+
+    <span class="ev">event</span> <span class="f">ProposalCreated</span>(<span class="t">uint256</span> indexed id, <span class="t">string</span> title);
+    <span class="ev">event</span> <span class="f">VoteCast</span>(<span class="t">uint256</span> indexed proposalId, <span class="t">address</span> indexed voter);
+    <span class="ev">event</span> <span class="f">TallyRequested</span>(<span class="t">uint256</span> indexed proposalId, <span class="t">uint256</span> requestId);
+    <span class="ev">event</span> <span class="f">ResultRevealed</span>(<span class="t">uint256</span> indexed proposalId, <span class="t">uint32</span> yes, <span class="t">uint32</span> no);
+
+    <span class="k">constructor</span>() { owner = msg.sender; }
+
+    <span class="k">modifier</span> <span class="f">onlyOwner</span>() { <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>); _; }
+}</pre>
+</div>
+
+<h3 class="sub" id="create">createProposal() and Voter Registration</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateVoting.sol — setup</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">function</span> <span class="f">registerVoter</span>(<span class="t">address</span> voter) <span class="k">external onlyOwner</span> {
+    isEligible[voter] = <span class="k">true</span>;
+}
+
+<span class="k">function</span> <span class="f">createProposal</span>(
+    <span class="t">string</span> calldata title,
+    <span class="t">string</span> calldata description,
+    <span class="t">uint256</span> durationSeconds
+) <span class="k">external onlyOwner returns</span> (<span class="t">uint256</span> id) {
+    id = proposalCount++;
+    <span class="t">Proposal</span> <span class="k">storage</span> p = proposals[id];
+    p.title       = title;
+    p.description = description;
+    p.startTime   = block.timestamp;
+    p.endTime     = block.timestamp + durationSeconds;
+    p.state       = <span class="t">ProposalState</span>.Active;
+
+    <span class="c">// Initialize encrypted tallies to 0</span>
+    p.yesCount = FHE.<span class="f">asEuint32</span>(<span class="n">0</span>);
+    p.noCount  = FHE.<span class="f">asEuint32</span>(<span class="n">0</span>);
+    FHE.<span class="f">allowThis</span>(p.yesCount);
+    FHE.<span class="f">allowThis</span>(p.noCount);
+
+    <span class="k">emit</span> <span class="f">ProposalCreated</span>(id, title);
+}</pre>
+</div>
+
+<h3 class="sub" id="vote">castVote() — The Heart of Private Voting</h3>
+<p>Votes are submitted as encrypted booleans. We use <code>FHE.select()</code> to conditionally add 1 to either yes or no count — without the contract ever knowing which was chosen.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateVoting.sol — castVote</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Cast an encrypted vote on a proposal.
+ * @param proposalId  Which proposal to vote on
+ * @param encVote     Encrypted bool: true = YES, false = NO
+ * @param proof       ZK proof binding ciphertext to this contract + caller
+ */</span>
+<span class="k">function</span> <span class="f">castVote</span>(
+    <span class="t">uint256</span>       proposalId,
+    <span class="t">externalEbool</span> calldata encVote,
+    <span class="t">bytes</span>         calldata proof
+) <span class="k">external</span> {
+    <span class="k">require</span>(isEligible[msg.sender],       <span class="s">"Not eligible"</span>);
+    <span class="k">require</span>(!hasVoted[proposalId][msg.sender], <span class="s">"Already voted"</span>);
+
+    <span class="t">Proposal</span> <span class="k">storage</span> p = proposals[proposalId];
+    <span class="k">require</span>(p.state == <span class="t">ProposalState</span>.Active, <span class="s">"Not active"</span>);
+    <span class="k">require</span>(block.timestamp &lt; p.endTime,       <span class="s">"Voting closed"</span>);
+
+    <span class="c">// Validate input: ZK proof confirms this vote was encrypted for
+    // this contract + this caller</span>
+    <span class="t">ebool</span> vote = FHE.<span class="f">fromExternal</span>(encVote, proof);
+
+    <span class="c">// ONE = encrypted constant 1</span>
+    <span class="t">euint32</span> ONE  = FHE.<span class="f">asEuint32</span>(<span class="n">1</span>);
+    <span class="t">euint32</span> ZERO = FHE.<span class="f">asEuint32</span>(<span class="n">0</span>);
+
+    <span class="c">// If vote is YES: add 1 to yesCount, add 0 to noCount
+    // If vote is NO:  add 0 to yesCount, add 1 to noCount
+    // FHE.select(bool, ifTrue, ifFalse)</span>
+    <span class="t">euint32</span> yesAdd = FHE.<span class="f">select</span>(vote, ONE,  ZERO);
+    <span class="t">euint32</span> noAdd  = FHE.<span class="f">select</span>(vote, ZERO, ONE);
+
+    p.yesCount = FHE.<span class="f">add</span>(p.yesCount, yesAdd);
+    p.noCount  = FHE.<span class="f">add</span>(p.noCount,  noAdd);
+
+    <span class="c">// Grant contract access to both new handles</span>
+    FHE.<span class="f">allowThis</span>(p.yesCount);
+    FHE.<span class="f">allowThis</span>(p.noCount);
+
+    <span class="c">// Mark voter — this is public metadata, not the vote itself</span>
+    hasVoted[proposalId][msg.sender] = <span class="k">true</span>;
+    p.totalVoters++;
+
+    <span class="k">emit</span> <span class="f">VoteCast</span>(proposalId, msg.sender); <span class="c">// no vote direction revealed</span>
+}</pre>
+</div>
+
+<div class="box info">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Why FHE.select() Instead of Two Separate Conditions</div>
+    <div class="box-text">
+      We always add to both yesCount and noCount — adding either 1 or 0 depending on the encrypted vote. This means exactly one counter increments by 1, and the other stays the same, without the contract (or anyone watching) knowing which one changed. The coprocessor performs both additions off-chain; only the handles change on-chain.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="tally">requestTally() — Close and Reveal</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateVoting.sol — requestTally</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">function</span> <span class="f">requestTally</span>(<span class="t">uint256</span> proposalId) <span class="k">external onlyOwner</span> {
+    <span class="t">Proposal</span> <span class="k">storage</span> p = proposals[proposalId];
+    <span class="k">require</span>(p.state == <span class="t">ProposalState</span>.Active, <span class="s">"Not active"</span>);
+    <span class="k">require</span>(block.timestamp &gt;= p.endTime, <span class="s">"Voting still open"</span>);
+
+    p.state = <span class="t">ProposalState</span>.Closed;
+
+    <span class="c">// Mark both handles as publicly decryptable</span>
+    FHE.<span class="f">makePubliclyDecryptable</span>(p.yesCount);
+    FHE.<span class="f">makePubliclyDecryptable</span>(p.noCount);
+
+    <span class="c">// Request both in a single Gateway call</span>
+    <span class="t">euint32</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">euint32</span>[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = p.yesCount;
+    handles[<span class="n">1</span>] = p.noCount;
+
+    <span class="t">uint256</span> reqId = Gateway.<span class="f">requestDecryption</span>(
+        handles,
+        <span class="k">this</span>.tallyCallback.selector,
+        <span class="n">0</span>,
+        block.timestamp + <span class="n">1 hours</span>,
+        <span class="k">false</span>
+    );
+
+    requestToProposal[reqId] = proposalId;
+    <span class="k">emit</span> <span class="f">TallyRequested</span>(proposalId, reqId);
+}
+
+<span class="c">// Gateway calls this with BOTH decrypted values</span>
+<span class="k">function</span> <span class="f">tallyCallback</span>(
+    <span class="t">uint256</span> requestId,
+    <span class="t">uint32</span>  yesResult,
+    <span class="t">uint32</span>  noResult
+) <span class="k">external onlyGateway</span> {
+    <span class="t">uint256</span> proposalId = requestToProposal[requestId];
+    <span class="t">Proposal</span> <span class="k">storage</span> p = proposals[proposalId];
+
+    p.finalYes = yesResult;
+    p.finalNo  = noResult;
+    p.state    = <span class="t">ProposalState</span>.Tallied;
+
+    <span class="k">emit</span> <span class="f">ResultRevealed</span>(proposalId, yesResult, noResult);
+}</pre>
+</div>
+
+<h3 class="sub" id="callback">Reading Results</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">PrivateVoting.sol — result view</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">function</span> <span class="f">getResult</span>(<span class="t">uint256</span> proposalId)
+    <span class="k">external view returns</span> (
+        <span class="t">uint32</span>  yes,
+        <span class="t">uint32</span>  no,
+        <span class="t">bool</span>    passed,
+        <span class="t">uint32</span>  totalVoters
+    )
+{
+    <span class="t">Proposal</span> <span class="k">storage</span> p = proposals[proposalId];
+    <span class="k">require</span>(p.state == <span class="t">ProposalState</span>.Tallied, <span class="s">"Not tallied yet"</span>);
+
+    yes         = p.finalYes;
+    no          = p.finalNo;
+    passed      = p.finalYes &gt; p.finalNo;
+    totalVoters = p.totalVoters;
+}
+
+<span class="c">// Anyone can check if a voter participated (but not HOW they voted)</span>
+<span class="k">function</span> <span class="f">didVote</span>(<span class="t">uint256</span> proposalId, <span class="t">address</span> voter)
+    <span class="k">external view returns</span> (<span class="k">bool</span>)
+{
+    <span class="k">return</span> hasVoted[proposalId][voter];
+}</pre>
+</div>
+
+<h2 class="sec" id="patterns">Key Design Patterns</h2>
+
+<h3 class="sub" id="double-vote">Preventing Double Voting Without Leaking Vote</h3>
+<div class="box tip">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Public Participation, Private Choice</div>
+    <div class="box-text">
+      <code>hasVoted[proposalId][voter]</code> is a plaintext bool — it only records <em>whether</em> someone voted, not <em>how</em>. This is intentionally public: you can prove participation without revealing direction. The contract checks this before accepting a vote, preventing double-voting while keeping vote content private. This is analogous to a physical polling station verifying your ID but not recording your ballot choice.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="state-machine">Strict State Machine</h3>
+<div class="tw"><table>
+  <thead><tr><th>State</th><th>castVote?</th><th>requestTally?</th><th>getResult?</th></tr></thead>
+  <tbody>
+    <tr><td><code>Created</code></td><td>&#10007; Not active</td><td>&#10007; Not active</td><td>&#10007;</td></tr>
+    <tr><td><code>Active</code></td><td>&#10003; If within endTime</td><td>&#10003; If past endTime</td><td>&#10007;</td></tr>
+    <tr><td><code>Closed</code></td><td>&#10007; Closed</td><td>&#10007; Already requested</td><td>&#10007; Pending callback</td></tr>
+    <tr><td><code>Tallied</code></td><td>&#10007;</td><td>&#10007;</td><td>&#10003; Results available</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="quorum">Tracking Quorum Without Revealing Counts</h3>
+<div class="box info">
+  <span class="box-ico">&#128200;</span>
+  <div class="box-inner">
+    <div class="box-title">totalVoters is Public</div>
+    <div class="box-text">
+      <code>p.totalVoters</code> is a plaintext counter that increments on every <code>castVote()</code> call. This lets anyone verify quorum was reached (enough people voted) without revealing the YES/NO split. A quorum check might require 51% participation before tally is allowed. This is intentionally public — you need to know <em>how many</em> voted to assess legitimacy, just not <em>how</em> they voted.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="tests">Test Suite</h2>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/PrivateVoting.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers, network } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { expect } <span class="k">from</span> <span class="s">"chai"</span>;
+<span class="k">import</span> { <span class="f">getFhevmInstance</span> } <span class="k">from</span> <span class="s">"./helpers"</span>;
+
+describe(<span class="s">"PrivateVoting"</span>, () => {
+  <span class="k">let</span> voting: <span class="k">any</span>;
+  <span class="k">let</span> owner: <span class="k">any</span>, alice: <span class="k">any</span>, bob: <span class="k">any</span>, carol: <span class="k">any</span>;
+  <span class="k">const</span> DURATION = <span class="n">3600</span>; <span class="c">// 1 hour</span>
+
+  before(<span class="k">async</span> () => {
+    [owner, alice, bob, carol] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"PrivateVoting"</span>);
+    voting = <span class="k">await</span> F.<span class="f">deploy</span>();
+    <span class="k">await</span> voting.<span class="f">waitForDeployment</span>();
+
+    <span class="c">// Register voters</span>
+    <span class="k">await</span> voting.<span class="f">connect</span>(owner).<span class="f">registerVoter</span>(alice.address);
+    <span class="k">await</span> voting.<span class="f">connect</span>(owner).<span class="f">registerVoter</span>(bob.address);
+    <span class="k">await</span> voting.<span class="f">connect</span>(owner).<span class="f">registerVoter</span>(carol.address);
+  });
+
+  it(<span class="s">"creates a proposal"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> tx = <span class="k">await</span> voting.<span class="f">createProposal</span>(
+      <span class="s">"Increase treasury allocation"</span>,
+      <span class="s">"Should the treasury increase developer grants by 20%?"</span>,
+      DURATION
+    );
+    <span class="k">await</span> tx.<span class="f">wait</span>();
+    <span class="k">const</span> p = <span class="k">await</span> voting.<span class="f">proposals</span>(<span class="n">0</span>);
+    expect(p.title).<span class="f">to</span>.<span class="f">equal</span>(<span class="s">"Increase treasury allocation"</span>);
+    console.<span class="f">log</span>(<span class="s">"  ✓ Proposal 0 created"</span>);
+  });
+
+  it(<span class="s">"alice votes YES (encrypted)"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> voting.<span class="f">getAddress</span>();
+
+    <span class="c">// Encrypt vote: true = YES</span>
+    <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">addBool</span>(<span class="k">true</span>);   <span class="c">// YES vote</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+    <span class="k">await</span> voting.<span class="f">connect</span>(alice).<span class="f">castVote</span>(<span class="n">0</span>, handles[<span class="n">0</span>], inputProof);
+    expect(<span class="k">await</span> voting.<span class="f">didVote</span>(<span class="n">0</span>, alice.address)).<span class="f">to</span>.<span class="f">be</span>.<span class="k">true</span>;
+    console.<span class="f">log</span>(<span class="s">"  ✓ Alice voted (YES, encrypted)"</span>);
+  });
+
+  it(<span class="s">"bob votes NO (encrypted)"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> voting.<span class="f">getAddress</span>();
+
+    <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(addr, bob.address);
+    input.<span class="f">addBool</span>(<span class="k">false</span>);  <span class="c">// NO vote</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+    <span class="k">await</span> voting.<span class="f">connect</span>(bob).<span class="f">castVote</span>(<span class="n">0</span>, handles[<span class="n">0</span>], inputProof);
+    console.<span class="f">log</span>(<span class="s">"  ✓ Bob voted (NO, encrypted)"</span>);
+  });
+
+  it(<span class="s">"carol votes YES; totalVoters = 3"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> voting.<span class="f">getAddress</span>();
+    <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(addr, carol.address);
+    input.<span class="f">addBool</span>(<span class="k">true</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+    <span class="k">await</span> voting.<span class="f">connect</span>(carol).<span class="f">castVote</span>(<span class="n">0</span>, handles[<span class="n">0</span>], inputProof);
+
+    <span class="k">const</span> p = <span class="k">await</span> voting.<span class="f">proposals</span>(<span class="n">0</span>);
+    expect(p.totalVoters).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">3n</span>);
+    console.<span class="f">log</span>(<span class="s">"  ✓ 3 votes cast. Individual votes are still hidden."</span>);
+  });
+
+  it(<span class="s">"double-vote is rejected"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> voting.<span class="f">getAddress</span>();
+    <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">addBool</span>(<span class="k">false</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+    <span class="k">await</span> expect(
+      voting.<span class="f">connect</span>(alice).<span class="f">castVote</span>(<span class="n">0</span>, handles[<span class="n">0</span>], inputProof)
+    ).<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"Already voted"</span>);
+  });
+
+  it(<span class="s">"fast-forward time and request tally"</span>, <span class="k">async</span> () => {
+    <span class="c">// Advance Hardhat time past voting window</span>
+    <span class="k">await</span> network.provider.<span class="f">request</span>({
+      method: <span class="s">"evm_increaseTime"</span>, params: [DURATION + <span class="n">10</span>]
+    });
+    <span class="k">await</span> network.provider.<span class="f">request</span>({ method: <span class="s">"evm_mine"</span> });
+
+    <span class="k">await</span> voting.<span class="f">connect</span>(owner).<span class="f">requestTally</span>(<span class="n">0</span>);
+    <span class="k">const</span> p = <span class="k">await</span> voting.<span class="f">proposals</span>(<span class="n">0</span>);
+    expect(p.state).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">2</span>); <span class="c">// ProposalState.Closed</span>
+    console.<span class="f">log</span>(<span class="s">"  ✓ Tally requested. Awaiting Gateway callback..."</span>);
+    <span class="c">// On local Hardhat with mock Gateway, callback fires automatically.</span>
+    <span class="c">// In production the callback arrives in ~2s from KMS.</span>
+  });
+});</pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 5 Quiz — Encrypted Voting</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">How does <code>castVote()</code> add to either yesCount or noCount without knowing which?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The contract decrypts the vote locally using the evaluation key, then uses a plaintext branch</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It computes an encrypted 1 or 0 per counter using <code>FHE.select(vote, ONE, ZERO)</code> and adds both — so exactly one counter increments by 1, the other by 0, without revealing which</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It uses FHE.if() to conditionally execute the add operation</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It stores both possible outcomes and resolves them at tally time</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> <code>yesAdd = FHE.select(vote, ONE, ZERO)</code> creates an encrypted 1 if YES or encrypted 0 if NO. <code>noAdd = FHE.select(vote, ZERO, ONE)</code> creates the opposite. Adding both to their respective counters means exactly one counter increments — but the contract and observers never know which one.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Why is <code>hasVoted[proposalId][voter]</code> kept as a plaintext bool rather than an encrypted value?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Encrypted booleans cannot be used in mappings</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It is cheaper to store plaintext</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>We want to publicly verify <em>whether</em> someone voted (for quorum and double-vote prevention) without revealing <em>how</em> they voted — this is intentional partial transparency</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The contract needs to revert on double-vote, which requires a plaintext check</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Participation is public information — you need to verify quorum and prevent double voting. The sensitive information is the vote direction (YES/NO), which is encrypted. This design separates "who voted" (public) from "how they voted" (private), analogous to a real polling station.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">Why must <code>requestTally()</code> call <code>FHE.makePubliclyDecryptable()</code> before requesting Gateway decryption?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The Gateway requires a special key to decrypt that is only available after this call</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It upgrades the handle to a 256-bit format required by the Gateway</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It signals to the coprocessor to finalize the computation</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway's callback will deliver plaintext to the contract, which means the value will be public — <code>makePubliclyDecryptable()</code> registers this intent in the ACL so the KMS knows it's authorized to decrypt for anyone</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The ACL needs to authorize public decryption before the Gateway can request it. makePubliclyDecryptable() sets the ACL flag that tells the KMS "anyone is authorized to request decryption of this handle." Without it, the Gateway's decryption request would fail the ACL check.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">What attack does the ZK proof in <code>castVote()</code> prevent?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Replay attacks: copying another voter's encrypted vote from a different proposal or transaction and submitting it as your own</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Sybil attacks: a single person voting as multiple addresses</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Front-running: observing votes in the mempool before they are confirmed</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Overflow attacks: submitting a vote that wraps the counter around zero</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The ZK proof binds the ciphertext to this specific contract address AND msg.sender. An attacker cannot take Alice's vote from a previous round and re-submit it, nor can they take a vote from a different contract. The proof must be freshly generated for each call.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">What type is used for individual votes, and why not <code>euint8</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>euint8</code> — to encode multi-choice votes (0=abstain, 1=yes, 2=no)</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>euint32</code> — because booleans cannot be used with fromExternal()</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>ebool</code> — the most gas-efficient type for binary choices, and it perfectly matches the YES/NO semantics of a binary vote</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>euint64</code> — to support future weighted voting</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> ebool is the smallest and cheapest FHE type (1 bit). For a binary YES/NO vote it's semantically perfect. euint8 would work but waste gas encoding 255 unnecessary values. If you need multi-choice or weighted voting, you'd use a larger type and different logic.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">What is revealed when <code>VoteCast(proposalId, voter)</code> is emitted?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — the event is also encrypted</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>That a specific address voted on a specific proposal at a specific time — but not how they voted</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The vote direction can be inferred from timing patterns</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The current running tally as of this vote</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Solidity events are always plaintext on-chain. The event reveals participation (voter address + proposal + timestamp) but not vote direction. This is an intentional design: participation verification is public, vote content is private.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">Can a voter change their vote after casting it?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Yes — they can submit a correction vote before the deadline</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Yes — the owner can reset the hasVoted flag</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Yes — but only within 5 minutes using the revoteWindow()</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>No — the <code>hasVoted</code> flag prevents double voting. Even if the contract allowed it, subtracting a previous encrypted vote would be complex (you'd need to store each voter's encrypted vote for later subtraction) and is generally not implemented</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Once hasVoted is set to true, castVote() always reverts with "Already voted". Supporting vote changes would require storing each voter's previous encrypted vote and using FHE.sub() to remove it — significantly more complex. Most voting systems treat votes as final once cast.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">The <code>tallyCallback()</code> receives two <code>uint32</code> values from the Gateway. What ensures this isn't a fake result injected by an attacker?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The <code>onlyGateway</code> modifier verifies <code>msg.sender == Gateway address</code> — only the legitimate Gateway contract can call this function</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The function checks a cryptographic signature from the KMS nodes</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The result is compared against an on-chain hash of the expected values</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The requestId must match a pending request — only the contract knows valid requestIds</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The onlyGateway modifier checks msg.sender against the known Gateway contract address set by ZamaConfig. Without it, any address could call tallyCallback(proposalId, 999, 0) and falsify results. The modifier is the single guard that ensures only the legitimate decryption pathway can deliver results.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day04.html">&#8592; Day 4 — Encrypted ERC-20</a>
+  <a class="next" href="day06.html">Day 6 — Sealed-Bid Auction &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','why','lifecycle','contract','storage','create','vote','tally','callback','patterns','double-vote','state-machine','quorum','tests','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Day 6!':pct>=87?'Excellent!':pct>=62?'Good — review explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
