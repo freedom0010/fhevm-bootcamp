@@ -170,6 +170,127 @@ td strong { color: var(--bright); }
 .pnav .next { background: var(--acc2); border-color: var(--accb); color: var(--amber); }
 .pnav .next:hover { background: rgba(255,179,0,.2); }
 @media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } }
+
+/* ═══ QUIZ COMPONENT ═══════════════════════════════════════════ */
+.qz { background:#0d0d1a; border:1px solid #2a2a45; border-radius:14px;
+  margin:52px 0; overflow:hidden; }
+.qz-head { display:flex; align-items:center; gap:14px; padding:18px 24px;
+  background:rgba(255,179,0,.06); border-bottom:1px solid #2a2a45; }
+.qz-icon { font-size:22px; }
+.qz-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  color:#ffb300; letter-spacing:-.3px; }
+.qz-sub { font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:#6b6b95; margin-top:2px; letter-spacing:.5px; }
+.qz-qs { padding:0 24px; display:flex; flex-direction:column; gap:0; }
+.qz-q { padding:28px 0; border-bottom:1px solid #1e1e36; }
+.qz-q:last-child { border-bottom:none; }
+.qz-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  letter-spacing:2px; margin-bottom:8px; }
+.qz-text { font-size:14px; color:#f0f0ff; line-height:1.65; margin-bottom:14px; }
+.qz-text code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.1); padding:1px 6px; border-radius:3px; }
+.qz-opts { display:flex; flex-direction:column; gap:8px; }
+.qz-opt { display:flex; align-items:flex-start; gap:10px; padding:11px 14px;
+  border-radius:8px; border:1px solid #2a2a45; cursor:pointer;
+  font-size:13px; color:#9898be; line-height:1.6;
+  transition:border-color .14s, background .14s, color .14s;
+  user-select:none; }
+.qz-opt:hover { border-color:#353560; background:rgba(255,255,255,.02); color:#c0c0e0; }
+.qz-opt.sel { border-color:#4a4a70; background:rgba(191,90,242,.07); color:#e0e0ff; }
+.qz-ltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1a1a30; color:#6b6b95; transition:all .14s; }
+.qz-opt.sel .qz-ltr { background:rgba(191,90,242,.2); color:#bf5af2; }
+.qz-opt code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-foot { padding:20px 24px; border-top:1px solid #2a2a45;
+  display:flex; align-items:center; justify-content:space-between; }
+.qz-prog { font-family:'JetBrains Mono',monospace; font-size:11px; color:#5a5a82;
+  letter-spacing:.5px; }
+.qz-btn { padding:11px 28px; border-radius:8px; border:1px solid rgba(255,179,0,.3);
+  background:rgba(255,179,0,.08); color:#ffb300;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  letter-spacing:1.5px; cursor:pointer; transition:all .14s; }
+.qz-btn:hover:not(:disabled) { background:rgba(255,179,0,.18); border-color:#ffb300; }
+.qz-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ─── Results overlay ─────────────────────────────────────────── */
+.qz-overlay { position:fixed; inset:0; z-index:9999; background:#070711;
+  overflow-y:auto; display:none; flex-direction:column;
+  font-family:'Instrument Sans',sans-serif; }
+.qz-overlay.open { display:flex; }
+.qz-ob { position:sticky; top:0; height:52px; display:flex;
+  align-items:center; gap:12px; padding:0 24px;
+  background:rgba(7,7,17,.97); border-bottom:1px solid #2a2a45;
+  backdrop-filter:blur(16px); z-index:10; }
+.qz-ob-back { padding:6px 16px; border-radius:6px; border:1px solid #2a2a45;
+  background:none; color:#6b6b95; font-family:'JetBrains Mono',monospace;
+  font-size:11px; cursor:pointer; letter-spacing:.5px; transition:all .14s; }
+.qz-ob-back:hover { border-color:#ffb300; color:#ffb300; }
+.qz-ob-pill { margin-left:auto; padding:4px 14px; border-radius:20px;
+  background:rgba(255,179,0,.08); border:1px solid rgba(255,179,0,.2);
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:#ffb300; }
+.qz-oh { display:flex; align-items:center; gap:32px;
+  padding:40px 48px 32px; border-bottom:1px solid #2a2a45; }
+.qz-ring { flex-shrink:0; }
+.qz-ht { flex:1; }
+.qz-score { font-family:'Syne',sans-serif; font-size:56px; font-weight:800;
+  color:#f0f0ff; letter-spacing:-3px; line-height:1; }
+.qz-score sup { font-size:28px; color:#ffb300; vertical-align:super; letter-spacing:0; }
+.qz-hmsg { font-family:'JetBrains Mono',monospace; font-size:12px; color:#9898be;
+  margin:10px 0 12px; letter-spacing:.3px; line-height:1.7; }
+.qz-badge { display:inline-block; padding:4px 14px; border-radius:4px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; }
+.b-s { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.25); }
+.b-a { background:rgba(0,229,255,.08); color:#00e5ff; border:1px solid rgba(0,229,255,.22); }
+.b-b { background:rgba(255,179,0,.1); color:#ffb300; border:1px solid rgba(255,179,0,.25); }
+.b-c { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.25); }
+.qz-cards { padding:32px 48px 80px; display:flex; flex-direction:column; gap:20px; }
+.qz-card { border:1px solid #2a2a45; border-radius:12px; overflow:hidden; }
+.qz-card.c-ok { border-left:3px solid #69ff47; }
+.qz-card.c-no { border-left:3px solid #ff4d6d; }
+.qz-ch { display:flex; align-items:flex-start; gap:12px; padding:14px 20px;
+  border-bottom:1px solid #1e1e36; background:#0d0d1a; }
+.qz-cnum { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  flex-shrink:0; padding-top:2px; letter-spacing:1.5px; }
+.qz-cq { font-size:13px; color:#f0f0ff; flex:1; line-height:1.6; }
+.qz-cq code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cv { flex-shrink:0; padding:3px 10px; border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; }
+.cv-ok { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.2); }
+.cv-no { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.2); }
+.qz-copts { padding:12px 20px; background:#111128; display:flex;
+  flex-direction:column; gap:7px; }
+.qz-co { display:flex; align-items:flex-start; gap:10px; padding:9px 12px;
+  border-radius:7px; font-size:13px; color:#6b6b95; border:1px solid transparent;
+  line-height:1.6; }
+.qz-co.o-right { border-color:rgba(105,255,71,.3); background:rgba(105,255,71,.05); color:#f0f0ff; }
+.qz-co.o-wrong { border-color:rgba(255,77,109,.3); background:rgba(255,77,109,.06);
+  color:#ff4d6d; text-decoration:line-through; opacity:.8; }
+.qz-co code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1e1e36; color:#5a5a82; }
+.qz-co.o-right .qz-cltr { background:rgba(105,255,71,.18); color:#69ff47; }
+.qz-co.o-wrong .qz-cltr { background:rgba(255,77,109,.14); color:#ff4d6d; }
+.qz-cexp { margin:0 20px 16px; padding:13px 16px; background:#0d0d1a;
+  border:1px solid #2a2a45; border-radius:8px;
+  font-size:13px; color:#9898be; line-height:1.75; }
+.qz-cexp strong { color:#ffb300; }
+.qz-cexp em { color:#c0c0e0; }
+.qz-cexp code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+@media(max-width:720px){
+  .qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px;}
+  .qz-cards{padding:20px 16px 60px;}
+  .qz-score{font-size:44px;}
+}
+/* ═══════════════════════════════════════════════════════════════ */
+
 </style>
 </head>
 <body>
@@ -765,102 +886,86 @@ client.watchContractEvent({
 <p><strong>Extension:</strong> Add a <code>deploy/02_initialize_token.ts</code> script that mints an initial supply to a treasury address and sets up ACL grants for a designated admin contract. Integrate this as an automatic post-deploy step in the CI pipeline.</p>
 
 <!-- QUIZ -->
-<div class="quiz" id="quiz">
-  <div class="quiz-head">
-    <div class="quiz-head-icon">&#129504;</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
     <div>
-      <div class="quiz-title">Day 18 Quiz</div>
-      <div class="quiz-subtitle">6 questions · deployment & CI/CD</div>
+      <div class="qz-title">Day 18 Quiz</div>
+      <div class="qz-sub">6 questions · mainnet deployment & CI/CD</div>
     </div>
   </div>
-  <div class="quiz-body">
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 01 / 06</div>
-      <div class="q-q">Why should KMS, ACL, and Gateway contract addresses never be hardcoded in your Solidity contract?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Hardcoding wastes gas due to extra bytes in bytecode</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Solidity compiler rejects hardcoded addresses</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>These system contract addresses change between network versions — hardcoding breaks the contract on every network upgrade without redeployment</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>They must be kept private to prevent front-running</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> Zama's system contracts are upgraded and redeployed as the FHEVM evolves. A contract with hardcoded addresses would break silently after a network upgrade. Always read addresses from a configuration file or constructor argument and verify against the current documentation.</div>
+  <div class="qz-qs">
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 01 / 06</div>
+      <div class="qz-text">Why should KMS, ACL, and Gateway contract addresses never be hardcoded in your Solidity contract?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Hardcoding wastes gas due to extra bytes in bytecode</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The Solidity compiler rejects hardcoded addresses</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>These system contract addresses change between network versions — hardcoding breaks the contract on every network upgrade without redeployment</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>They must be kept private to prevent front-running</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> Zama's system contracts are upgraded and redeployed as the FHEVM evolves. A contract with hardcoded addresses would break silently after a network upgrade. Always read addresses from a configuration file or constructor argument and verify against the current documentation.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 02 / 06</div>
-      <div class="q-q">In the CI/CD pipeline, why do integration tests against the real devnet only run on pushes to <code>main</code>, not on every PR?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>GitHub Actions does not support devnet RPC connections on PR builds</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Devnet tests take ~8 minutes (real KMS latency), cost real tokens, and require production secrets — running them on every PR would be slow and wasteful. Mock tests catch 95% of bugs faster.</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>PR branches cannot access environment secrets</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Devnet has a rate limit of one connection per repository</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> The tiered pipeline design runs fast mock tests on every PR (catching logic bugs in seconds) and reserves expensive devnet tests for code that's already been reviewed and is ready to merge. This balances developer velocity with thorough testing.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 02 / 06</div>
+      <div class="qz-text">In the CI/CD pipeline, why do integration tests against the real devnet only run on pushes to <code>main</code>, not on every PR?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>GitHub Actions does not support devnet RPC connections on PR builds</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Devnet tests take ~8 minutes (real KMS latency), cost real tokens, and require production secrets — running them on every PR would be slow and wasteful. Mock tests catch 95% of bugs faster.</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>PR branches cannot access environment secrets</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Devnet has a rate limit of one connection per repository</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> The tiered pipeline design runs fast mock tests on every PR (catching logic bugs in seconds) and reserves expensive devnet tests for code that's already been reviewed and is ready to merge. This balances developer velocity with thorough testing.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 06</div>
-      <div class="q-q">What is the correct way to trigger the deploy stage in the GitHub Actions pipeline shown today?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Push any commit to <code>main</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Open a pull request to <code>main</code></div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Manually trigger via the Actions tab</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Create and push a tag starting with <code>v</code> — for example <code>git tag v1.0.0 &amp;&amp; git push --tags</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> The pipeline uses <code>if: startsWith(github.ref, 'refs/tags/v')</code> to gate the deploy stage. This ensures deploys are intentional, versioned, and traceable — not triggered by every merge to main.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 03 / 06</div>
+      <div class="qz-text">What is the correct way to trigger the deploy stage in the GitHub Actions pipeline shown today?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Push any commit to <code>main</code></div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Open a pull request to <code>main</code></div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Manually trigger via the Actions tab</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Create and push a tag starting with <code>v</code> — for example <code>git tag v1.0.0 &amp;&amp; git push --tags</code></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> The pipeline uses <code>if: startsWith(github.ref, 'refs/tags/v')</code> to gate the deploy stage. This ensures deploys are intentional, versioned, and traceable — not triggered by every merge to main.</div>
     </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 04 / 06</div>
-      <div class="q-q">When upgrading a FHEVM contract using a proxy, what is the most critical constraint to maintain?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The storage layout must be preserved — changing where encrypted mappings are stored would cause existing handles to be read from wrong storage slots, corrupting all encrypted state</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>All ACL grants must be re-issued after every upgrade</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The contract address must remain the same as the KMS address</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The new implementation must re-encrypt all stored ciphertexts</td></tr></div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> FHEVM handles are <code>uint256</code> values stored at specific storage slots. If you reorder state variables, the handle stored at slot N now refers to a different ciphertext. This silently corrupts all encrypted balances. Use OpenZeppelin's storage gap pattern to safely add variables in future upgrades.</div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-num">QUESTION 04 / 06</div>
+      <div class="qz-text">When upgrading a FHEVM contract using a proxy, what is the most critical constraint to maintain?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The storage layout must be preserved — changing where encrypted mappings are stored would cause existing handles to be read from wrong storage slots, corrupting all encrypted state</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>All ACL grants must be re-issued after every upgrade</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The contract address must remain the same as the KMS address</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The new implementation must re-encrypt all stored ciphertexts</td></tr></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> FHEVM handles are <code>uint256</code> values stored at specific storage slots. If you reorder state variables, the handle stored at slot N now refers to a different ciphertext. This silently corrupts all encrypted balances. Use OpenZeppelin's storage gap pattern to safely add variables in future upgrades.</div>
     </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 06</div>
-      <div class="q-q">What does the <code>waitConfirmations: 3</code> parameter in the deployment script accomplish?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It retries the deployment transaction up to 3 times on failure</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It sets the gas price to 3× the base fee</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It waits for 3 blocks to be mined after deployment before proceeding — ensuring the deployment is deeply confirmed and the contract is safely indexed by the explorer before any subsequent setup transactions</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It requests 3 validator signatures for the deployment transaction</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> On live networks, <code>waitConfirmations</code> adds safety margin. A single confirmation could be orphaned in a chain reorg. 3 confirmations ensures the deployment is stable before any subsequent transactions (like minting initial supply or setting permissions) that depend on the deployed address.</div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 05 / 06</div>
+      <div class="qz-text">What does the <code>waitConfirmations: 3</code> parameter in the deployment script accomplish?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It retries the deployment transaction up to 3 times on failure</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It sets the gas price to 3× the base fee</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It waits for 3 blocks to be mined after deployment before proceeding — ensuring the deployment is deeply confirmed and the contract is safely indexed by the explorer before any subsequent setup transactions</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It requests 3 validator signatures for the deployment transaction</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> On live networks, <code>waitConfirmations</code> adds safety margin. A single confirmation could be orphaned in a chain reorg. 3 confirmations ensures the deployment is stable before any subsequent transactions (like minting initial supply or setting permissions) that depend on the deployed address.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 06 / 06</div>
-      <div class="q-q">You want to monitor KMS callback latency in production. What is the correct approach using on-chain events?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Poll the Gateway contract's <code>getPendingRequests()</code> view function every second</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Record the timestamp when <code>AuctionEnded</code> (requestDecryption) is emitted, then compute the delta when <code>WinnerRevealed</code> (callback) fires — the difference is the KMS round-trip latency</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Subscribe to the KMS contract's internal events directly</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Use block timestamps from the two transactions — subtract them in Solidity and emit the result</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Record <code>Date.now()</code> off-chain when the request event fires, then subtract it from <code>Date.now()</code> when the callback event fires. This gives you wall-clock KMS latency with millisecond precision — more useful than block timestamps which have 12-second granularity.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 06 / 06</div>
+      <div class="qz-text">You want to monitor KMS callback latency in production. What is the correct approach using on-chain events?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Poll the Gateway contract's <code>getPendingRequests()</code> view function every second</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Record the timestamp when <code>AuctionEnded</code> (requestDecryption) is emitted, then compute the delta when <code>WinnerRevealed</code> (callback) fires — the difference is the KMS round-trip latency</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Subscribe to the KMS contract's internal events directly</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Use block timestamps from the two transactions — subtract them in Solidity and emit the result</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Record <code>Date.now()</code> off-chain when the request event fires, then subtract it from <code>Date.now()</code> when the callback event fires. This gives you wall-clock KMS latency with millisecond precision — more useful than block timestamps which have 12-second granularity.</div>
     </div>
-
   </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/6</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="Day18-quiz-prog">0 / 6 answered</span>
+    <button class="qz-btn" id="Day18-quiz-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
 <div class="pnav">
-  <a href="day17.html">&#8592; Day 17 — Gas Optimization</a>
-  <a class="next" href="day19.html">Day 19 — Observability & Scaling &#8594;</a>
+  <a href="Day17.html">&#8592; Day 17 — Gas Optimization</a>
+  <a class="next" href="Day19.html">Day 19 — Observability & Scaling &#8594;</a>
 </div>
 
 </main>
@@ -894,48 +999,169 @@ sbLinks.forEach(l => l.addEventListener('click', () => {
   const el = document.getElementById(l.dataset.id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }));
-const TOTAL = 6;
-document.querySelectorAll('.q-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const q = opt.closest('.q');
-    if (q.dataset.done) return;
-    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
-    opt.classList.add('picked');
-    const done = document.querySelectorAll('.q-opt.picked').length;
-    document.getElementById('qsub').disabled = done < TOTAL;
+
+// ═══ Quiz: Day18 ════════════════════════════════════════════════
+(function() {
+  var QUIZ_ID = 'Day18-quiz';
+
+  // Wire up option clicks
+  var opts = document.querySelectorAll('.qz-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].addEventListener('click', handleOptClick);
+  }
+
+  function handleOptClick() {
+    var q = this.closest('.qz-q');
+    if (!q) return;
+    // deselect siblings
+    var siblings = q.querySelectorAll('.qz-opt');
+    for (var j = 0; j < siblings.length; j++) {
+      siblings[j].classList.remove('sel');
+      siblings[j].querySelector('.qz-ltr').style.background = '';
+      siblings[j].querySelector('.qz-ltr').style.color = '';
+    }
+    // select this one
+    this.classList.add('sel');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var total   = document.querySelectorAll('.qz-q').length;
+    var picked  = document.querySelectorAll('.qz-q .qz-opt.sel').length;
+    var btn     = document.getElementById(QUIZ_ID + '-btn');
+    var prog    = document.getElementById(QUIZ_ID + '-prog');
+    if (btn)  btn.disabled = (picked < total);
+    if (prog) prog.textContent = picked + ' / ' + total + ' answered';
+  }
+
+  // Submit
+  var btn = document.getElementById(QUIZ_ID + '-btn');
+  if (btn) btn.addEventListener('click', function() {
+    if (this.disabled) return;
+    showResults();
   });
-});
-function gradeQuiz() {
-  let correct = 0;
-  document.querySelectorAll('.q').forEach(q => {
-    q.dataset.done = '1';
-    const picked = q.querySelector('.q-opt.picked');
-    const ans = q.dataset.ans;
-    q.querySelectorAll('.q-opt').forEach(o => {
-      if (o.dataset.v === ans) o.classList.add('right');
-      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+
+  function showResults() {
+    var qs = document.querySelectorAll('.qz-q');
+    var correct = 0;
+    var cards = '';
+
+    for (var i = 0; i < qs.length; i++) {
+      var q       = qs[i];
+      var ans     = q.getAttribute('data-ans');
+      var sel     = q.querySelector('.qz-opt.sel');
+      var selV    = sel ? sel.getAttribute('data-v') : null;
+      var isRight = selV === ans;
+      if (isRight) correct++;
+
+      // question text
+      var qEl   = q.querySelector('.qz-text');
+      var qText = qEl ? qEl.innerHTML : '';
+
+      // explanation
+      var expEl = q.querySelector('.qz-exp');
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      // build option rows
+      var optRows = '';
+      var optEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < optEls.length; j++) {
+        var o    = optEls[j];
+        var v    = o.getAttribute('data-v');
+        var ltr  = o.querySelector('.qz-ltr');
+        var ltrT = ltr ? ltr.textContent : v;
+        // get option text (everything except the .qz-ltr span)
+        var oClone = o.cloneNode(true);
+        var ltrEl = oClone.querySelector('.qz-ltr');
+        if (ltrEl) ltrEl.parentNode.removeChild(ltrEl);
+        var oText = oClone.innerHTML.trim();
+
+        var cls = '';
+        if (v === ans) cls = 'o-right';
+        else if (v === selV) cls = 'o-wrong';
+
+        optRows += '<div class="qz-co ' + cls + '">'
+          + '<span class="qz-cltr">' + ltrT + '</span>'
+          + oText
+          + '</div>';
+      }
+
+      cards += '<div class="qz-card ' + (isRight ? 'c-ok' : 'c-no') + '">'
+        + '<div class="qz-ch">'
+        +   '<span class="qz-cnum">Q' + (i + 1) + '</span>'
+        +   '<div class="qz-cq">' + qText + '</div>'
+        +   '<span class="qz-cv ' + (isRight ? 'cv-ok' : 'cv-no') + '">' + (isRight ? '✓ Correct' : '✗ Wrong') + '</span>'
+        + '</div>'
+        + '<div class="qz-copts">' + optRows + '</div>'
+        + (exp ? '<div class="qz-cexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var total  = qs.length;
+    var pct    = Math.round(correct / total * 100);
+    var circ   = 251.3;
+    var offset = circ - (pct / 100) * circ;
+
+    var ringC = pct === 100 ? '#69ff47' : pct >= 80 ? '#00e5ff' : pct >= 60 ? '#ffb300' : '#ff4d6d';
+    var badge = pct === 100 ? '<span class="qz-badge b-s">🏆 Perfect Score</span>'
+              : pct >= 80   ? '<span class="qz-badge b-a">✓ Excellent</span>'
+              : pct >= 60   ? '<span class="qz-badge b-b">~ Needs Review</span>'
+              :               '<span class="qz-badge b-c">↺ Try Again</span>';
+    var hmsg  = pct === 100 ? 'Every concept nailed. Outstanding.'
+              : pct >= 80   ? 'Strong understanding. Check flagged questions.'
+              : pct >= 60   ? 'Good base. Re-read sections for wrong answers.'
+              :               'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-ring">'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="' + ringC + '" stroke-width="7"'
+      +   ' stroke-linecap="round"'
+      +   ' stroke-dasharray="' + circ + '"'
+      +   ' stroke-dashoffset="' + offset + '"'
+      +   ' transform="rotate(-90 50 50)"'
+      +   ' style="transition:stroke-dashoffset 1s ease"/>'
+      + '</svg>';
+
+    var overlayHTML =
+        '<div class="qz-ob">'
+      +   '<button class="qz-ob-back" id="' + QUIZ_ID + '-close">← Back to Quiz</button>'
+      +   '<span class="qz-ob-pill">' + correct + '/' + total + ' correct &nbsp;·&nbsp; ' + pct + '%</span>'
+      + '</div>'
+      + '<div class="qz-oh">'
+      +   ring
+      +   '<div class="qz-ht">'
+      +     '<div class="qz-score">' + correct + '<sup>/' + total + '</sup></div>'
+      +     '<div class="qz-hmsg">' + hmsg + '</div>'
+      +     badge
+      +   '</div>'
+      + '</div>'
+      + '<div class="qz-cards">' + cards + '</div>';
+
+    var overlay = document.getElementById(QUIZ_ID + '-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = QUIZ_ID + '-overlay';
+      overlay.className = 'qz-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = overlayHTML;
+    overlay.classList.add('open');
+    overlay.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    // wire close button
+    var closeBtn = document.getElementById(QUIZ_ID + '-close');
+    if (closeBtn) closeBtn.addEventListener('click', function() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
     });
-    if (picked && picked.dataset.v === ans) correct++;
-    const exp = q.querySelector('.q-exp');
-    if (exp) exp.classList.add('show');
-  });
-  const pct = Math.round(correct / TOTAL * 100);
-  document.getElementById('snum').textContent = correct + '/' + TOTAL;
-  document.getElementById('smsg').textContent =
-    pct === 100 ? 'Perfect! Production-ready engineer.' :
-    pct >= 83   ? 'Excellent work!'                     :
-    pct >= 50   ? 'Review the CI/CD pipeline section.'  :
-                  'Re-read from the top.';
-  document.getElementById('qscore').classList.add('show');
-  document.getElementById('qsub').disabled = true;
-}
-function copyCode(btn) {
-  const pre = btn.closest('.code').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(() => {
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY', 1800);
-  });
-}
+  }
+
+  updateProgress();
+})();
+
 </script>
 </body>
 </html>
