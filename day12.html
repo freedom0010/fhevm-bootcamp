@@ -147,6 +147,127 @@ td code { font-family: var(--mono); font-size: 11px; color: var(--violet); backg
 .pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
 .pnav .next:hover { background: rgba(191,90,242,.14); }
 @media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } .diff { grid-template-columns: 1fr; } }
+
+/* ═══ QUIZ COMPONENT ═══════════════════════════════════════════ */
+.qz { background:#0d0d1a; border:1px solid #2a2a45; border-radius:14px;
+  margin:52px 0; overflow:hidden; }
+.qz-head { display:flex; align-items:center; gap:14px; padding:18px 24px;
+  background:rgba(255,179,0,.06); border-bottom:1px solid #2a2a45; }
+.qz-icon { font-size:22px; }
+.qz-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  color:#ffb300; letter-spacing:-.3px; }
+.qz-sub { font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:#6b6b95; margin-top:2px; letter-spacing:.5px; }
+.qz-qs { padding:0 24px; display:flex; flex-direction:column; gap:0; }
+.qz-q { padding:28px 0; border-bottom:1px solid #1e1e36; }
+.qz-q:last-child { border-bottom:none; }
+.qz-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  letter-spacing:2px; margin-bottom:8px; }
+.qz-text { font-size:14px; color:#f0f0ff; line-height:1.65; margin-bottom:14px; }
+.qz-text code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.1); padding:1px 6px; border-radius:3px; }
+.qz-opts { display:flex; flex-direction:column; gap:8px; }
+.qz-opt { display:flex; align-items:flex-start; gap:10px; padding:11px 14px;
+  border-radius:8px; border:1px solid #2a2a45; cursor:pointer;
+  font-size:13px; color:#9898be; line-height:1.6;
+  transition:border-color .14s, background .14s, color .14s;
+  user-select:none; }
+.qz-opt:hover { border-color:#353560; background:rgba(255,255,255,.02); color:#c0c0e0; }
+.qz-opt.sel { border-color:#4a4a70; background:rgba(191,90,242,.07); color:#e0e0ff; }
+.qz-ltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1a1a30; color:#6b6b95; transition:all .14s; }
+.qz-opt.sel .qz-ltr { background:rgba(191,90,242,.2); color:#bf5af2; }
+.qz-opt code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-foot { padding:20px 24px; border-top:1px solid #2a2a45;
+  display:flex; align-items:center; justify-content:space-between; }
+.qz-prog { font-family:'JetBrains Mono',monospace; font-size:11px; color:#5a5a82;
+  letter-spacing:.5px; }
+.qz-btn { padding:11px 28px; border-radius:8px; border:1px solid rgba(255,179,0,.3);
+  background:rgba(255,179,0,.08); color:#ffb300;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  letter-spacing:1.5px; cursor:pointer; transition:all .14s; }
+.qz-btn:hover:not(:disabled) { background:rgba(255,179,0,.18); border-color:#ffb300; }
+.qz-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ─── Results overlay ─────────────────────────────────────────── */
+.qz-overlay { position:fixed; inset:0; z-index:9999; background:#070711;
+  overflow-y:auto; display:none; flex-direction:column;
+  font-family:'Instrument Sans',sans-serif; }
+.qz-overlay.open { display:flex; }
+.qz-ob { position:sticky; top:0; height:52px; display:flex;
+  align-items:center; gap:12px; padding:0 24px;
+  background:rgba(7,7,17,.97); border-bottom:1px solid #2a2a45;
+  backdrop-filter:blur(16px); z-index:10; }
+.qz-ob-back { padding:6px 16px; border-radius:6px; border:1px solid #2a2a45;
+  background:none; color:#6b6b95; font-family:'JetBrains Mono',monospace;
+  font-size:11px; cursor:pointer; letter-spacing:.5px; transition:all .14s; }
+.qz-ob-back:hover { border-color:#ffb300; color:#ffb300; }
+.qz-ob-pill { margin-left:auto; padding:4px 14px; border-radius:20px;
+  background:rgba(255,179,0,.08); border:1px solid rgba(255,179,0,.2);
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:#ffb300; }
+.qz-oh { display:flex; align-items:center; gap:32px;
+  padding:40px 48px 32px; border-bottom:1px solid #2a2a45; }
+.qz-ring { flex-shrink:0; }
+.qz-ht { flex:1; }
+.qz-score { font-family:'Syne',sans-serif; font-size:56px; font-weight:800;
+  color:#f0f0ff; letter-spacing:-3px; line-height:1; }
+.qz-score sup { font-size:28px; color:#ffb300; vertical-align:super; letter-spacing:0; }
+.qz-hmsg { font-family:'JetBrains Mono',monospace; font-size:12px; color:#9898be;
+  margin:10px 0 12px; letter-spacing:.3px; line-height:1.7; }
+.qz-badge { display:inline-block; padding:4px 14px; border-radius:4px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; }
+.b-s { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.25); }
+.b-a { background:rgba(0,229,255,.08); color:#00e5ff; border:1px solid rgba(0,229,255,.22); }
+.b-b { background:rgba(255,179,0,.1); color:#ffb300; border:1px solid rgba(255,179,0,.25); }
+.b-c { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.25); }
+.qz-cards { padding:32px 48px 80px; display:flex; flex-direction:column; gap:20px; }
+.qz-card { border:1px solid #2a2a45; border-radius:12px; overflow:hidden; }
+.qz-card.c-ok { border-left:3px solid #69ff47; }
+.qz-card.c-no { border-left:3px solid #ff4d6d; }
+.qz-ch { display:flex; align-items:flex-start; gap:12px; padding:14px 20px;
+  border-bottom:1px solid #1e1e36; background:#0d0d1a; }
+.qz-cnum { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  flex-shrink:0; padding-top:2px; letter-spacing:1.5px; }
+.qz-cq { font-size:13px; color:#f0f0ff; flex:1; line-height:1.6; }
+.qz-cq code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cv { flex-shrink:0; padding:3px 10px; border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; }
+.cv-ok { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.2); }
+.cv-no { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.2); }
+.qz-copts { padding:12px 20px; background:#111128; display:flex;
+  flex-direction:column; gap:7px; }
+.qz-co { display:flex; align-items:flex-start; gap:10px; padding:9px 12px;
+  border-radius:7px; font-size:13px; color:#6b6b95; border:1px solid transparent;
+  line-height:1.6; }
+.qz-co.o-right { border-color:rgba(105,255,71,.3); background:rgba(105,255,71,.05); color:#f0f0ff; }
+.qz-co.o-wrong { border-color:rgba(255,77,109,.3); background:rgba(255,77,109,.06);
+  color:#ff4d6d; text-decoration:line-through; opacity:.8; }
+.qz-co code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1e1e36; color:#5a5a82; }
+.qz-co.o-right .qz-cltr { background:rgba(105,255,71,.18); color:#69ff47; }
+.qz-co.o-wrong .qz-cltr { background:rgba(255,77,109,.14); color:#ff4d6d; }
+.qz-cexp { margin:0 20px 16px; padding:13px 16px; background:#0d0d1a;
+  border:1px solid #2a2a45; border-radius:8px;
+  font-size:13px; color:#9898be; line-height:1.75; }
+.qz-cexp strong { color:#ffb300; }
+.qz-cexp em { color:#c0c0e0; }
+.qz-cexp code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+@media(max-width:720px){
+  .qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px;}
+  .qz-cards{padding:20px 16px 60px;}
+  .qz-score{font-size:44px;}
+}
+/* ═══════════════════════════════════════════════════════════════ */
+
 </style>
 </head>
 <body>
@@ -641,102 +762,86 @@ td code { font-family: var(--mono); font-size: 11px; color: var(--violet); backg
 <p><strong>Extension:</strong> Add a <code>maxTimestamp</code> check — if the KMS hasn't responded after 2 days, allow the auction owner to cancel and refund all bidders.</p>
 
 <!-- QUIZ -->
-<div class="quiz" id="quiz">
-  <div class="quiz-head">
-    <div class="quiz-head-icon">&#129504;</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
     <div>
-      <div class="quiz-title">Day 12 Quiz</div>
-      <div class="quiz-subtitle">6 questions · Gateway async decryption</div>
+      <div class="qz-title">Day 12 Quiz</div>
+      <div class="qz-sub">6 questions · Gateway async decryption</div>
     </div>
   </div>
-  <div class="quiz-body">
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 01 / 06</div>
-      <div class="q-q">Why is FHEVM decryption always asynchronous (two transactions)?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It's a design choice for gas efficiency</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The EVM cannot execute WASM code in-block</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Threshold decryption requires consensus across multiple KMS nodes, which cannot complete within a single block's execution</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway contract stores ciphertexts in a queue to batch decryptions</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> The KMS is a distributed MPC cluster. Each node must independently compute a partial decryption and the results must be combined. This consensus round spans network roundtrips and cannot fit inside one EVM execution context.</div>
+  <div class="qz-qs">
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 01 / 06</div>
+      <div class="qz-text">Why is FHEVM decryption always asynchronous (two transactions)?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It's a design choice for gas efficiency</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The EVM cannot execute WASM code in-block</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Threshold decryption requires consensus across multiple KMS nodes, which cannot complete within a single block's execution</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The Gateway contract stores ciphertexts in a queue to batch decryptions</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> The KMS is a distributed MPC cluster. Each node must independently compute a partial decryption and the results must be combined. This consensus round spans network roundtrips and cannot fit inside one EVM execution context.</div>
     </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 02 / 06</div>
-      <div class="q-q">What is the consequence of omitting the <code>onlyGateway</code> modifier on a decryption callback?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Any address can call the callback with forged plaintext values, completely bypassing the decryption security</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The callback can only be called once</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Gas costs increase</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The function can only be called internally</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Without <code>onlyGateway</code>, your callback is a public function. A malicious actor could call it directly with any plaintext values, for example setting a winning auction bid to 0 and claiming the prize without paying.</div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-num">QUESTION 02 / 06</div>
+      <div class="qz-text">What is the consequence of omitting the <code>onlyGateway</code> modifier on a decryption callback?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Any address can call the callback with forged plaintext values, completely bypassing the decryption security</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The callback can only be called once</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Gas costs increase</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The function can only be called internally</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Without <code>onlyGateway</code>, your callback is a public function. A malicious actor could call it directly with any plaintext values, for example setting a winning auction bid to 0 and claiming the prize without paying.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 06</div>
-      <div class="q-q">You request decryption of <strong>two</strong> handles in order: <code>[yesVotes, noVotes]</code>. What should your callback signature look like?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>callback(uint256 requestId, uint256[] plaintext)</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>callback(uint32 yesCount, uint32 noCount)</code></div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>callback(uint256 requestId)</code></div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>callback(uint256 requestId, uint32 yesCount, uint32 noCount)</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> The Gateway passes the requestId first, then the decrypted plaintext values in the exact same order as the handles array. Each plaintext is a separate parameter of its original Solidity type.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 03 / 06</div>
+      <div class="qz-text">You request decryption of <strong>two</strong> handles in order: <code>[yesVotes, noVotes]</code>. What should your callback signature look like?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>callback(uint256 requestId, uint256[] plaintext)</code></div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>callback(uint32 yesCount, uint32 noCount)</code></div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>callback(uint256 requestId)</code></div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>callback(uint256 requestId, uint32 yesCount, uint32 noCount)</code></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> The Gateway passes the requestId first, then the decrypted plaintext values in the exact same order as the handles array. Each plaintext is a separate parameter of its original Solidity type.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 04 / 06</div>
-      <div class="q-q">What happens if you call <code>Gateway.requestDecryption</code> without first calling <code>TFHE.allowForDecryption(handle)</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The request succeeds but the callback receives 0 for that value</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The KMS will not decrypt it — the ACL check fails and the request is ignored or reverts</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The Gateway automatically grants the permission on your behalf</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The transaction succeeds but emits no event</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> <code>allowForDecryption</code> is the ACL step that tells the on-chain ACL contract that the Gateway is permitted to decrypt this handle. Without it, the KMS's ACL check will reject the decryption request.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 04 / 06</div>
+      <div class="qz-text">What happens if you call <code>Gateway.requestDecryption</code> without first calling <code>TFHE.allowForDecryption(handle)</code>?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The request succeeds but the callback receives 0 for that value</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The KMS will not decrypt it — the ACL check fails and the request is ignored or reverts</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The Gateway automatically grants the permission on your behalf</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The transaction succeeds but emits no event</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> <code>allowForDecryption</code> is the ACL step that tells the on-chain ACL contract that the Gateway is permitted to decrypt this handle. Without it, the KMS's ACL check will reject the decryption request.</div>
     </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 06</div>
-      <div class="q-q">In the conditional reveal pattern, why must you make <strong>two</strong> separate Gateway calls (condition first, value second)?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To save gas by batching in two requests</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Because the Gateway limits each request to one handle</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>You cannot branch on encrypted values in Solidity — you must first reveal the boolean condition as plaintext before deciding whether to reveal the value</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The KMS processes two-step requests faster</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> In FHEVM, <code>if (encryptedBool)</code> is not possible — all branches must be oblivious. To gate a reveal on a condition, you must first decrypt the condition to plaintext via the Gateway, then use the resulting boolean in a normal Solidity if-statement to decide whether to proceed with the value reveal.</div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 05 / 06</div>
+      <div class="qz-text">In the conditional reveal pattern, why must you make <strong>two</strong> separate Gateway calls (condition first, value second)?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>To save gas by batching in two requests</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Because the Gateway limits each request to one handle</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>You cannot branch on encrypted values in Solidity — you must first reveal the boolean condition as plaintext before deciding whether to reveal the value</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The KMS processes two-step requests faster</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> In FHEVM, <code>if (encryptedBool)</code> is not possible — all branches must be oblivious. To gate a reveal on a condition, you must first decrypt the condition to plaintext via the Gateway, then use the resulting boolean in a normal Solidity if-statement to decide whether to proceed with the value reveal.</div>
     </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 06 / 06</div>
-      <div class="q-q">What is the recommended frontend pattern to know when a Gateway callback has executed?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Emit a dedicated event in your callback function and watch it with <code>watchContractEvent</code> before triggering the request transaction</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Poll the contract's storage every 500 ms until the value changes</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Wait for the request transaction to confirm — the callback is always in the same block</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Call a <code>getDecryptionStatus(requestId)</code> view function on the Gateway</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Event-driven is the cleanest approach. Subscribe to your contract's callback event before sending the request transaction. When the callback executes (1–2 blocks later), the event fires and your UI updates. Polling is wasteful and introduces latency.</div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-num">QUESTION 06 / 06</div>
+      <div class="qz-text">What is the recommended frontend pattern to know when a Gateway callback has executed?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Emit a dedicated event in your callback function and watch it with <code>watchContractEvent</code> before triggering the request transaction</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Poll the contract's storage every 500 ms until the value changes</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Wait for the request transaction to confirm — the callback is always in the same block</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Call a <code>getDecryptionStatus(requestId)</code> view function on the Gateway</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Event-driven is the cleanest approach. Subscribe to your contract's callback event before sending the request transaction. When the callback executes (1–2 blocks later), the event fires and your UI updates. Polling is wasteful and introduces latency.</div>
     </div>
-
   </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/6</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="Day12-quiz-prog">0 / 6 answered</span>
+    <button class="qz-btn" id="Day12-quiz-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
 <div class="pnav">
-  <a href="day11.html">&#8592; Day 11 — fhevmjs Frontend</a>
-  <a class="next" href="day13.html">Day 13 — Cross-Contract Patterns &#8594;</a>
+  <a href="Day11.html">&#8592; Day 11 — fhevmjs Frontend</a>
+  <a class="next" href="Day13.html">Day 13 — Cross-Contract Patterns &#8594;</a>
 </div>
 
 </main>
@@ -767,48 +872,169 @@ sbLinks.forEach(l => l.addEventListener('click', () => {
   const el = document.getElementById(l.dataset.id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }));
-const TOTAL = 6;
-document.querySelectorAll('.q-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const q = opt.closest('.q');
-    if (q.dataset.done) return;
-    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
-    opt.classList.add('picked');
-    const done = document.querySelectorAll('.q-opt.picked').length;
-    document.getElementById('qsub').disabled = done < TOTAL;
+
+// ═══ Quiz: Day12 ════════════════════════════════════════════════
+(function() {
+  var QUIZ_ID = 'Day12-quiz';
+
+  // Wire up option clicks
+  var opts = document.querySelectorAll('.qz-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].addEventListener('click', handleOptClick);
+  }
+
+  function handleOptClick() {
+    var q = this.closest('.qz-q');
+    if (!q) return;
+    // deselect siblings
+    var siblings = q.querySelectorAll('.qz-opt');
+    for (var j = 0; j < siblings.length; j++) {
+      siblings[j].classList.remove('sel');
+      siblings[j].querySelector('.qz-ltr').style.background = '';
+      siblings[j].querySelector('.qz-ltr').style.color = '';
+    }
+    // select this one
+    this.classList.add('sel');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var total   = document.querySelectorAll('.qz-q').length;
+    var picked  = document.querySelectorAll('.qz-q .qz-opt.sel').length;
+    var btn     = document.getElementById(QUIZ_ID + '-btn');
+    var prog    = document.getElementById(QUIZ_ID + '-prog');
+    if (btn)  btn.disabled = (picked < total);
+    if (prog) prog.textContent = picked + ' / ' + total + ' answered';
+  }
+
+  // Submit
+  var btn = document.getElementById(QUIZ_ID + '-btn');
+  if (btn) btn.addEventListener('click', function() {
+    if (this.disabled) return;
+    showResults();
   });
-});
-function gradeQuiz() {
-  let correct = 0;
-  document.querySelectorAll('.q').forEach(q => {
-    q.dataset.done = '1';
-    const picked = q.querySelector('.q-opt.picked');
-    const ans = q.dataset.ans;
-    q.querySelectorAll('.q-opt').forEach(o => {
-      if (o.dataset.v === ans) o.classList.add('right');
-      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+
+  function showResults() {
+    var qs = document.querySelectorAll('.qz-q');
+    var correct = 0;
+    var cards = '';
+
+    for (var i = 0; i < qs.length; i++) {
+      var q       = qs[i];
+      var ans     = q.getAttribute('data-ans');
+      var sel     = q.querySelector('.qz-opt.sel');
+      var selV    = sel ? sel.getAttribute('data-v') : null;
+      var isRight = selV === ans;
+      if (isRight) correct++;
+
+      // question text
+      var qEl   = q.querySelector('.qz-text');
+      var qText = qEl ? qEl.innerHTML : '';
+
+      // explanation
+      var expEl = q.querySelector('.qz-exp');
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      // build option rows
+      var optRows = '';
+      var optEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < optEls.length; j++) {
+        var o    = optEls[j];
+        var v    = o.getAttribute('data-v');
+        var ltr  = o.querySelector('.qz-ltr');
+        var ltrT = ltr ? ltr.textContent : v;
+        // get option text (everything except the .qz-ltr span)
+        var oClone = o.cloneNode(true);
+        var ltrEl = oClone.querySelector('.qz-ltr');
+        if (ltrEl) ltrEl.parentNode.removeChild(ltrEl);
+        var oText = oClone.innerHTML.trim();
+
+        var cls = '';
+        if (v === ans) cls = 'o-right';
+        else if (v === selV) cls = 'o-wrong';
+
+        optRows += '<div class="qz-co ' + cls + '">'
+          + '<span class="qz-cltr">' + ltrT + '</span>'
+          + oText
+          + '</div>';
+      }
+
+      cards += '<div class="qz-card ' + (isRight ? 'c-ok' : 'c-no') + '">'
+        + '<div class="qz-ch">'
+        +   '<span class="qz-cnum">Q' + (i + 1) + '</span>'
+        +   '<div class="qz-cq">' + qText + '</div>'
+        +   '<span class="qz-cv ' + (isRight ? 'cv-ok' : 'cv-no') + '">' + (isRight ? '✓ Correct' : '✗ Wrong') + '</span>'
+        + '</div>'
+        + '<div class="qz-copts">' + optRows + '</div>'
+        + (exp ? '<div class="qz-cexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var total  = qs.length;
+    var pct    = Math.round(correct / total * 100);
+    var circ   = 251.3;
+    var offset = circ - (pct / 100) * circ;
+
+    var ringC = pct === 100 ? '#69ff47' : pct >= 80 ? '#00e5ff' : pct >= 60 ? '#ffb300' : '#ff4d6d';
+    var badge = pct === 100 ? '<span class="qz-badge b-s">🏆 Perfect Score</span>'
+              : pct >= 80   ? '<span class="qz-badge b-a">✓ Excellent</span>'
+              : pct >= 60   ? '<span class="qz-badge b-b">~ Needs Review</span>'
+              :               '<span class="qz-badge b-c">↺ Try Again</span>';
+    var hmsg  = pct === 100 ? 'Every concept nailed. Outstanding.'
+              : pct >= 80   ? 'Strong understanding. Check flagged questions.'
+              : pct >= 60   ? 'Good base. Re-read sections for wrong answers.'
+              :               'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-ring">'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="' + ringC + '" stroke-width="7"'
+      +   ' stroke-linecap="round"'
+      +   ' stroke-dasharray="' + circ + '"'
+      +   ' stroke-dashoffset="' + offset + '"'
+      +   ' transform="rotate(-90 50 50)"'
+      +   ' style="transition:stroke-dashoffset 1s ease"/>'
+      + '</svg>';
+
+    var overlayHTML =
+        '<div class="qz-ob">'
+      +   '<button class="qz-ob-back" id="' + QUIZ_ID + '-close">← Back to Quiz</button>'
+      +   '<span class="qz-ob-pill">' + correct + '/' + total + ' correct &nbsp;·&nbsp; ' + pct + '%</span>'
+      + '</div>'
+      + '<div class="qz-oh">'
+      +   ring
+      +   '<div class="qz-ht">'
+      +     '<div class="qz-score">' + correct + '<sup>/' + total + '</sup></div>'
+      +     '<div class="qz-hmsg">' + hmsg + '</div>'
+      +     badge
+      +   '</div>'
+      + '</div>'
+      + '<div class="qz-cards">' + cards + '</div>';
+
+    var overlay = document.getElementById(QUIZ_ID + '-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = QUIZ_ID + '-overlay';
+      overlay.className = 'qz-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = overlayHTML;
+    overlay.classList.add('open');
+    overlay.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    // wire close button
+    var closeBtn = document.getElementById(QUIZ_ID + '-close');
+    if (closeBtn) closeBtn.addEventListener('click', function() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
     });
-    if (picked && picked.dataset.v === ans) correct++;
-    const exp = q.querySelector('.q-exp');
-    if (exp) exp.classList.add('show');
-  });
-  const pct = Math.round(correct / TOTAL * 100);
-  document.getElementById('snum').textContent = correct + '/' + TOTAL;
-  document.getElementById('smsg').textContent =
-    pct === 100 ? 'Perfect! On to Day 13.' :
-    pct >= 83   ? 'Excellent!'              :
-    pct >= 50   ? 'Review the callback patterns.' :
-                  'Re-read from the top.';
-  document.getElementById('qscore').classList.add('show');
-  document.getElementById('qsub').disabled = true;
-}
-function copyCode(btn) {
-  const pre = btn.closest('.code').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(() => {
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY', 1800);
-  });
-}
+  }
+
+  updateProgress();
+})();
+
 </script>
 </body>
 </html>
