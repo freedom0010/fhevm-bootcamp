@@ -68,13 +68,13 @@ td.ok{color:var(--green)!important}td.bad{color:var(--rose)!important}
 .quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
 .quiz-head{padding:20px 24px;background:rgba(52,211,153,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
 .quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
-.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
-.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
-.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+
+
+
 .q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
 .q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
 .q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
-.q-opts{display:flex;flex-direction:column;gap:7px}
+
 .q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
 .q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
 .q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
@@ -82,15 +82,84 @@ td.ok{color:var(--green)!important}td.bad{color:var(--rose)!important}
 .q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
 .q-exp{margin-top:10px;padding:11px 14px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
 .q-exp.show{display:block}.q-exp strong{color:var(--acc)}
-.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
-.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+
+
 .score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
-.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
-.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.score.show{display:flex}
+.score-right{display:flex;flex-direction:column;gap:3px}
 .pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
 .pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
 .pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.22);color:var(--acc)}.pnav .next:hover{background:rgba(52,211,153,.14)}
 @media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.grid2{grid-template-columns:1fr}}
+
+/* ═══ QUIZ COMPONENT ══════════════════════════════════════ */
+.qz{background:var(--bg2,#0d0d1a);border:1px solid var(--b2,var(--border,#2a2a45));border-radius:12px;margin:48px 0;overflow:hidden}
+.qz-head{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--b2,var(--border,#2a2a45))}
+.qz-icon{font-size:22px;flex-shrink:0}
+.qz-title{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:18px;font-weight:700;color:var(--acc,var(--purple,var(--amber,#ffb300)));letter-spacing:-.2px}
+.qz-sub{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#6b6b95));margin-top:3px;letter-spacing:.5px}
+.qz-list{padding:0 24px;display:flex;flex-direction:column}
+.qz-q{padding:26px 0;border-bottom:1px solid var(--b2,var(--border,#1e1e36))}
+.qz-q:last-child{border-bottom:none}
+.qz-qnum{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#5a5a82));letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.qz-qtext{font-size:14px;color:var(--text,var(--white,#f0f0ff));line-height:1.65;margin-bottom:14px;font-weight:500}
+.qz-qtext code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,var(--amber,#ffb300));background:rgba(255,179,0,.08);padding:1px 6px;border-radius:3px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border,#2a2a45);cursor:pointer;font-size:13px;color:var(--text2,var(--mid,#9898be));line-height:1.6;transition:border-color .14s,background .14s,color .14s;user-select:none}
+.qz-opt:hover{border-color:var(--b2,#353560);background:rgba(255,255,255,.02);color:var(--text,#e0e0ff)}
+.qz-opt.sel{border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.05);color:var(--text,#f0f0ff)}
+.qz-opt.sel .qz-ltr{background:rgba(255,179,0,.18);color:var(--acc,#ffb300)}
+.qz-ltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg3,var(--plate,#1a1a30));color:var(--text3,#6b6b95);transition:all .14s}
+.qz-opt code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-exp{display:none}
+.qz-foot{padding:18px 24px;border-top:1px solid var(--b2,var(--border,#2a2a45));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.qz-prog{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--text3,#5a5a82);letter-spacing:.5px}
+.qz-btn{padding:11px 28px;border-radius:7px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:var(--acc,#ffb300);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.qz-btn:hover:not(:disabled){background:rgba(255,179,0,.2);border-color:var(--acc,#ffb300)}
+.qz-btn:disabled{opacity:.3;cursor:not-allowed}
+/* results overlay */
+.qz-ov{position:fixed;inset:0;z-index:9999;background:var(--bg,var(--ink,#070711));overflow-y:auto;display:none;flex-direction:column}
+.qz-ov.open{display:flex}
+.qz-ob{position:sticky;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(7,7,17,.97);border-bottom:1px solid var(--border,#2a2a45);backdrop-filter:blur(16px);z-index:10}
+.qz-ob-back{padding:5px 16px;border-radius:6px;border:1px solid var(--border,#2a2a45);background:none;color:var(--text3,#6b6b95);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;cursor:pointer;letter-spacing:.5px;transition:all .14s}
+.qz-ob-back:hover{border-color:var(--acc,#ffb300);color:var(--acc,#ffb300)}
+.qz-ob-pill{margin-left:auto;padding:3px 14px;border-radius:20px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--acc,#ffb300)}
+.qz-oh{display:flex;align-items:center;gap:32px;padding:40px 48px 32px;border-bottom:1px solid var(--border,#2a2a45)}
+.qz-oring{flex-shrink:0}
+.qz-oht{flex:1}
+.qz-oscore{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:56px;font-weight:800;color:var(--text,#f0f0ff);letter-spacing:-3px;line-height:1}
+.qz-oscore sup{font-size:28px;color:var(--acc,#ffb300);vertical-align:super;letter-spacing:0}
+.qz-omsg{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--text2,#9898be);margin:10px 0 12px;letter-spacing:.3px;line-height:1.7}
+.qz-obadge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.gb-s{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.25)}
+.gb-a{background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.22)}
+.gb-b{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.25)}
+.gb-c{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.qz-ocards{padding:32px 48px 80px;display:flex;flex-direction:column;gap:20px}
+.qz-oc{border:1px solid var(--border,#2a2a45);border-radius:12px;overflow:hidden}
+.qz-oc.oc-ok{border-left:3px solid #69ff47}
+.qz-oc.oc-no{border-left:3px solid #ff4d6d}
+.qz-och{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--b2,#1e1e36);background:var(--bg2,#0d0d1a)}
+.qz-ocn{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,#5a5a82);flex-shrink:0;padding-top:2px;letter-spacing:1.5px}
+.qz-ocq{font-size:13px;color:var(--text,#f0f0ff);flex:1;line-height:1.6}
+.qz-ocq code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocv{flex-shrink:0;padding:3px 10px;border-radius:10px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1px}
+.ocv-ok{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.2)}
+.ocv-no{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.2)}
+.qz-ocopts{padding:12px 20px;background:var(--bg3,#111128);display:flex;flex-direction:column;gap:7px}
+.qz-oco{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:7px;font-size:13px;color:var(--text2,#6b6b95);border:1px solid transparent;line-height:1.6}
+.qz-oco.oo-r{border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.05);color:var(--text,#f0f0ff)}
+.qz-oco.oo-w{border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;text-decoration:line-through;opacity:.8}
+.qz-oco code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg2,#1e1e36);color:var(--text3,#5a5a82)}
+.qz-oco.oo-r .qz-ocltr{background:rgba(105,255,71,.18);color:#69ff47}
+.qz-oco.oo-w .qz-ocltr{background:rgba(255,77,109,.14);color:#ff4d6d}
+.qz-ocexp{margin:0 20px 16px;padding:13px 16px;background:var(--bg2,#0d0d1a);border:1px solid var(--border,#2a2a45);border-radius:8px;font-size:13px;color:var(--text2,#9898be);line-height:1.75}
+.qz-ocexp strong{color:var(--acc,#ffb300)}
+.qz-ocexp em{color:var(--text,#c0c0e0)}
+.qz-ocexp code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+@media(max-width:720px){.qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px}.qz-ocards{padding:20px 16px 60px}.qz-oscore{font-size:44px}}
+/* ════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>
@@ -735,121 +804,105 @@ it(<span class="s">"invariants hold after mint + transfer"</span>, <span class="
   </div>
 </div>
 
-<h2 class="sec" id="quiz">Knowledge Check</h2>
-<div class="quiz">
-  <div class="quiz-head">
-    <div class="quiz-icon">&#128221;</div>
-    <div>
-      <div class="quiz-title">Day 10 Quiz — Testing &amp; Debugging</div>
-      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
+    <div><div class="qz-title">Day 10 Quiz — Week 2 Capstone</div><div class="qz-sub">8 questions · Week 2 review</div></div>
+  </div>
+  <div class="qz-list">
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 01 / 08</div>
+      <div class="qz-qtext">A test passes in mock mode but fails on Zama Devnet with "KMSVerifier: invalid proof". What is the most likely cause?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The contract compiled differently on devnet</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Devnet uses a different Solidity version</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Mock mode skips ZK proof validation — the proof was generated with the wrong contract address or user address and only gets caught when real proof verification runs</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The devnet gateway is not configured correctly</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> Mock mode skips fromExternal() proof verification entirely — any ciphertext passes. Real FHE mode verifies that the ZK proof binds the ciphertext to the exact contract address and msg.sender. A common bug is passing the wrong address to createEncryptedInput() which is invisible in mock mode.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 02 / 08</div>
+      <div class="qz-qtext">Your test fails with "ACL: sender is not allowed" on the <em>second</em> call to a function, but the first call succeeds. What pattern should you check?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Missing <code>FHE.allowThis()</code> after the FHE operation in the first call — the first call creates a new handle but doesn't grant the contract access, so the second call can't read it</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The second call uses a different signer that wasn't registered</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The ACL contract has a rate limit on permissions</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The constructor's ACL grant expires after one use</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> The constructor may grant allowThis() on the initial handle, but the first operation creates a NEW handle. If you forget allowThis() on this new handle, the contract can't use it in the next transaction. First call works (using the initialized handle), second call fails (trying to use the new handle with no grants).</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 03 / 08</div>
+      <div class="qz-qtext">Why should <code>FhevmInstance</code> be a singleton (created once) across all tests rather than created fresh per test?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Multiple instances would conflict with each other's state</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The fhevmjs SDK only supports one instance per process</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Each instance generates a new encryption keypair, breaking previously encrypted values</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Creating an instance fetches the network's FHE public key from the node — an expensive network call that significantly slows down test runs if repeated for every test</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> createFhevmInstance() fetches the current FHE public key from the network, verifies KMS keys, and sets up the cryptographic context. This is a slow operation (100ms+) that involves network calls. Doing it once and caching the result is standard practice for fast test suites.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 04 / 08</div>
+      <div class="qz-qtext">When should you use <code>beforeEach</code> (fresh deployment per test) vs <code>before</code> (shared deployment) for FHEVM contracts?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Always use beforeEach — state contamination in FHEVM is too risky</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Use <code>beforeEach</code> for unit tests that test single behaviors in isolation; use <code>before</code> for integration tests that deliberately test state accumulation across multiple operations</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Always use <code>before</code> — redeployment invalidates cached encrypted inputs</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Use <code>before</code> if the contract has any encrypted state; <code>beforeEach</code> otherwise</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Unit tests should be isolated — beforeEach gives a clean slate. Integration tests deliberately test multi-step flows (deploy → mint → transfer → verify) where state accumulation is intentional — before() is appropriate there. The key insight: unit tests test one thing; integration tests test sequences.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 05 / 08</div>
+      <div class="qz-qtext">You want to test that a Gateway callback is called correctly after <code>requestDecryption()</code>. How should you wait for it in a real-FHE test?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>await sleep(5000)</code> — just wait 5 seconds for the callback</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Poll <code>contract.state()</code> every 500ms until it changes</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Listen for the event emitted by the callback: <code>await new Promise(resolve => contract.once("ResultRevealed", resolve))</code> with a timeout</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The Gateway callback always fires in the same block as requestDecryption() — no waiting needed</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> The canonical pattern for async Gateway tests is event-driven: listen for the event your callback emits, wrapped in a Promise with a timeout. Sleeping is fragile (timing-dependent), polling is wasteful, and assuming same-block delivery is wrong for real FHE where KMS processing takes ~2 seconds.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 06 / 08</div>
+      <div class="qz-qtext">What does the handle type byte (high byte of the handle value) tell you during debugging?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The block number when the handle was created</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The address of the contract that created the handle</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Whether the handle has been decrypted or not</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The FHE type (ebool=0, euint8=2, euint32=4, euint64=5, etc.) — useful for verifying that fromExternal() correctly typed the ciphertext</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> The high byte of a handle encodes the encrypted type. During debugging, if you see an unexpected type byte, it means either: wrong input method was called (add32 instead of add64), or the handle was corrupted/zero. This is particularly useful when debugging "wrong size" type mismatches in cross-contract calls.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 07 / 08</div>
+      <div class="qz-qtext">What is an invariant test in the context of FHEVM contracts, and what bug class does it catch?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>A test that verifies properties that must always hold true (e.g., sum of balances == totalSupply, all handles have allowThis()) — catches subtle state corruption that targeted tests miss</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>A test that checks that the contract code cannot be modified after deployment</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>A test that verifies FHE operations produce consistent results across multiple calls</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>A test that verifies the contract's constructor runs without reverting</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> Invariant tests define global correctness conditions — things that must be true in every valid state regardless of how you got there. For FHEVM, key invariants include: sum of decryptable balances matches totalSupply, no uninitialized handles (zero handle), all stored handles have allowThis(), Gateway callbacks have onlyGateway. These catch bugs that unit tests miss because they verify systemic properties.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 08 / 08</div>
+      <div class="qz-qtext">Why must you <em>never</em> cache encrypted inputs (handles + inputProof) across contract deployments?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The fhevmjs SDK uses a session token that expires</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The ZK proof is cryptographically bound to the contract address — when the contract redeploys to a new address, the old proof is bound to the old address and will always fail the <code>fromExternal()</code> verification in the new contract</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The ciphertext format changes between deployments</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The KMS rotates its public key on each new deployment</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> fromExternal() verifies that the ZK proof was generated for this specific contract address + caller address. Redeployment creates a new contract at a new address. Any proof generated for the old address will fail verification at the new address. Always call createEncryptedInput(newContractAddr, callerAddr) after every redeployment.</div>
     </div>
   </div>
-  <div class="quiz-body" id="qbody">
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 01 / 08</div>
-      <div class="q-q">A test passes in mock mode but fails on Zama Devnet with "KMSVerifier: invalid proof". What is the most likely cause?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The contract compiled differently on devnet</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Devnet uses a different Solidity version</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Mock mode skips ZK proof validation — the proof was generated with the wrong contract address or user address and only gets caught when real proof verification runs</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The devnet gateway is not configured correctly</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> Mock mode skips fromExternal() proof verification entirely — any ciphertext passes. Real FHE mode verifies that the ZK proof binds the ciphertext to the exact contract address and msg.sender. A common bug is passing the wrong address to createEncryptedInput() which is invisible in mock mode.</div>
-    </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 02 / 08</div>
-      <div class="q-q">Your test fails with "ACL: sender is not allowed" on the <em>second</em> call to a function, but the first call succeeds. What pattern should you check?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Missing <code>FHE.allowThis()</code> after the FHE operation in the first call — the first call creates a new handle but doesn't grant the contract access, so the second call can't read it</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The second call uses a different signer that wasn't registered</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ACL contract has a rate limit on permissions</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The constructor's ACL grant expires after one use</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> The constructor may grant allowThis() on the initial handle, but the first operation creates a NEW handle. If you forget allowThis() on this new handle, the contract can't use it in the next transaction. First call works (using the initialized handle), second call fails (trying to use the new handle with no grants).</div>
-    </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 08</div>
-      <div class="q-q">Why should <code>FhevmInstance</code> be a singleton (created once) across all tests rather than created fresh per test?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Multiple instances would conflict with each other's state</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The fhevmjs SDK only supports one instance per process</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Each instance generates a new encryption keypair, breaking previously encrypted values</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Creating an instance fetches the network's FHE public key from the node — an expensive network call that significantly slows down test runs if repeated for every test</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> createFhevmInstance() fetches the current FHE public key from the network, verifies KMS keys, and sets up the cryptographic context. This is a slow operation (100ms+) that involves network calls. Doing it once and caching the result is standard practice for fast test suites.</div>
-    </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 04 / 08</div>
-      <div class="q-q">When should you use <code>beforeEach</code> (fresh deployment per test) vs <code>before</code> (shared deployment) for FHEVM contracts?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Always use beforeEach — state contamination in FHEVM is too risky</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Use <code>beforeEach</code> for unit tests that test single behaviors in isolation; use <code>before</code> for integration tests that deliberately test state accumulation across multiple operations</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Always use <code>before</code> — redeployment invalidates cached encrypted inputs</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Use <code>before</code> if the contract has any encrypted state; <code>beforeEach</code> otherwise</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Unit tests should be isolated — beforeEach gives a clean slate. Integration tests deliberately test multi-step flows (deploy → mint → transfer → verify) where state accumulation is intentional — before() is appropriate there. The key insight: unit tests test one thing; integration tests test sequences.</div>
-    </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 08</div>
-      <div class="q-q">You want to test that a Gateway callback is called correctly after <code>requestDecryption()</code>. How should you wait for it in a real-FHE test?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>await sleep(5000)</code> — just wait 5 seconds for the callback</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Poll <code>contract.state()</code> every 500ms until it changes</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Listen for the event emitted by the callback: <code>await new Promise(resolve => contract.once("ResultRevealed", resolve))</code> with a timeout</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway callback always fires in the same block as requestDecryption() — no waiting needed</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> The canonical pattern for async Gateway tests is event-driven: listen for the event your callback emits, wrapped in a Promise with a timeout. Sleeping is fragile (timing-dependent), polling is wasteful, and assuming same-block delivery is wrong for real FHE where KMS processing takes ~2 seconds.</div>
-    </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 06 / 08</div>
-      <div class="q-q">What does the handle type byte (high byte of the handle value) tell you during debugging?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The block number when the handle was created</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The address of the contract that created the handle</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Whether the handle has been decrypted or not</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The FHE type (ebool=0, euint8=2, euint32=4, euint64=5, etc.) — useful for verifying that fromExternal() correctly typed the ciphertext</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> The high byte of a handle encodes the encrypted type. During debugging, if you see an unexpected type byte, it means either: wrong input method was called (add32 instead of add64), or the handle was corrupted/zero. This is particularly useful when debugging "wrong size" type mismatches in cross-contract calls.</div>
-    </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 07 / 08</div>
-      <div class="q-q">What is an invariant test in the context of FHEVM contracts, and what bug class does it catch?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A test that verifies properties that must always hold true (e.g., sum of balances == totalSupply, all handles have allowThis()) — catches subtle state corruption that targeted tests miss</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A test that checks that the contract code cannot be modified after deployment</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A test that verifies FHE operations produce consistent results across multiple calls</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A test that verifies the contract's constructor runs without reverting</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> Invariant tests define global correctness conditions — things that must be true in every valid state regardless of how you got there. For FHEVM, key invariants include: sum of decryptable balances matches totalSupply, no uninitialized handles (zero handle), all stored handles have allowThis(), Gateway callbacks have onlyGateway. These catch bugs that unit tests miss because they verify systemic properties.</div>
-    </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 08 / 08</div>
-      <div class="q-q">Why must you <em>never</em> cache encrypted inputs (handles + inputProof) across contract deployments?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The fhevmjs SDK uses a session token that expires</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ZK proof is cryptographically bound to the contract address — when the contract redeploys to a new address, the old proof is bound to the old address and will always fail the <code>fromExternal()</code> verification in the new contract</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ciphertext format changes between deployments</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The KMS rotates its public key on each new deployment</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> fromExternal() verifies that the ZK proof was generated for this specific contract address + caller address. Redeployment creates a new contract at a new address. Any proof generated for the old address will fail verification at the new address. Always call createEncryptedInput(newContractAddr, callerAddr) after every redeployment.</div>
-    </div>
-
-  </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/8</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="day10-prog">0 / 8 answered</span>
+    <button class="qz-btn" id="day10-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
@@ -863,8 +916,128 @@ window.addEventListener('scroll',()=>{const d=document.documentElement;document.
 const sba=document.querySelectorAll('.sb-a[data-id]');
 ['intro','hardhat-setup','mock-mode','config','test-helpers','instance-mgmt','encrypt-helpers','decrypt-helpers','common-errors','acl-errors','proof-errors','gateway-errors','debug-patterns','handle-inspect','event-trace','gas-profile','test-structure','unit-tests','integration','invariants','ci','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
 sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
-document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
-function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Week 3!':pct>=87?'Excellent!':pct>=62?'Good — review explanations above.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
-function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+(function() {
+  var ID      = 'day10';
+  var optEls  = document.querySelectorAll('#quiz .qz-opt');
+  var btnEl   = document.getElementById(ID + '-btn');
+  var progEl  = document.getElementById(ID + '-prog');
+  var total   = document.querySelectorAll('#quiz .qz-q').length;
+
+  function picked() { return document.querySelectorAll('#quiz .qz-q .qz-opt.sel').length; }
+
+  function refresh() {
+    if (btnEl)  btnEl.disabled       = (picked() < total);
+    if (progEl) progEl.textContent   = picked() + ' / ' + total + ' answered';
+  }
+
+  for (var i = 0; i < optEls.length; i++) {
+    optEls[i].addEventListener('click', function() {
+      var q = this.closest('.qz-q');
+      if (!q) return;
+      var s = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < s.length; j++) s[j].classList.remove('sel');
+      this.classList.add('sel');
+      refresh();
+    });
+  }
+
+  if (btnEl) btnEl.addEventListener('click', function() {
+    if (this.disabled) return;
+    render();
+  });
+
+  function render() {
+    var qEls = document.querySelectorAll('#quiz .qz-q');
+    var ok   = 0;
+    var html = '';
+
+    for (var i = 0; i < qEls.length; i++) {
+      var q     = qEls[i];
+      var ans   = q.getAttribute('data-ans');
+      var selEl = q.querySelector('.qz-opt.sel');
+      var selV  = selEl ? selEl.getAttribute('data-v') : null;
+      var isOk  = selV === ans;
+      if (isOk) ok++;
+
+      var qtEl  = q.querySelector('.qz-qtext');
+      var expEl = q.querySelector('.qz-exp');
+      var qText = qtEl  ? qtEl.innerHTML  : '';
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      var rows  = '';
+      var oEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < oEls.length; j++) {
+        var o    = oEls[j];
+        var v    = o.getAttribute('data-v');
+        var lEl  = o.querySelector('.qz-ltr');
+        var lTx  = lEl ? lEl.textContent : v;
+        var cl   = o.cloneNode(true);
+        var lc   = cl.querySelector('.qz-ltr');
+        if (lc)  lc.parentNode.removeChild(lc);
+        var cls  = v === ans ? 'oo-r' : (v === selV ? 'oo-w' : '');
+        rows += '<div class="qz-oco ' + cls + '"><span class="qz-ocltr">' + lTx + '</span>' + cl.innerHTML.trim() + '</div>';
+      }
+
+      html += '<div class="qz-oc ' + (isOk ? 'oc-ok' : 'oc-no') + '">'
+        + '<div class="qz-och"><span class="qz-ocn">Q' + (i+1) + '</span>'
+        + '<div class="qz-ocq">' + qText + '</div>'
+        + '<span class="qz-ocv ' + (isOk?'ocv-ok':'ocv-no') + '">' + (isOk?'✓ Correct':'✗ Wrong') + '</span></div>'
+        + '<div class="qz-ocopts">' + rows + '</div>'
+        + (exp ? '<div class="qz-ocexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var pct  = Math.round(ok / total * 100);
+    var circ = 251.3;
+    var off  = circ - (pct/100)*circ;
+    var rc   = pct===100?'#69ff47':pct>=80?'#00e5ff':pct>=60?'#ffb300':'#ff4d6d';
+    var bdg  = pct===100?'<span class="qz-obadge gb-s">🏆 Perfect Score</span>'
+              :pct>=80  ?'<span class="qz-obadge gb-a">✓ Excellent</span>'
+              :pct>=60  ?'<span class="qz-obadge gb-b">~ Needs Review</span>'
+              :'<span class="qz-obadge gb-c">↺ Try Again</span>';
+    var msg  = pct===100?'Flawless — every concept nailed.'
+              :pct>=80  ?'Strong work. Check any flagged questions.'
+              :pct>=60  ?'Good base — re-read sections for wrong answers.'
+              :'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-oring">'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+rc+'" stroke-width="7"'
+      +' stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"'
+      +' transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/></svg>';
+
+    var ov = document.getElementById(ID+'-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = ID+'-ov';
+      ov.className = 'qz-ov';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="qz-ob">'
+      +'<button class="qz-ob-back" id="'+ID+'-close">← Back to Quiz</button>'
+      +'<span class="qz-ob-pill">'+ok+'/'+total+' correct &nbsp;·&nbsp; '+pct+'%</span>'
+      +'</div>'
+      +'<div class="qz-oh">'+ring
+      +'<div class="qz-oht"><div class="qz-oscore">'+ok+'<sup>/'+total+'</sup></div>'
+      +'<div class="qz-omsg">'+msg+'</div>'+bdg+'</div></div>'
+      +'<div class="qz-ocards">'+html+'</div>';
+
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(ID+'-close').addEventListener('click', function() {
+      ov.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
+    });
+  }
+
+  refresh();
+})();
+
+
 </script>
 </body></html>
