@@ -259,6 +259,127 @@ td code { font-family: var(--mono); font-size: 11px; color: var(--violet);
   .phase-strip { flex-direction: column; }
   .phase { border-right: none; border-bottom: 1px solid var(--wire); }
 }
+
+/* ═══ QUIZ COMPONENT ═══════════════════════════════════════════ */
+.qz { background:#0d0d1a; border:1px solid #2a2a45; border-radius:14px;
+  margin:52px 0; overflow:hidden; }
+.qz-head { display:flex; align-items:center; gap:14px; padding:18px 24px;
+  background:rgba(255,179,0,.06); border-bottom:1px solid #2a2a45; }
+.qz-icon { font-size:22px; }
+.qz-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  color:#ffb300; letter-spacing:-.3px; }
+.qz-sub { font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:#6b6b95; margin-top:2px; letter-spacing:.5px; }
+.qz-qs { padding:0 24px; display:flex; flex-direction:column; gap:0; }
+.qz-q { padding:28px 0; border-bottom:1px solid #1e1e36; }
+.qz-q:last-child { border-bottom:none; }
+.qz-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  letter-spacing:2px; margin-bottom:8px; }
+.qz-text { font-size:14px; color:#f0f0ff; line-height:1.65; margin-bottom:14px; }
+.qz-text code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.1); padding:1px 6px; border-radius:3px; }
+.qz-opts { display:flex; flex-direction:column; gap:8px; }
+.qz-opt { display:flex; align-items:flex-start; gap:10px; padding:11px 14px;
+  border-radius:8px; border:1px solid #2a2a45; cursor:pointer;
+  font-size:13px; color:#9898be; line-height:1.6;
+  transition:border-color .14s, background .14s, color .14s;
+  user-select:none; }
+.qz-opt:hover { border-color:#353560; background:rgba(255,255,255,.02); color:#c0c0e0; }
+.qz-opt.sel { border-color:#4a4a70; background:rgba(191,90,242,.07); color:#e0e0ff; }
+.qz-ltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1a1a30; color:#6b6b95; transition:all .14s; }
+.qz-opt.sel .qz-ltr { background:rgba(191,90,242,.2); color:#bf5af2; }
+.qz-opt code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-foot { padding:20px 24px; border-top:1px solid #2a2a45;
+  display:flex; align-items:center; justify-content:space-between; }
+.qz-prog { font-family:'JetBrains Mono',monospace; font-size:11px; color:#5a5a82;
+  letter-spacing:.5px; }
+.qz-btn { padding:11px 28px; border-radius:8px; border:1px solid rgba(255,179,0,.3);
+  background:rgba(255,179,0,.08); color:#ffb300;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  letter-spacing:1.5px; cursor:pointer; transition:all .14s; }
+.qz-btn:hover:not(:disabled) { background:rgba(255,179,0,.18); border-color:#ffb300; }
+.qz-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ─── Results overlay ─────────────────────────────────────────── */
+.qz-overlay { position:fixed; inset:0; z-index:9999; background:#070711;
+  overflow-y:auto; display:none; flex-direction:column;
+  font-family:'Instrument Sans',sans-serif; }
+.qz-overlay.open { display:flex; }
+.qz-ob { position:sticky; top:0; height:52px; display:flex;
+  align-items:center; gap:12px; padding:0 24px;
+  background:rgba(7,7,17,.97); border-bottom:1px solid #2a2a45;
+  backdrop-filter:blur(16px); z-index:10; }
+.qz-ob-back { padding:6px 16px; border-radius:6px; border:1px solid #2a2a45;
+  background:none; color:#6b6b95; font-family:'JetBrains Mono',monospace;
+  font-size:11px; cursor:pointer; letter-spacing:.5px; transition:all .14s; }
+.qz-ob-back:hover { border-color:#ffb300; color:#ffb300; }
+.qz-ob-pill { margin-left:auto; padding:4px 14px; border-radius:20px;
+  background:rgba(255,179,0,.08); border:1px solid rgba(255,179,0,.2);
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:#ffb300; }
+.qz-oh { display:flex; align-items:center; gap:32px;
+  padding:40px 48px 32px; border-bottom:1px solid #2a2a45; }
+.qz-ring { flex-shrink:0; }
+.qz-ht { flex:1; }
+.qz-score { font-family:'Syne',sans-serif; font-size:56px; font-weight:800;
+  color:#f0f0ff; letter-spacing:-3px; line-height:1; }
+.qz-score sup { font-size:28px; color:#ffb300; vertical-align:super; letter-spacing:0; }
+.qz-hmsg { font-family:'JetBrains Mono',monospace; font-size:12px; color:#9898be;
+  margin:10px 0 12px; letter-spacing:.3px; line-height:1.7; }
+.qz-badge { display:inline-block; padding:4px 14px; border-radius:4px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; }
+.b-s { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.25); }
+.b-a { background:rgba(0,229,255,.08); color:#00e5ff; border:1px solid rgba(0,229,255,.22); }
+.b-b { background:rgba(255,179,0,.1); color:#ffb300; border:1px solid rgba(255,179,0,.25); }
+.b-c { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.25); }
+.qz-cards { padding:32px 48px 80px; display:flex; flex-direction:column; gap:20px; }
+.qz-card { border:1px solid #2a2a45; border-radius:12px; overflow:hidden; }
+.qz-card.c-ok { border-left:3px solid #69ff47; }
+.qz-card.c-no { border-left:3px solid #ff4d6d; }
+.qz-ch { display:flex; align-items:flex-start; gap:12px; padding:14px 20px;
+  border-bottom:1px solid #1e1e36; background:#0d0d1a; }
+.qz-cnum { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  flex-shrink:0; padding-top:2px; letter-spacing:1.5px; }
+.qz-cq { font-size:13px; color:#f0f0ff; flex:1; line-height:1.6; }
+.qz-cq code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cv { flex-shrink:0; padding:3px 10px; border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; }
+.cv-ok { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.2); }
+.cv-no { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.2); }
+.qz-copts { padding:12px 20px; background:#111128; display:flex;
+  flex-direction:column; gap:7px; }
+.qz-co { display:flex; align-items:flex-start; gap:10px; padding:9px 12px;
+  border-radius:7px; font-size:13px; color:#6b6b95; border:1px solid transparent;
+  line-height:1.6; }
+.qz-co.o-right { border-color:rgba(105,255,71,.3); background:rgba(105,255,71,.05); color:#f0f0ff; }
+.qz-co.o-wrong { border-color:rgba(255,77,109,.3); background:rgba(255,77,109,.06);
+  color:#ff4d6d; text-decoration:line-through; opacity:.8; }
+.qz-co code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1e1e36; color:#5a5a82; }
+.qz-co.o-right .qz-cltr { background:rgba(105,255,71,.18); color:#69ff47; }
+.qz-co.o-wrong .qz-cltr { background:rgba(255,77,109,.14); color:#ff4d6d; }
+.qz-cexp { margin:0 20px 16px; padding:13px 16px; background:#0d0d1a;
+  border:1px solid #2a2a45; border-radius:8px;
+  font-size:13px; color:#9898be; line-height:1.75; }
+.qz-cexp strong { color:#ffb300; }
+.qz-cexp em { color:#c0c0e0; }
+.qz-cexp code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+@media(max-width:720px){
+  .qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px;}
+  .qz-cards{padding:20px 16px 60px;}
+  .qz-score{font-size:44px;}
+}
+/* ═══════════════════════════════════════════════════════════════ */
+
 </style>
 </head>
 <body>
@@ -974,115 +1095,97 @@ td code { font-family: var(--mono); font-size: 11px; color: var(--violet);
 </ul>
 
 <!-- QUIZ -->
-<div class="quiz" id="quiz">
-  <div class="quiz-head">
-    <div class="quiz-head-icon">&#129504;</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
     <div>
-      <div class="quiz-title">Day 14 Quiz</div>
-      <div class="quiz-subtitle">7 questions · sealed-bid auction DApp</div>
+      <div class="qz-title">Day 14 Quiz</div>
+      <div class="qz-sub">7 questions · sealed-bid auction DApp</div>
     </div>
   </div>
-  <div class="quiz-body">
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 01 / 07</div>
-      <div class="q-q">Why is the current highest bidder stored as <code>eaddress</code> rather than a plain <code>address</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To save gas by compressing address storage</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway requires eaddress for its decryption callback</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A plaintext address would allow observers to track which bidder is winning in real time, leaking information about relative bid sizes</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Solidity cannot store addresses in mappings without encryption</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> If the leading bidder were public, observers could infer that anyone who becomes the leader must have bid higher than the previous leader. Over multiple bids, this leaks comparative information. Encrypting the leader keeps the field entirely private until the reveal.</div>
+  <div class="qz-qs">
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 01 / 07</div>
+      <div class="qz-text">Why is the current highest bidder stored as <code>eaddress</code> rather than a plain <code>address</code>?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>To save gas by compressing address storage</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The Gateway requires eaddress for its decryption callback</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>A plaintext address would allow observers to track which bidder is winning in real time, leaking information about relative bid sizes</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Solidity cannot store addresses in mappings without encryption</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> If the leading bidder were public, observers could infer that anyone who becomes the leader must have bid higher than the previous leader. Over multiple bids, this leaks comparative information. Encrypting the leader keeps the field entirely private until the reveal.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 02 / 07</div>
-      <div class="q-q">In <code>placeBid</code>, why must you use <code>TFHE.select(isHigher, bid, _highestBid)</code> to update the maximum, instead of <code>if (TFHE.decrypt(isHigher)) { _highestBid = bid; }</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>TFHE.decrypt is not available in Solidity</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Decrypting inside placeBid would reveal whether the new bid is higher, breaking bid privacy for every transaction</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>TFHE.select is cheaper in gas</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The if-statement would revert on an ebool</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Decrypting inside <code>placeBid</code> would leak whether the new bid beat the previous maximum — revealing comparative information to anyone watching the transaction outcome. <code>TFHE.select</code> performs the update homomorphically, keeping both bids secret throughout.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 02 / 07</div>
+      <div class="qz-text">In <code>placeBid</code>, why must you use <code>TFHE.select(isHigher, bid, _highestBid)</code> to update the maximum, instead of <code>if (TFHE.decrypt(isHigher)) { _highestBid = bid; }</code>?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>TFHE.decrypt is not available in Solidity</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Decrypting inside placeBid would reveal whether the new bid is higher, breaking bid privacy for every transaction</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>TFHE.select is cheaper in gas</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The if-statement would revert on an ebool</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Decrypting inside <code>placeBid</code> would leak whether the new bid beat the previous maximum — revealing comparative information to anyone watching the transaction outcome. <code>TFHE.select</code> performs the update homomorphically, keeping both bids secret throughout.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 03 / 07</div>
-      <div class="q-q">The <code>endAuction</code> function requests decryption of <em>two</em> handles: <code>_highestBid</code> and <code>_highestBidder</code>. What must the callback signature look like?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>revealCallback(uint256 requestId)</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>revealCallback(uint64 amount, address winner)</code></div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>revealCallback(uint256 requestId, bytes[] results)</code></div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>revealCallback(uint256 requestId, uint64 winningBid, address winningBidder)</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> The callback receives: (1) requestId first, (2) plaintext values in the same order as the handles array. Handle 0 was <code>_highestBid</code> (euint64 → uint64), handle 1 was <code>_highestBidder</code> (eaddress → address). So: <code>revealCallback(uint256, uint64, address)</code>.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 03 / 07</div>
+      <div class="qz-text">The <code>endAuction</code> function requests decryption of <em>two</em> handles: <code>_highestBid</code> and <code>_highestBidder</code>. What must the callback signature look like?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>revealCallback(uint256 requestId)</code></div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>revealCallback(uint64 amount, address winner)</code></div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>revealCallback(uint256 requestId, bytes[] results)</code></div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>revealCallback(uint256 requestId, uint64 winningBid, address winningBidder)</code></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> The callback receives: (1) requestId first, (2) plaintext values in the same order as the handles array. Handle 0 was <code>_highestBid</code> (euint64 → uint64), handle 1 was <code>_highestBidder</code> (eaddress → address). So: <code>revealCallback(uint256, uint64, address)</code>.</div>
     </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 04 / 07</div>
-      <div class="q-q">In the frontend <code>usePlaceBid</code> hook, why is <code>value: amountWei</code> passed alongside the encrypted bid?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The ETH is the actual payment deposited so losers can claim a refund later — the encrypted bid amount determines who wins, but the ETH value is what gets held in escrow</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The FHEVM node charges ETH for encryption</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Without value, the ZK proof fails</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It is required by the Gateway for decryption fees</div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> The encrypted bid value determines who wins (via homomorphic comparison). The ETH deposit is a separate mechanism: the contract holds it on behalf of the bidder, and losers can call <code>claimRefund</code> to get it back after the reveal.</div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-num">QUESTION 04 / 07</div>
+      <div class="qz-text">In the frontend <code>usePlaceBid</code> hook, why is <code>value: amountWei</code> passed alongside the encrypted bid?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>The ETH is the actual payment deposited so losers can claim a refund later — the encrypted bid amount determines who wins, but the ETH value is what gets held in escrow</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The FHEVM node charges ETH for encryption</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Without value, the ZK proof fails</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It is required by the Gateway for decryption fees</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> The encrypted bid value determines who wins (via homomorphic comparison). The ETH deposit is a separate mechanism: the contract holds it on behalf of the bidder, and losers can call <code>claimRefund</code> to get it back after the reveal.</div>
     </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 05 / 07</div>
-      <div class="q-q">Which privacy guarantee does this sealed-bid auction <strong>NOT</strong> provide?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Losing bid amounts are never revealed</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The running leader is hidden during bidding</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The fact that an address participated is hidden</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Individual bid values are hidden during bidding</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> The <code>BidPlaced(address indexed bidder)</code> event reveals that an address participated. On-chain, anyone can see which addresses called <code>placeBid</code> and the transaction count. Participation metadata is inherently public in this design.</div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 05 / 07</div>
+      <div class="qz-text">Which privacy guarantee does this sealed-bid auction <strong>NOT</strong> provide?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Losing bid amounts are never revealed</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>The running leader is hidden during bidding</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The fact that an address participated is hidden</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Individual bid values are hidden during bidding</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> The <code>BidPlaced(address indexed bidder)</code> event reveals that an address participated. On-chain, anyone can see which addresses called <code>placeBid</code> and the transaction count. Participation metadata is inherently public in this design.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 06 / 07</div>
-      <div class="q-q">What is the correct order of operations when a bidder submits a bid from the frontend?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Send tx → wait for confirmation → encrypt the amount client-side → include in next tx</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Encrypt amount + generate ZK proof in browser → send tx with <code>(handles[0], inputProof)</code> as args → await tx confirmation</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Request encryption from the FHEVM node → node returns ciphertext → include in tx</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Sign the amount with EIP-712 → send to the Gateway → Gateway encrypts and forwards to contract</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> All encryption happens client-side using fhevmjs before the transaction is sent. The browser generates both the ciphertext (handles[0]) and the ZK proof (inputProof). The transaction carries both as calldata. No additional round-trips to any server are needed.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 06 / 07</div>
+      <div class="qz-text">What is the correct order of operations when a bidder submits a bid from the frontend?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Send tx → wait for confirmation → encrypt the amount client-side → include in next tx</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Encrypt amount + generate ZK proof in browser → send tx with <code>(handles[0], inputProof)</code> as args → await tx confirmation</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Request encryption from the FHEVM node → node returns ciphertext → include in tx</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Sign the amount with EIP-712 → send to the Gateway → Gateway encrypts and forwards to contract</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> All encryption happens client-side using fhevmjs before the transaction is sent. The browser generates both the ciphertext (handles[0]) and the ZK proof (inputProof). The transaction carries both as calldata. No additional round-trips to any server are needed.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 07 / 07</div>
-      <div class="q-q">After <code>endAuction()</code> is called, the UI should show "waiting for reveal." How should the frontend know when the reveal is complete?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Poll <code>auction.phase()</code> every 500 ms</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Wait a fixed 10 seconds — the KMS always responds within this time</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Check the Gateway contract for a <code>DecryptionFulfilled</code> event</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Subscribe to the <code>WinnerRevealed</code> event on the auction contract using <code>watchContractEvent</code> before calling endAuction</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> Subscribe to the event <em>before</em> sending the endAuction transaction to avoid race conditions. When the Gateway callback executes, your contract emits <code>WinnerRevealed</code>, the wagmi listener fires, and you update the UI — no polling required.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 07 / 07</div>
+      <div class="qz-text">After <code>endAuction()</code> is called, the UI should show "waiting for reveal." How should the frontend know when the reveal is complete?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Poll <code>auction.phase()</code> every 500 ms</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Wait a fixed 10 seconds — the KMS always responds within this time</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Check the Gateway contract for a <code>DecryptionFulfilled</code> event</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Subscribe to the <code>WinnerRevealed</code> event on the auction contract using <code>watchContractEvent</code> before calling endAuction</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> Subscribe to the event <em>before</em> sending the endAuction transaction to avoid race conditions. When the Gateway callback executes, your contract emits <code>WinnerRevealed</code>, the wagmi listener fires, and you update the UI — no polling required.</div>
     </div>
-
   </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/7</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="Day14-quiz-prog">0 / 7 answered</span>
+    <button class="qz-btn" id="Day14-quiz-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
 <!-- PAGE NAV -->
 <div class="pnav">
-  <a href="day13.html">&#8592; Day 13 — Cross-Contract Patterns</a>
-  <a class="next" href="day15.html">Day 15 — Week 3 Capstone &#8594;</a>
+  <a href="Day13.html">&#8592; Day 13 — Cross-Contract Patterns</a>
+  <a class="next" href="Day15.html">Day 15 — Week 3 Capstone &#8594;</a>
 </div>
 
 </main>
@@ -1119,50 +1222,168 @@ sbLinks.forEach(l => l.addEventListener('click', () => {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }));
 
-const TOTAL = 7;
-document.querySelectorAll('.q-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const q = opt.closest('.q');
-    if (q.dataset.done) return;
-    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
-    opt.classList.add('picked');
-    const done = document.querySelectorAll('.q-opt.picked').length;
-    document.getElementById('qsub').disabled = done < TOTAL;
-  });
-});
+// ═══ Quiz: Day14 ════════════════════════════════════════════════
+(function() {
+  var QUIZ_ID = 'Day14-quiz';
 
-function gradeQuiz() {
-  let correct = 0;
-  document.querySelectorAll('.q').forEach(q => {
-    q.dataset.done = '1';
-    const picked = q.querySelector('.q-opt.picked');
-    const ans    = q.dataset.ans;
-    q.querySelectorAll('.q-opt').forEach(o => {
-      if (o.dataset.v === ans) o.classList.add('right');
-      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+  // Wire up option clicks
+  var opts = document.querySelectorAll('.qz-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].addEventListener('click', handleOptClick);
+  }
+
+  function handleOptClick() {
+    var q = this.closest('.qz-q');
+    if (!q) return;
+    // deselect siblings
+    var siblings = q.querySelectorAll('.qz-opt');
+    for (var j = 0; j < siblings.length; j++) {
+      siblings[j].classList.remove('sel');
+      siblings[j].querySelector('.qz-ltr').style.background = '';
+      siblings[j].querySelector('.qz-ltr').style.color = '';
+    }
+    // select this one
+    this.classList.add('sel');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var total   = document.querySelectorAll('.qz-q').length;
+    var picked  = document.querySelectorAll('.qz-q .qz-opt.sel').length;
+    var btn     = document.getElementById(QUIZ_ID + '-btn');
+    var prog    = document.getElementById(QUIZ_ID + '-prog');
+    if (btn)  btn.disabled = (picked < total);
+    if (prog) prog.textContent = picked + ' / ' + total + ' answered';
+  }
+
+  // Submit
+  var btn = document.getElementById(QUIZ_ID + '-btn');
+  if (btn) btn.addEventListener('click', function() {
+    if (this.disabled) return;
+    showResults();
+  });
+
+  function showResults() {
+    var qs = document.querySelectorAll('.qz-q');
+    var correct = 0;
+    var cards = '';
+
+    for (var i = 0; i < qs.length; i++) {
+      var q       = qs[i];
+      var ans     = q.getAttribute('data-ans');
+      var sel     = q.querySelector('.qz-opt.sel');
+      var selV    = sel ? sel.getAttribute('data-v') : null;
+      var isRight = selV === ans;
+      if (isRight) correct++;
+
+      // question text
+      var qEl   = q.querySelector('.qz-text');
+      var qText = qEl ? qEl.innerHTML : '';
+
+      // explanation
+      var expEl = q.querySelector('.qz-exp');
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      // build option rows
+      var optRows = '';
+      var optEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < optEls.length; j++) {
+        var o    = optEls[j];
+        var v    = o.getAttribute('data-v');
+        var ltr  = o.querySelector('.qz-ltr');
+        var ltrT = ltr ? ltr.textContent : v;
+        // get option text (everything except the .qz-ltr span)
+        var oClone = o.cloneNode(true);
+        var ltrEl = oClone.querySelector('.qz-ltr');
+        if (ltrEl) ltrEl.parentNode.removeChild(ltrEl);
+        var oText = oClone.innerHTML.trim();
+
+        var cls = '';
+        if (v === ans) cls = 'o-right';
+        else if (v === selV) cls = 'o-wrong';
+
+        optRows += '<div class="qz-co ' + cls + '">'
+          + '<span class="qz-cltr">' + ltrT + '</span>'
+          + oText
+          + '</div>';
+      }
+
+      cards += '<div class="qz-card ' + (isRight ? 'c-ok' : 'c-no') + '">'
+        + '<div class="qz-ch">'
+        +   '<span class="qz-cnum">Q' + (i + 1) + '</span>'
+        +   '<div class="qz-cq">' + qText + '</div>'
+        +   '<span class="qz-cv ' + (isRight ? 'cv-ok' : 'cv-no') + '">' + (isRight ? '✓ Correct' : '✗ Wrong') + '</span>'
+        + '</div>'
+        + '<div class="qz-copts">' + optRows + '</div>'
+        + (exp ? '<div class="qz-cexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var total  = qs.length;
+    var pct    = Math.round(correct / total * 100);
+    var circ   = 251.3;
+    var offset = circ - (pct / 100) * circ;
+
+    var ringC = pct === 100 ? '#69ff47' : pct >= 80 ? '#00e5ff' : pct >= 60 ? '#ffb300' : '#ff4d6d';
+    var badge = pct === 100 ? '<span class="qz-badge b-s">🏆 Perfect Score</span>'
+              : pct >= 80   ? '<span class="qz-badge b-a">✓ Excellent</span>'
+              : pct >= 60   ? '<span class="qz-badge b-b">~ Needs Review</span>'
+              :               '<span class="qz-badge b-c">↺ Try Again</span>';
+    var hmsg  = pct === 100 ? 'Every concept nailed. Outstanding.'
+              : pct >= 80   ? 'Strong understanding. Check flagged questions.'
+              : pct >= 60   ? 'Good base. Re-read sections for wrong answers.'
+              :               'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-ring">'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="' + ringC + '" stroke-width="7"'
+      +   ' stroke-linecap="round"'
+      +   ' stroke-dasharray="' + circ + '"'
+      +   ' stroke-dashoffset="' + offset + '"'
+      +   ' transform="rotate(-90 50 50)"'
+      +   ' style="transition:stroke-dashoffset 1s ease"/>'
+      + '</svg>';
+
+    var overlayHTML =
+        '<div class="qz-ob">'
+      +   '<button class="qz-ob-back" id="' + QUIZ_ID + '-close">← Back to Quiz</button>'
+      +   '<span class="qz-ob-pill">' + correct + '/' + total + ' correct &nbsp;·&nbsp; ' + pct + '%</span>'
+      + '</div>'
+      + '<div class="qz-oh">'
+      +   ring
+      +   '<div class="qz-ht">'
+      +     '<div class="qz-score">' + correct + '<sup>/' + total + '</sup></div>'
+      +     '<div class="qz-hmsg">' + hmsg + '</div>'
+      +     badge
+      +   '</div>'
+      + '</div>'
+      + '<div class="qz-cards">' + cards + '</div>';
+
+    var overlay = document.getElementById(QUIZ_ID + '-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = QUIZ_ID + '-overlay';
+      overlay.className = 'qz-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = overlayHTML;
+    overlay.classList.add('open');
+    overlay.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    // wire close button
+    var closeBtn = document.getElementById(QUIZ_ID + '-close');
+    if (closeBtn) closeBtn.addEventListener('click', function() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
     });
-    if (picked && picked.dataset.v === ans) correct++;
-    const exp = q.querySelector('.q-exp');
-    if (exp) exp.classList.add('show');
-  });
-  const pct = Math.round(correct / TOTAL * 100);
-  document.getElementById('snum').textContent = correct + '/' + TOTAL;
-  document.getElementById('smsg').textContent =
-    pct === 100 ? 'Perfect! Ready for the Week 3 Capstone.' :
-    pct >= 85   ? 'Excellent — strong DApp fundamentals.'   :
-    pct >= 57   ? 'Good — review the callback and bid patterns.' :
-                  'Re-read the contract section.';
-  document.getElementById('qscore').classList.add('show');
-  document.getElementById('qsub').disabled = true;
-}
+  }
 
-function copyCode(btn) {
-  const pre = btn.closest('.code').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(() => {
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY', 1800);
-  });
-}
+  updateProgress();
+})();
+
 </script>
 </body>
 </html>
