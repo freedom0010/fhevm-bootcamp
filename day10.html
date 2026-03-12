@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 10 — Testing &amp; Debugging | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#070a0f;--ink2:#0c1018;--ink3:#111820;--plate:#161f28;--wire:#222d38;--wire2:#2e3d4c;--acc:#34d399;--acc2:#10b981;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--purple:#c084fc;--sky:#60a5fa;--dim:#5a7060;--mid:#88a898;--bright:#d0e8d8;--white:#eafaf0;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--sky));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,10,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-sep{color:var(--wire2)}.tb-cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:218px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(52,211,153,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:920px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.16);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:2px 6px;border-radius:3px}
+.code{background:#030608;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.82;color:#c0d8c8;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#4a6050;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}.e{color:#ff5555}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(52,211,153,.05);border-color:var(--acc)}.tip .box-title{color:var(--acc)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(96,165,250,.05);border-color:var(--sky)}.info .box-title{color:var(--sky)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(52,211,153,.07);padding:1px 5px;border-radius:3px}
+td.ok{color:var(--green)!important}td.bad{color:var(--rose)!important}
+.errbox{background:#0a0505;border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:16px 18px;margin:14px 0;font-family:var(--mono);font-size:12px;line-height:1.76;overflow-x:auto}
+.errbox .e{color:#ff6b6b}.errbox .a{color:#50fa7b}.errbox .c{color:#4a5060;font-style:italic}
+.fix-block{background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.15);border-radius:8px;padding:16px 18px;margin:14px 0}
+.fix-label{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.card{background:var(--ink2);border:1px solid var(--wire);border-radius:10px;padding:18px 20px}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.card p,.card li{font-size:13px;margin-bottom:7px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(52,211,153,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(52,211,153,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.22);color:var(--acc)}.pnav .next:hover{background:rgba(52,211,153,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="tb-cur">Week 2</span><span class="tb-sep">/</span><span class="tb-cur">Day 10</span></div>
+  <div class="tb-badge">Week 2 — Applied Patterns</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="hardhat-setup">Hardhat FHE Setup</a>
+  <a class="sb-a sub" data-id="mock-mode">Mock vs Real FHE</a>
+  <a class="sb-a sub" data-id="config">hardhat.config.ts</a>
+  <a class="sb-a" data-id="test-helpers">Test Helpers Library</a>
+  <a class="sb-a sub" data-id="instance-mgmt">Instance Management</a>
+  <a class="sb-a sub" data-id="encrypt-helpers">Encrypt Helpers</a>
+  <a class="sb-a sub" data-id="decrypt-helpers">Decrypt Helpers</a>
+  <a class="sb-a" data-id="common-errors">Common Errors</a>
+  <a class="sb-a sub" data-id="acl-errors">ACL Errors</a>
+  <a class="sb-a sub" data-id="proof-errors">Proof Errors</a>
+  <a class="sb-a sub" data-id="gateway-errors">Gateway Errors</a>
+  <a class="sb-a" data-id="debug-patterns">Debug Patterns</a>
+  <a class="sb-a sub" data-id="handle-inspect">Inspect Handles</a>
+  <a class="sb-a sub" data-id="event-trace">Event Tracing</a>
+  <a class="sb-a sub" data-id="gas-profile">Gas Profiling</a>
+  <a class="sb-a" data-id="test-structure">Test Structure</a>
+  <a class="sb-a sub" data-id="unit-tests">Unit Tests</a>
+  <a class="sb-a sub" data-id="integration">Integration Tests</a>
+  <a class="sb-a sub" data-id="invariants">Invariant Tests</a>
+  <a class="sb-a" data-id="ci">CI Pipeline</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128300; Day 10 of 20</div>
+  <h1>Testing &amp;<br><em>Debugging FHEVM</em></h1>
+  <p class="lead">FHEVM contracts have a unique failure mode: silent bugs. A missing <code>allowThis()</code> doesn't fail on deployment — it fails silently the next time you try to use the handle. Today you build a comprehensive test harness, a helper library, and a systematic debugging approach to catch every class of FHEVM bug before production.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#128300; Debug techniques</div>
+    <div class="stat">&#128196; Full test harness</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="hardhat-setup">Hardhat FHE Test Environment</h2>
+<h3 class="sub" id="mock-mode">Mock Mode vs. Real FHE Mode</h3>
+<p>The FHEVM Hardhat plugin provides two execution modes for tests. Understanding the difference is critical for test design:</p>
+<div class="tw"><table>
+  <thead><tr><th>Feature</th><th>Mock Mode (<code>HARDHAT_FHEVM_MOCK=true</code>)</th><th>Real FHE Mode (local node)</th></tr></thead>
+  <tbody>
+    <tr><td>FHE operations</td><td>Plaintext arithmetic — no actual encryption</td><td>Full BFV/TFHE encryption on coprocessor</td></tr>
+    <tr><td>Test speed</td><td class="ok">~10× faster — no cryptographic overhead</td><td>Normal contract speed + ~2s coprocessor delay</td></tr>
+    <tr><td>Gateway callbacks</td><td class="ok">Immediate — mock fires callback inline</td><td>~2 second async delay</td></tr>
+    <tr><td>ZK proof validation</td><td class="bad">Skipped — fromExternal() always succeeds</td><td>Full proof verification</td></tr>
+    <tr><td>ACL enforcement</td><td class="ok">Enforced — ACL checks still apply</td><td>Enforced</td></tr>
+    <tr><td>Best for</td><td>Logic bugs, ACL bugs, unit tests</td><td>Integration tests, proof validation, gas measurement</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">Always Test in Both Modes</div>
+    <div class="box-text">Mock mode skips ZK proof verification — so a broken proof will pass in mock but fail in production. Your CI pipeline should run the full test suite in both modes. Use mock mode for fast iteration and real-FHE mode for pre-deployment validation.</div>
+  </div>
+</div>
+
+<h3 class="sub" id="config">hardhat.config.ts for Testing</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">hardhat.config.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { HardhatUserConfig } <span class="k">from</span> <span class="s">"hardhat/config"</span>;
+<span class="k">import</span> <span class="s">"@nomicfoundation/hardhat-toolbox"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/hardhat-plugin"</span>;   <span class="c">// FHEVM Hardhat integration</span>
+
+<span class="k">const</span> config: HardhatUserConfig = {
+  solidity: {
+    version: <span class="s">"0.8.24"</span>,
+    settings: {
+      optimizer: { enabled: <span class="k">true</span>, runs: <span class="n">200</span> },
+      viaIR: <span class="k">true</span>   <span class="c">// required for some FHEVM contracts</span>
+    }
+  },
+  networks: {
+    <span class="c">// Local mock — fastest, runs inline</span>
+    hardhat: {
+      chainId: <span class="n">31337</span>,
+      fhevm: {
+        mode: process.env.HARDHAT_FHEVM_MOCK === <span class="s">"true"</span> ? <span class="s">"mock"</span> : <span class="s">"local"</span>,
+        gatewayUrl: <span class="s">"http://localhost:7077"</span>,
+      }
+    },
+    <span class="c">// Zama Devnet for integration testing</span>
+    devnet: {
+      url: <span class="s">"https://devnet.zama.ai"</span>,
+      chainId: <span class="n">9000</span>,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      fhevm: { mode: <span class="s">"devnet"</span> }
+    }
+  },
+  mocha: {
+    timeout: <span class="n">120000</span>  <span class="c">// 2 min timeout — real FHE ops can be slow</span>
+  }
+};
+
+<span class="k">export default</span> config;</pre>
+</div>
+
+<h2 class="sec" id="test-helpers">The fhevm-test-helpers Library</h2>
+<p>Build this helper module once and import it in every test file. It standardizes the repetitive setup — instance creation, encryption, re-encryption, and decryption — so your test bodies stay focused on logic.</p>
+
+<h3 class="sub" id="instance-mgmt">Instance Management</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/helpers/fhevm.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { createFhevmInstance, FhevmInstance } <span class="k">from</span> <span class="s">"fhevmjs"</span>;
+
+<span class="c">// Singleton — one instance per test run (expensive to create)</span>
+<span class="k">let</span> _instance: FhevmInstance | <span class="k">null</span> = <span class="k">null</span>;
+
+<span class="k">export async function</span> <span class="f">getInstance</span>(): <span class="t">Promise</span>&lt;FhevmInstance&gt; {
+  <span class="k">if</span> (_instance) <span class="k">return</span> _instance;
+
+  <span class="k">const</span> provider = ethers.provider;
+  <span class="k">const</span> network  = <span class="k">await</span> provider.<span class="f">getNetwork</span>();
+
+  _instance = <span class="k">await</span> <span class="f">createFhevmInstance</span>({
+    chainId:    network.chainId,
+    networkUrl: provider._getConnection().url,
+    gatewayUrl: process.env.GATEWAY_URL || <span class="s">"http://localhost:7077"</span>,
+    aclAddress: process.env.ACL_ADDRESS  || <span class="s">"0x339EcE85B9E11a3A3AA557582784a15d7F82AAf2"</span>,
+  });
+
+  <span class="k">return</span> _instance;
+}
+
+<span class="c">// Reset between test suites if needed</span>
+<span class="k">export function</span> <span class="f">resetInstance</span>(): <span class="k">void</span> { _instance = <span class="k">null</span>; }</pre>
+</div>
+
+<h3 class="sub" id="encrypt-helpers">Encrypt Helpers — All Types</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/helpers/encrypt.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { <span class="f">getInstance</span> } <span class="k">from</span> <span class="s">"./fhevm"</span>;
+
+<span class="k">export interface</span> EncryptedInput {
+  handles:    <span class="t">Uint8Array</span>[];
+  inputProof: <span class="t">Uint8Array</span>;
+}
+
+<span class="c">/**
+ * Generic encrypted input helper.
+ * contractAddress — the contract that will call fromExternal()
+ * userAddress     — the msg.sender that will call the function
+ */</span>
+<span class="k">async function</span> <span class="f">encryptValue</span>(
+  value:           <span class="t">number</span> | <span class="t">bigint</span> | <span class="t">boolean</span>,
+  type:            <span class="s">"bool"</span> | <span class="s">"8"</span> | <span class="s">"16"</span> | <span class="s">"32"</span> | <span class="s">"64"</span> | <span class="s">"128"</span>,
+  contractAddress: <span class="t">string</span>,
+  userAddress:     <span class="t">string</span>
+): <span class="t">Promise</span>&lt;EncryptedInput&gt; {
+  <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getInstance</span>();
+  <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(contractAddress, userAddress);
+
+  <span class="k">switch</span> (type) {
+    <span class="k">case</span> <span class="s">"bool"</span>: input.<span class="f">addBool</span>(<span class="k">value as</span> <span class="t">boolean</span>); <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">"8"</span>:    input.<span class="f">add8</span>(<span class="n">Number</span>(value));        <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">"16"</span>:   input.<span class="f">add16</span>(<span class="n">Number</span>(value));       <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">"32"</span>:   input.<span class="f">add32</span>(<span class="n">Number</span>(value));       <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">"64"</span>:   input.<span class="f">add64</span>(<span class="k">BigInt</span>(value));       <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">"128"</span>:  input.<span class="f">add128</span>(<span class="k">BigInt</span>(value));      <span class="k">break</span>;
+  }
+
+  <span class="k">const</span> encrypted = <span class="k">await</span> input.<span class="f">encrypt</span>();
+  <span class="k">return</span> { handles: encrypted.handles, inputProof: encrypted.inputProof };
+}
+
+<span class="c">// Typed convenience wrappers</span>
+<span class="k">export const</span> <span class="f">encBool</span>   = (v: <span class="t">boolean</span>, c: <span class="t">string</span>, u: <span class="t">string</span>) => <span class="f">encryptValue</span>(v, <span class="s">"bool"</span>, c, u);
+<span class="k">export const</span> <span class="f">encUint8</span>  = (v: <span class="t">number</span>,  c: <span class="t">string</span>, u: <span class="t">string</span>) => <span class="f">encryptValue</span>(v, <span class="s">"8"</span>,    c, u);
+<span class="k">export const</span> <span class="f">encUint16</span> = (v: <span class="t">number</span>,  c: <span class="t">string</span>, u: <span class="t">string</span>) => <span class="f">encryptValue</span>(v, <span class="s">"16"</span>,   c, u);
+<span class="k">export const</span> <span class="f">encUint32</span> = (v: <span class="t">number</span>,  c: <span class="t">string</span>, u: <span class="t">string</span>) => <span class="f">encryptValue</span>(v, <span class="s">"32"</span>,   c, u);
+<span class="k">export const</span> <span class="f">encUint64</span> = (v: <span class="t">bigint</span>,  c: <span class="t">string</span>, u: <span class="t">string</span>) => <span class="f">encryptValue</span>(v, <span class="s">"64"</span>,   c, u);</pre>
+</div>
+
+<h3 class="sub" id="decrypt-helpers">Decrypt Helpers — Re-encryption Flow</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/helpers/decrypt.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { <span class="f">getInstance</span> } <span class="k">from</span> <span class="s">"./fhevm"</span>;
+
+<span class="c">/**
+ * Full re-encryption + local decryption flow.
+ * Returns the plaintext value as bigint.
+ *
+ * @param handle          The euint/ebool handle returned by the contract
+ * @param contractAddress Address of the contract that owns the handle
+ * @param signer          The authorized signer (must have ACL grant for handle)
+ */</span>
+<span class="k">export async function</span> <span class="f">decryptHandle</span>(
+  handle:          <span class="t">bigint</span>,
+  contractAddress: <span class="t">string</span>,
+  signer:          <span class="k">any</span>
+): <span class="t">Promise</span>&lt;<span class="t">bigint</span>&gt; {
+  <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getInstance</span>();
+
+  <span class="c">// Generate fresh ephemeral keypair for this decryption request</span>
+  <span class="k">const</span> { publicKey, privateKey } = instance.<span class="f">generateKeypair</span>();
+
+  <span class="c">// Create EIP-712 typed data for the KMS re-encryption request</span>
+  <span class="k">const</span> eip712  = instance.<span class="f">createEIP712</span>(publicKey, contractAddress);
+  <span class="k">const</span> sig     = <span class="k">await</span> signer.<span class="f">signTypedData</span>(
+    eip712.domain, eip712.types, eip712.message
+  );
+
+  <span class="c">// Request re-encryption from KMS (or mock in test mode)</span>
+  <span class="k">const</span> reencrypted = <span class="k">await</span> instance.<span class="f">reencrypt</span>(
+    handle,
+    privateKey,
+    publicKey,
+    sig,
+    contractAddress,
+    signer.address
+  );
+
+  <span class="c">// Decrypt locally with our private key — plaintext never hits the network</span>
+  <span class="k">return</span> instance.<span class="f">decrypt</span>(contractAddress, reencrypted);
+}
+
+<span class="c">// Shortcut for boolean handles</span>
+<span class="k">export async function</span> <span class="f">decryptBool</span>(
+  handle: <span class="t">bigint</span>, contractAddress: <span class="t">string</span>, signer: <span class="k">any</span>
+): <span class="t">Promise</span>&lt;<span class="t">boolean</span>&gt; {
+  <span class="k">return</span> (<span class="k">await</span> <span class="f">decryptHandle</span>(handle, contractAddress, signer)) !== <span class="n">0n</span>;
+}</pre>
+</div>
+
+<h2 class="sec" id="common-errors">Common FHEVM Errors &amp; Fixes</h2>
+<p>FHEVM contracts fail in predictable ways. This reference covers every error class you'll encounter, with the exact error message, root cause, and fix.</p>
+
+<h3 class="sub" id="acl-errors">ACL Errors</h3>
+
+<div class="box alert">
+  <span class="box-ico">&#128274;</span>
+  <div class="box-inner">
+    <div class="box-title">Error Class 1 — ACL Not Authorized</div>
+    <div class="box-text">Triggered when a contract or address tries to use a ciphertext handle it was never granted access to.</div>
+  </div>
+</div>
+
+<div class="errbox">
+<span class="e">Error: VM Exception while processing transaction: reverted with reason string</span>
+<span class="e">'ACL: sender is not allowed'</span>
+<span class="c">-- or --</span>
+<span class="e">'FHEExecutor: ciphertext is not authorized for this operation'</span>
+</div>
+
+<div class="tw"><table>
+  <thead><tr><th>Scenario</th><th>Root Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>Second transaction fails after first worked</td><td><code>allowThis()</code> missing after FHE op. New handle has zero grants.</td><td>Add <code>FHE.allowThis(newHandle)</code> after every op that creates a new handle.</td></tr>
+    <tr><td>Cross-contract call fails</td><td>Calling contract never received <code>allowTransient()</code> before being called.</td><td>Add <code>FHE.allowTransient(handle, contractB)</code> before calling ContractB.</td></tr>
+    <tr><td>View function fails for authorized user</td><td><code>FHE.allow(handle, user)</code> was not called after the last write that created a new handle.</td><td>After every storage write that updates an encrypted var, re-grant all viewers.</td></tr>
+    <tr><td>Constructor initializes fine; first call fails</td><td>Constructor granted <code>allowThis()</code> on the initial handle, but the first transaction's new handle was never granted.</td><td>Ensure every write path (not just constructor) calls <code>allowThis()</code>.</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="proof-errors">Input Proof Errors</h3>
+<div class="errbox">
+<span class="e">Error: VM Exception: reverted with reason string 'KMSVerifier: invalid proof'</span>
+<span class="c">-- or --</span>
+<span class="e">'FHE.fromExternal: ZK proof does not match contract + caller'</span>
+</div>
+
+<div class="tw"><table>
+  <thead><tr><th>Scenario</th><th>Root Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>Proof works in one test, fails in another</td><td>Proof was generated for a different <code>contractAddress</code> or <code>userAddress</code>. ZK proof is bound to both.</td><td>Always pass the exact contract address and caller address to <code>createEncryptedInput(contractAddr, callerAddr)</code>.</td></tr>
+    <tr><td>Proof fails after contract redeployment</td><td>Contract address changed. Old proof is bound to old address.</td><td>Re-encrypt after every deployment. Never cache encrypted inputs across deployments.</td></tr>
+    <tr><td>Proxy contract fails even with correct addresses</td><td>Proof is bound to proxy address, but <code>msg.sender</code> context changes through delegatecall.</td><td>Use the implementation address in <code>createEncryptedInput()</code>, or design proxy to preserve msg.sender context.</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="gateway-errors">Gateway &amp; Callback Errors</h3>
+<div class="errbox">
+<span class="e">Error: Gateway callback never fired — requestDecryption() returned but callback was not called</span>
+<span class="c">-- or --</span>
+<span class="e">Error: 'GatewayCaller: onlyGateway — sender is not the Gateway'</span>
+<span class="c">-- or --</span>
+<span class="e">Error: 'FHE.makePubliclyDecryptable must be called before requestDecryption'</span>
+</div>
+
+<div class="tw"><table>
+  <thead><tr><th>Scenario</th><th>Root Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>Callback never fires in production</td><td><code>makePubliclyDecryptable()</code> not called before <code>Gateway.requestDecryption()</code>.</td><td>Always call <code>FHE.makePubliclyDecryptable(handle)</code> for every handle being decrypted publicly.</td></tr>
+    <tr><td>Fake callback injection attack surface</td><td>Callback lacks <code>onlyGateway</code> modifier — any address can call it.</td><td>Always add <code>onlyGateway</code> to every Gateway callback function.</td></tr>
+    <tr><td>Callback fires but state not updated</td><td>Request ID not stored — callback can't look up which proposal/auction to update.</td><td>Store <code>requestId → entityId</code> mapping in <code>requestDecryption()</code> and look it up in the callback.</td></tr>
+    <tr><td>Test passes in mock, fails on devnet</td><td>Mock fires callback synchronously. Real Gateway is async (~2s). Test doesn't wait.</td><td>In real-FHE tests, wait for the <code>ResultRevealed</code> event with a timeout: <code>await contract.once("ResultRevealed", resolve)</code>.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="debug-patterns">Debug Patterns</h2>
+
+<h3 class="sub" id="handle-inspect">Inspecting Handles</h3>
+<p>A handle is just a <code>bytes32</code> value on-chain. In tests, you can read handles and inspect their metadata using the FHEVM SDK debug utilities:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">Handle inspection in tests</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { <span class="f">getInstance</span> } <span class="k">from</span> <span class="s">"./helpers/fhevm"</span>;
+
+<span class="c">// In test body:</span>
+<span class="k">const</span> instance = <span class="k">await</span> <span class="f">getInstance</span>();
+
+<span class="c">// Get the raw handle bytes32 from contract storage</span>
+<span class="k">const</span> handleRaw: bigint = <span class="k">await</span> contract.<span class="f">getCount</span>();
+
+<span class="c">// Decode handle metadata (available in local/mock mode)</span>
+<span class="k">if</span> (process.env.HARDHAT_FHEVM_MOCK === <span class="s">"true"</span>) {
+  <span class="c">// In mock mode, the "handle" actually encodes the plaintext value
+  // You can read it directly without re-encryption:</span>
+  <span class="k">const</span> plaintext = <span class="k">await</span> instance.<span class="f">decryptMock</span>(handleRaw);
+  console.<span class="f">log</span>(<span class="s">"Mock plaintext:"</span>, plaintext);
+}
+
+<span class="c">// Check if a handle is zero (uninitialized)</span>
+<span class="k">function</span> <span class="f">isZeroHandle</span>(handle: bigint): <span class="t">boolean</span> {
+  <span class="k">return</span> handle === <span class="n">0n</span>;
+}
+
+<span class="c">// Decode handle type bits (high byte of handle encodes the euintX size)</span>
+<span class="k">function</span> <span class="f">getHandleType</span>(handle: bigint): <span class="t">string</span> {
+  <span class="k">const</span> typeByte = (<span class="k">handle</span> &gt;&gt; <span class="n">248n</span>) &amp; <span class="n">0xffn</span>;
+  <span class="k">const</span> typeMap: Record&lt;<span class="t">number</span>, <span class="t">string</span>&gt; = {
+    <span class="n">0</span>: <span class="s">"ebool"</span>, <span class="n">1</span>: <span class="s">"euint4"</span>, <span class="n">2</span>: <span class="s">"euint8"</span>, <span class="n">3</span>: <span class="s">"euint16"</span>,
+    <span class="n">4</span>: <span class="s">"euint32"</span>, <span class="n">5</span>: <span class="s">"euint64"</span>, <span class="n">6</span>: <span class="s">"euint128"</span>, <span class="n">12</span>: <span class="s">"eaddress"</span>
+  };
+  <span class="k">return</span> typeMap[<span class="n">Number</span>(typeByte)] || <span class="s">`unknown(${typeByte})`</span>;
+}
+
+<span class="c">// Usage in tests:</span>
+console.<span class="f">log</span>(<span class="s">"Handle type:"</span>, <span class="f">getHandleType</span>(handleRaw));   <span class="c">// "euint32"</span>
+console.<span class="f">log</span>(<span class="s">"Is zero:"</span>,    <span class="f">isZeroHandle</span>(handleRaw));       <span class="c">// false</span></pre>
+</div>
+
+<h3 class="sub" id="event-trace">Event Tracing for ACL Debug</h3>
+<p>The ACL contract emits events every time a grant is made. In a failing test, capturing these events tells you exactly which grants were made and which are missing:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">ACL event tracing helper</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">"hardhat"</span>;
+
+<span class="k">const</span> ACL_ADDRESS = <span class="s">"0x339EcE85B9E11a3A3AA557582784a15d7F82AAf2"</span>;
+<span class="k">const</span> ACL_ABI = [
+  <span class="s">"event Allowed(bytes32 indexed handle, address indexed account)"</span>,
+  <span class="s">"event AllowedForAll(bytes32 indexed handle)"</span>,
+  <span class="s">"function isAllowed(bytes32 handle, address account) view returns (bool)"</span>
+];
+
+<span class="k">export async function</span> <span class="f">traceACLGrants</span>(txReceipt: <span class="k">any</span>) {
+  <span class="k">const</span> acl = <span class="k">new</span> ethers.Contract(ACL_ADDRESS, ACL_ABI, ethers.provider);
+  <span class="k">const</span> iface = acl.interface;
+
+  console.<span class="f">log</span>(<span class="s">"\n  === ACL Grants in this tx ==="</span>);
+  <span class="k">for</span> (<span class="k">const</span> log <span class="k">of</span> txReceipt.logs) {
+    <span class="k">try</span> {
+      <span class="k">const</span> parsed = iface.<span class="f">parseLog</span>(log);
+      <span class="k">if</span> (parsed?.name === <span class="s">"Allowed"</span>) {
+        console.<span class="f">log</span>(<span class="s">`  Allowed: handle=${parsed.args.handle.slice(0,10)}... → ${parsed.args.account}`</span>);
+      }
+    } <span class="k">catch</span> {} <span class="c">// ignore logs from other contracts</span>
+  }
+}
+
+<span class="c">// Check if a specific address has access to a handle</span>
+<span class="k">export async function</span> <span class="f">checkACL</span>(handle: bigint, address: <span class="t">string</span>): <span class="t">Promise</span>&lt;<span class="t">boolean</span>&gt; {
+  <span class="k">const</span> acl = <span class="k">new</span> ethers.Contract(ACL_ADDRESS, ACL_ABI, ethers.provider);
+  <span class="k">return</span> acl.<span class="f">isAllowed</span>(handle, address);
+}
+
+<span class="c">// Usage in failing test to diagnose ACL issues:</span>
+<span class="c">// const receipt = await tx.wait();</span>
+<span class="c">// await traceACLGrants(receipt);</span>
+<span class="c">// const ok = await checkACL(handle, contractAddress);</span>
+<span class="c">// console.log("Contract has access:", ok);  // if false → missing allowThis()</span></pre>
+</div>
+
+<h3 class="sub" id="gas-profile">Gas Profiling</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">Gas profiling in tests</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Enable gas reporter in hardhat.config.ts:</span>
+<span class="c">// gasReporter: { enabled: true, currency: "USD", coinmarketcap: "..." }</span>
+
+<span class="c">// Manual gas measurement in tests:</span>
+<span class="k">async function</span> <span class="f">measureGas</span>(label: <span class="t">string</span>, txPromise: <span class="t">Promise</span>&lt;<span class="k">any</span>&gt;) {
+  <span class="k">const</span> tx      = <span class="k">await</span> txPromise;
+  <span class="k">const</span> receipt = <span class="k">await</span> tx.<span class="f">wait</span>();
+  console.<span class="f">log</span>(<span class="s">`  [GAS] ${label}: ${receipt.gasUsed.toLocaleString()} gas`</span>);
+  <span class="k">return</span> receipt.gasUsed;
+}
+
+<span class="c">// Compare op gas costs in a test:</span>
+it(<span class="s">"gas comparison: euint32 vs euint64 add"</span>, <span class="k">async</span> () => {
+  <span class="k">const</span> addr = <span class="k">await</span> contract.<span class="f">getAddress</span>();
+  <span class="k">const</span> { handles: h32, inputProof: p32 } = <span class="k">await</span> <span class="f">encUint32</span>(<span class="n">42</span>, addr, owner.address);
+  <span class="k">const</span> { handles: h64, inputProof: p64 } = <span class="k">await</span> <span class="f">encUint64</span>(<span class="n">42n</span>, addr, owner.address);
+
+  <span class="k">const</span> gas32 = <span class="k">await</span> <span class="f">measureGas</span>(<span class="s">"euint32.add"</span>, contract.<span class="f">add32</span>(h32[<span class="n">0</span>], p32));
+  <span class="k">const</span> gas64 = <span class="k">await</span> <span class="f">measureGas</span>(<span class="s">"euint64.add"</span>, contract.<span class="f">add64</span>(h64[<span class="n">0</span>], p64));
+
+  console.<span class="f">log</span>(<span class="s">`  euint64/euint32 ratio: ${Number(gas64) / Number(gas32):.2f}x`</span>);
+  <span class="c">// Expect ~2× overhead for euint64 vs euint32</span>
+});</pre>
+</div>
+
+<h2 class="sec" id="test-structure">Test Structure Best Practices</h2>
+
+<h3 class="sub" id="unit-tests">Unit Test Pattern — One Behavior Per Test</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/FHECounter.unit.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>describe(<span class="s">"FHECounter — Unit Tests"</span>, () => {
+  <span class="k">let</span> counter: <span class="k">any</span>, owner: <span class="k">any</span>, alice: <span class="k">any</span>;
+  <span class="k">let</span> contractAddr: <span class="t">string</span>;
+
+  beforeEach(<span class="k">async</span> () => {
+    <span class="c">// Fresh deployment for each test — avoids state bleed</span>
+    [owner, alice] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"FHECounter"</span>);
+    counter     = <span class="k">await</span> F.<span class="f">deploy</span>();
+    contractAddr = <span class="k">await</span> counter.<span class="f">getAddress</span>();
+  });
+
+  <span class="c">// ✓ Test one behavior: ACL authorization</span>
+  it(<span class="s">"getCount() reverts for unauthorized address"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> expect(counter.<span class="f">connect</span>(alice).<span class="f">getCount</span>())
+      .<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"FHECounter: not authorized"</span>);
+  });
+
+  <span class="c">// ✓ Test one behavior: correct encryption binding</span>
+  it(<span class="s">"add() with wrong contract address in proof reverts"</span>, <span class="k">async</span> () => {
+    <span class="c">// Encrypt for a DIFFERENT contract address (wrong binding)</span>
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> <span class="f">encUint32</span>(
+      <span class="n">42</span>,
+      <span class="s">"0x0000000000000000000000000000000000000001"</span>, <span class="c">// wrong address</span>
+      owner.address
+    );
+    <span class="k">await</span> expect(counter.<span class="f">add</span>(handles[<span class="n">0</span>], inputProof))
+      .<span class="f">to</span>.<span class="f">be</span>.<span class="f">reverted</span>;  <span class="c">// KMSVerifier: invalid proof</span>
+  });
+
+  <span class="c">// ✓ Test one behavior: state update after add</span>
+  it(<span class="s">"add() increments txCount"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> <span class="f">encUint32</span>(<span class="n">1</span>, contractAddr, owner.address);
+    <span class="k">await</span> counter.<span class="f">add</span>(handles[<span class="n">0</span>], inputProof);
+    expect(<span class="k">await</span> counter.<span class="f">txCount</span>()).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">1n</span>);
+  });
+
+  <span class="c">// ✓ Test one behavior: decrypt after single add</span>
+  it(<span class="s">"add(42) → getCount() decrypts to 42"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> <span class="f">encUint32</span>(<span class="n">42</span>, contractAddr, owner.address);
+    <span class="k">await</span> counter.<span class="f">add</span>(handles[<span class="n">0</span>], inputProof);
+
+    <span class="k">const</span> handle    = <span class="k">await</span> counter.<span class="f">connect</span>(owner).<span class="f">getCount</span>();
+    <span class="k">const</span> plaintext = <span class="k">await</span> <span class="f">decryptHandle</span>(handle, contractAddr, owner);
+    expect(plaintext).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">42n</span>);
+  });
+});</pre>
+</div>
+
+<h3 class="sub" id="integration">Integration Test Pattern — Full Flow</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/FHEToken.integration.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>describe(<span class="s">"ConfidentialERC20 — Integration"</span>, () => {
+  <span class="c">// Integration tests run with a shared contract across all tests
+  // They test end-to-end flows: deploy → mint → transfer → verify</span>
+  <span class="k">let</span> token: <span class="k">any</span>, addr: <span class="t">string</span>;
+  <span class="k">let</span> owner: <span class="k">any</span>, alice: <span class="k">any</span>, bob: <span class="k">any</span>;
+
+  before(<span class="k">async</span> () => {
+    [owner, alice, bob] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"ConfidentialERC20"</span>);
+    token = <span class="k">await</span> F.<span class="f">deploy</span>(<span class="s">"ConfCoin"</span>, <span class="s">"CONF"</span>);
+    addr  = <span class="k">await</span> token.<span class="f">getAddress</span>();
+  });
+
+  it(<span class="s">"FLOW: mint → transfer → verify balances → refund"</span>, <span class="k">async</span> () => {
+    <span class="c">// Step 1: Mint 1000 to alice</span>
+    <span class="k">await</span> token.<span class="f">mint</span>(alice.address, <span class="n">1000n</span>);
+
+    <span class="c">// Step 2: Alice transfers 300 to bob</span>
+    <span class="k">const</span> { handles: h, inputProof: p } = <span class="k">await</span> <span class="f">encUint64</span>(<span class="n">300n</span>, addr, alice.address);
+    <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">transfer</span>(bob.address, h[<span class="n">0</span>], p);
+
+    <span class="c">// Step 3: Verify alice = 700</span>
+    <span class="k">const</span> hA = <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">balanceOf</span>(alice.address);
+    expect(<span class="k">await</span> <span class="f">decryptHandle</span>(hA, addr, alice)).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">700n</span>);
+
+    <span class="c">// Step 4: Verify bob = 300</span>
+    <span class="k">const</span> hB = <span class="k">await</span> token.<span class="f">connect</span>(bob).<span class="f">balanceOf</span>(bob.address);
+    expect(<span class="k">await</span> <span class="f">decryptHandle</span>(hB, addr, bob)).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">300n</span>);
+
+    <span class="c">// Step 5: Verify total supply unchanged</span>
+    expect(<span class="k">await</span> token.<span class="f">totalSupply</span>()).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">1000n</span>);
+  });
+});</pre>
+</div>
+
+<h3 class="sub" id="invariants">Invariant Tests — Property-Based Checks</h3>
+<p>Define invariants — conditions that must <em>always</em> be true — and check them after every operation. These catch subtle bugs that targeted unit tests miss.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">Invariant checker</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * INVARIANT SUITE: ConfidentialERC20
+ *
+ * After every operation, all of these must hold:
+ * 1. totalSupply == sum of all individual balances (when decryptable)
+ * 2. No address has a negative balance (impossible but test for it)
+ * 3. Allowances are always <= granter's balance at time of approval
+ * 4. All balance handles have correct ACL grants
+ */</span>
+
+<span class="k">async function</span> <span class="f">checkInvariants</span>(
+  token: <span class="k">any</span>,
+  users: <span class="k">any</span>[],
+  addr: <span class="t">string</span>
+) {
+  <span class="k">const</span> expectedTotal = <span class="k">await</span> token.<span class="f">totalSupply</span>();
+  <span class="k">let</span> decryptedTotal = <span class="n">0n</span>;
+
+  <span class="k">for</span> (<span class="k">const</span> user <span class="k">of</span> users) {
+    <span class="k">const</span> handle  = <span class="k">await</span> token.<span class="f">connect</span>(user).<span class="f">balanceOf</span>(user.address);
+    <span class="k">const</span> balance = <span class="k">await</span> <span class="f">decryptHandle</span>(handle, addr, user);
+    decryptedTotal += balance;
+
+    <span class="c">// Invariant: no negative balances (euint can't be negative, but verify)</span>
+    expect(balance).<span class="f">to</span>.<span class="f">be</span>.<span class="f">gte</span>(<span class="n">0n</span>);
+
+    <span class="c">// Invariant: handle ACL — contract and user both have access</span>
+    expect(<span class="k">await</span> <span class="f">checkACL</span>(handle, addr))
+      .<span class="f">to</span>.<span class="f">be</span>.<span class="k">true</span>, <span class="s">`Contract lost ACL on ${user.address} balance`</span>;
+    expect(<span class="k">await</span> <span class="f">checkACL</span>(handle, user.address))
+      .<span class="f">to</span>.<span class="f">be</span>.<span class="k">true</span>, <span class="s">`User lost ACL on own balance`</span>;
+  }
+
+  <span class="c">// Invariant: sum of balances == totalSupply</span>
+  expect(decryptedTotal).<span class="f">to</span>.<span class="f">equal</span>(expectedTotal,
+    <span class="s">"Sum of decrypted balances does not match totalSupply"</span>
+  );
+}
+
+<span class="c">// Call after every state-changing operation:</span>
+it(<span class="s">"invariants hold after mint + transfer"</span>, <span class="k">async</span> () => {
+  <span class="k">await</span> token.<span class="f">mint</span>(alice.address, <span class="n">500n</span>);
+  <span class="k">await</span> <span class="f">checkInvariants</span>(token, [alice, bob], addr);
+
+  <span class="k">const</span> { handles: h, inputProof: p } = <span class="k">await</span> <span class="f">encUint64</span>(<span class="n">100n</span>, addr, alice.address);
+  <span class="k">await</span> token.<span class="f">connect</span>(alice).<span class="f">transfer</span>(bob.address, h[<span class="n">0</span>], p);
+  <span class="k">await</span> <span class="f">checkInvariants</span>(token, [alice, bob], addr);
+});</pre>
+</div>
+
+<h2 class="sec" id="ci">CI Pipeline Configuration</h2>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">YAML</span><span class="fname">.github/workflows/fhevm-tests.yml</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">name</span>: FHEVM Test Suite
+
+<span class="k">on</span>: [push, pull_request]
+
+<span class="k">jobs</span>:
+  <span class="t">unit-tests-mock</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">name</span>: Unit Tests (Mock FHE — fast)
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+      - <span class="k">uses</span>: actions/setup-node@v4
+        <span class="k">with</span>: { node-version: <span class="s">"20"</span> }
+      - <span class="k">run</span>: npm ci
+      - <span class="k">run</span>: npm run compile
+      - <span class="k">name</span>: Run unit tests (mock mode)
+        <span class="k">env</span>:
+          HARDHAT_FHEVM_MOCK: <span class="s">"true"</span>
+        <span class="k">run</span>: npx hardhat test test/**/*.unit.test.ts
+
+  <span class="t">integration-tests</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">name</span>: Integration Tests (Real FHE)
+    <span class="k">services</span>:
+      <span class="t">fhevm-node</span>:
+        <span class="k">image</span>: ghcr.io/zama-ai/fhevm-hardhat-node:latest
+        <span class="k">ports</span>: [<span class="s">"8545:8545"</span>, <span class="s">"7077:7077"</span>]
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+      - <span class="k">uses</span>: actions/setup-node@v4
+        <span class="k">with</span>: { node-version: <span class="s">"20"</span> }
+      - <span class="k">run</span>: npm ci && npm run compile
+      - <span class="k">name</span>: Wait for FHEVM node to be ready
+        <span class="k">run</span>: |
+          <span class="k">until</span> curl -sf http://localhost:8545 -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","method":"eth_blockNumber","id":1}'; <span class="k">do</span>
+            sleep 2; done
+      - <span class="k">name</span>: Run integration tests
+        <span class="k">run</span>: npx hardhat test test/**/*.integration.test.ts --network hardhat
+        <span class="k">timeout-minutes</span>: 20
+
+  <span class="t">gas-report</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">name</span>: Gas Report
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+      - <span class="k">uses</span>: actions/setup-node@v4
+        <span class="k">with</span>: { node-version: <span class="s">"20"</span> }
+      - <span class="k">run</span>: npm ci && npm run compile
+      - <span class="k">name</span>: Generate gas report
+        <span class="k">env</span>:
+          HARDHAT_FHEVM_MOCK: <span class="s">"true"</span>
+          REPORT_GAS: <span class="s">"true"</span>
+        <span class="k">run</span>: npx hardhat test
+      - <span class="k">uses</span>: actions/upload-artifact@v4
+        <span class="k">with</span>:
+          <span class="k">name</span>: gas-report
+          <span class="k">path</span>: gas-report.txt</pre>
+</div>
+
+<div class="box tip">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Testing Checklist Before Deployment</div>
+    <div class="box-text">
+      &#10003; All unit tests pass in mock mode<br>
+      &#10003; All integration tests pass with real-FHE node<br>
+      &#10003; Every handle has <code>allowThis()</code> verified by ACL invariant test<br>
+      &#10003; Every Gateway callback has <code>onlyGateway</code> modifier<br>
+      &#10003; <code>makePubliclyDecryptable()</code> is called for all publicly-decrypted handles<br>
+      &#10003; No proof is cached across deployments or contract addresses<br>
+      &#10003; Gas report reviewed — no unexpectedly expensive FHE operations
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 10 Quiz — Testing &amp; Debugging</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">A test passes in mock mode but fails on Zama Devnet with "KMSVerifier: invalid proof". What is the most likely cause?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The contract compiled differently on devnet</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Devnet uses a different Solidity version</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Mock mode skips ZK proof validation — the proof was generated with the wrong contract address or user address and only gets caught when real proof verification runs</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The devnet gateway is not configured correctly</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Mock mode skips fromExternal() proof verification entirely — any ciphertext passes. Real FHE mode verifies that the ZK proof binds the ciphertext to the exact contract address and msg.sender. A common bug is passing the wrong address to createEncryptedInput() which is invisible in mock mode.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Your test fails with "ACL: sender is not allowed" on the <em>second</em> call to a function, but the first call succeeds. What pattern should you check?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Missing <code>FHE.allowThis()</code> after the FHE operation in the first call — the first call creates a new handle but doesn't grant the contract access, so the second call can't read it</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The second call uses a different signer that wasn't registered</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ACL contract has a rate limit on permissions</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The constructor's ACL grant expires after one use</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The constructor may grant allowThis() on the initial handle, but the first operation creates a NEW handle. If you forget allowThis() on this new handle, the contract can't use it in the next transaction. First call works (using the initialized handle), second call fails (trying to use the new handle with no grants).</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">Why should <code>FhevmInstance</code> be a singleton (created once) across all tests rather than created fresh per test?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Multiple instances would conflict with each other's state</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The fhevmjs SDK only supports one instance per process</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Each instance generates a new encryption keypair, breaking previously encrypted values</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Creating an instance fetches the network's FHE public key from the node — an expensive network call that significantly slows down test runs if repeated for every test</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> createFhevmInstance() fetches the current FHE public key from the network, verifies KMS keys, and sets up the cryptographic context. This is a slow operation (100ms+) that involves network calls. Doing it once and caching the result is standard practice for fast test suites.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">When should you use <code>beforeEach</code> (fresh deployment per test) vs <code>before</code> (shared deployment) for FHEVM contracts?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Always use beforeEach — state contamination in FHEVM is too risky</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Use <code>beforeEach</code> for unit tests that test single behaviors in isolation; use <code>before</code> for integration tests that deliberately test state accumulation across multiple operations</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Always use <code>before</code> — redeployment invalidates cached encrypted inputs</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Use <code>before</code> if the contract has any encrypted state; <code>beforeEach</code> otherwise</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Unit tests should be isolated — beforeEach gives a clean slate. Integration tests deliberately test multi-step flows (deploy → mint → transfer → verify) where state accumulation is intentional — before() is appropriate there. The key insight: unit tests test one thing; integration tests test sequences.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">You want to test that a Gateway callback is called correctly after <code>requestDecryption()</code>. How should you wait for it in a real-FHE test?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>await sleep(5000)</code> — just wait 5 seconds for the callback</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Poll <code>contract.state()</code> every 500ms until it changes</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Listen for the event emitted by the callback: <code>await new Promise(resolve => contract.once("ResultRevealed", resolve))</code> with a timeout</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway callback always fires in the same block as requestDecryption() — no waiting needed</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The canonical pattern for async Gateway tests is event-driven: listen for the event your callback emits, wrapped in a Promise with a timeout. Sleeping is fragile (timing-dependent), polling is wasteful, and assuming same-block delivery is wrong for real FHE where KMS processing takes ~2 seconds.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">What does the handle type byte (high byte of the handle value) tell you during debugging?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The block number when the handle was created</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The address of the contract that created the handle</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Whether the handle has been decrypted or not</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The FHE type (ebool=0, euint8=2, euint32=4, euint64=5, etc.) — useful for verifying that fromExternal() correctly typed the ciphertext</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The high byte of a handle encodes the encrypted type. During debugging, if you see an unexpected type byte, it means either: wrong input method was called (add32 instead of add64), or the handle was corrupted/zero. This is particularly useful when debugging "wrong size" type mismatches in cross-contract calls.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">What is an invariant test in the context of FHEVM contracts, and what bug class does it catch?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A test that verifies properties that must always hold true (e.g., sum of balances == totalSupply, all handles have allowThis()) — catches subtle state corruption that targeted tests miss</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A test that checks that the contract code cannot be modified after deployment</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A test that verifies FHE operations produce consistent results across multiple calls</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A test that verifies the contract's constructor runs without reverting</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Invariant tests define global correctness conditions — things that must be true in every valid state regardless of how you got there. For FHEVM, key invariants include: sum of decryptable balances matches totalSupply, no uninitialized handles (zero handle), all stored handles have allowThis(), Gateway callbacks have onlyGateway. These catch bugs that unit tests miss because they verify systemic properties.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">Why must you <em>never</em> cache encrypted inputs (handles + inputProof) across contract deployments?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The fhevmjs SDK uses a session token that expires</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ZK proof is cryptographically bound to the contract address — when the contract redeploys to a new address, the old proof is bound to the old address and will always fail the <code>fromExternal()</code> verification in the new contract</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The ciphertext format changes between deployments</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The KMS rotates its public key on each new deployment</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> fromExternal() verifies that the ZK proof was generated for this specific contract address + caller address. Redeployment creates a new contract at a new address. Any proof generated for the old address will fail verification at the new address. Always call createEncryptedInput(newContractAddr, callerAddr) after every redeployment.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day09.html">&#8592; Day 9 — Gateway &amp; Async Decryption</a>
+  <a class="next" href="day11.html">Day 11 — fhevmjs SDK Deep Dive &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','hardhat-setup','mock-mode','config','test-helpers','instance-mgmt','encrypt-helpers','decrypt-helpers','common-errors','acl-errors','proof-errors','gateway-errors','debug-patterns','handle-inspect','event-trace','gas-profile','test-structure','unit-tests','integration','invariants','ci','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — on to Week 3!':pct>=87?'Excellent!':pct>=62?'Good — review explanations above.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
