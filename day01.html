@@ -98,41 +98,110 @@ td code{font-family:var(--mono);font-size:11px;color:var(--amber);background:rgb
 .step-num-bubble{width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:var(--amber);font-family:var(--mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px}
 .step-content h4{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .step-content p{font-size:13px;margin-bottom:0}
-.quiz-wrap{background:var(--bg2);border:1px solid var(--b2);border-radius:12px;margin:48px 0;overflow:hidden}
-.quiz-header{padding:20px 24px;background:rgba(167,139,250,.07);border-bottom:1px solid var(--b2);display:flex;align-items:center;gap:12px}
-.quiz-title{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--purple)}
-.quiz-sub{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:3px}
-.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
-.q-item{}
-.q-num{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px}
-.q-text{font-size:14px;color:var(--text);line-height:1.65;margin-bottom:14px;font-weight:500}
-.q-opts{display:flex;flex-direction:column;gap:7px}
+
+
+
+
+
+
+
+
+
 .q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:7px;cursor:pointer;border:1px solid var(--border);font-size:13px;color:var(--text2);transition:all .15s;user-select:none}
 .q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--b2)}
 .q-opt.selected{border-color:var(--b2);background:rgba(255,255,255,.03)}
 .q-opt.correct{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.07);color:var(--text)}
 .q-opt.incorrect{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.07);color:var(--text2);opacity:.7}
-.q-letter{width:22px;height:22px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--text3);flex-shrink:0}
-.q-opt.correct .q-letter{background:rgba(34,197,94,.2);color:var(--green)}
-.q-opt.incorrect .q-letter{background:rgba(239,68,68,.15);color:var(--rust)}
-.q-explanation{margin-top:10px;padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);border-radius:6px;font-size:13px;color:var(--text2);line-height:1.6;display:none}
-.q-explanation.show{display:block}
-.q-explanation strong{color:var(--blue)}
-.score-panel{margin:0 24px 24px;padding:16px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:none;align-items:center;gap:20px}
-.score-panel.show{display:flex}
-.score-num{font-family:var(--serif);font-size:36px;font-weight:700;color:var(--amber)}
-.score-info{display:flex;flex-direction:column;gap:3px}
-.score-label{font-size:13px;color:var(--text2)}
-.score-msg{font-size:12px;color:var(--text3);font-family:var(--mono)}
-.quiz-submit{margin:0 24px 24px;padding:11px 24px;border-radius:7px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--amber);font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .15s}
-.quiz-submit:hover{background:rgba(245,158,11,.2)}
-.quiz-submit:disabled{opacity:.4;cursor:not-allowed}
+
+.q-opt.correct 
+.q-opt.incorrect 
+
+
+
+
+
+
+
+
+
+
+
+
 .page-nav{display:flex;justify-content:space-between;align-items:center;margin-top:60px;padding-top:32px;border-top:1px solid var(--border)}
 .page-nav a{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:7px;text-decoration:none;font-family:var(--mono);font-size:12px;color:var(--text2);border:1px solid var(--border);transition:all .15s}
 .page-nav a:hover{border-color:var(--amber);color:var(--amber)}
 .page-nav .next{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--amber)}
 .page-nav .next:hover{background:rgba(245,158,11,.18)}
 @media(max-width:860px){.layout{grid-template-columns:1fr}.toc{display:none}.main{padding:32px 20px 60px}.card-grid{grid-template-columns:1fr}}
+
+/* ═══ QUIZ COMPONENT ══════════════════════════════════════ */
+.qz{background:var(--bg2,#0d0d1a);border:1px solid var(--b2,var(--border,#2a2a45));border-radius:12px;margin:48px 0;overflow:hidden}
+.qz-head{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--b2,var(--border,#2a2a45))}
+.qz-icon{font-size:22px;flex-shrink:0}
+.qz-title{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:18px;font-weight:700;color:var(--acc,var(--purple,var(--amber,#ffb300)));letter-spacing:-.2px}
+.qz-sub{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#6b6b95));margin-top:3px;letter-spacing:.5px}
+.qz-list{padding:0 24px;display:flex;flex-direction:column}
+.qz-q{padding:26px 0;border-bottom:1px solid var(--b2,var(--border,#1e1e36))}
+.qz-q:last-child{border-bottom:none}
+.qz-qnum{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,var(--dim,#5a5a82));letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.qz-qtext{font-size:14px;color:var(--text,var(--white,#f0f0ff));line-height:1.65;margin-bottom:14px;font-weight:500}
+.qz-qtext code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,var(--amber,#ffb300));background:rgba(255,179,0,.08);padding:1px 6px;border-radius:3px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid var(--border,#2a2a45);cursor:pointer;font-size:13px;color:var(--text2,var(--mid,#9898be));line-height:1.6;transition:border-color .14s,background .14s,color .14s;user-select:none}
+.qz-opt:hover{border-color:var(--b2,#353560);background:rgba(255,255,255,.02);color:var(--text,#e0e0ff)}
+.qz-opt.sel{border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.05);color:var(--text,#f0f0ff)}
+.qz-opt.sel .qz-ltr{background:rgba(255,179,0,.18);color:var(--acc,#ffb300)}
+.qz-ltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg3,var(--plate,#1a1a30));color:var(--text3,#6b6b95);transition:all .14s}
+.qz-opt code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-exp{display:none}
+.qz-foot{padding:18px 24px;border-top:1px solid var(--b2,var(--border,#2a2a45));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.qz-prog{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--text3,#5a5a82);letter-spacing:.5px}
+.qz-btn{padding:11px 28px;border-radius:7px;border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.08);color:var(--acc,#ffb300);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.qz-btn:hover:not(:disabled){background:rgba(255,179,0,.2);border-color:var(--acc,#ffb300)}
+.qz-btn:disabled{opacity:.3;cursor:not-allowed}
+/* results overlay */
+.qz-ov{position:fixed;inset:0;z-index:9999;background:var(--bg,var(--ink,#070711));overflow-y:auto;display:none;flex-direction:column}
+.qz-ov.open{display:flex}
+.qz-ob{position:sticky;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(7,7,17,.97);border-bottom:1px solid var(--border,#2a2a45);backdrop-filter:blur(16px);z-index:10}
+.qz-ob-back{padding:5px 16px;border-radius:6px;border:1px solid var(--border,#2a2a45);background:none;color:var(--text3,#6b6b95);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;cursor:pointer;letter-spacing:.5px;transition:all .14s}
+.qz-ob-back:hover{border-color:var(--acc,#ffb300);color:var(--acc,#ffb300)}
+.qz-ob-pill{margin-left:auto;padding:3px 14px;border-radius:20px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;color:var(--acc,#ffb300)}
+.qz-oh{display:flex;align-items:center;gap:32px;padding:40px 48px 32px;border-bottom:1px solid var(--border,#2a2a45)}
+.qz-oring{flex-shrink:0}
+.qz-oht{flex:1}
+.qz-oscore{font-family:var(--serif,var(--head,'Syne',sans-serif));font-size:56px;font-weight:800;color:var(--text,#f0f0ff);letter-spacing:-3px;line-height:1}
+.qz-oscore sup{font-size:28px;color:var(--acc,#ffb300);vertical-align:super;letter-spacing:0}
+.qz-omsg{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--text2,#9898be);margin:10px 0 12px;letter-spacing:.3px;line-height:1.7}
+.qz-obadge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.gb-s{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.25)}
+.gb-a{background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.22)}
+.gb-b{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.25)}
+.gb-c{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.25)}
+.qz-ocards{padding:32px 48px 80px;display:flex;flex-direction:column;gap:20px}
+.qz-oc{border:1px solid var(--border,#2a2a45);border-radius:12px;overflow:hidden}
+.qz-oc.oc-ok{border-left:3px solid #69ff47}
+.qz-oc.oc-no{border-left:3px solid #ff4d6d}
+.qz-och{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--b2,#1e1e36);background:var(--bg2,#0d0d1a)}
+.qz-ocn{font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;color:var(--text3,#5a5a82);flex-shrink:0;padding-top:2px;letter-spacing:1.5px}
+.qz-ocq{font-size:13px;color:var(--text,#f0f0ff);flex:1;line-height:1.6}
+.qz-ocq code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:12px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocv{flex-shrink:0;padding:3px 10px;border-radius:10px;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1px}
+.ocv-ok{background:rgba(105,255,71,.1);color:#69ff47;border:1px solid rgba(105,255,71,.2)}
+.ocv-no{background:rgba(255,77,109,.1);color:#ff4d6d;border:1px solid rgba(255,77,109,.2)}
+.qz-ocopts{padding:12px 20px;background:var(--bg3,#111128);display:flex;flex-direction:column;gap:7px}
+.qz-oco{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:7px;font-size:13px;color:var(--text2,#6b6b95);border:1px solid transparent;line-height:1.6}
+.qz-oco.oo-r{border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.05);color:var(--text,#f0f0ff)}
+.qz-oco.oo-w{border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;text-decoration:line-through;opacity:.8}
+.qz-oco code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+.qz-ocltr{width:22px;height:22px;border-radius:50%;flex-shrink:0;font-family:var(--mono,'JetBrains Mono',monospace);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px;background:var(--bg2,#1e1e36);color:var(--text3,#5a5a82)}
+.qz-oco.oo-r .qz-ocltr{background:rgba(105,255,71,.18);color:#69ff47}
+.qz-oco.oo-w .qz-ocltr{background:rgba(255,77,109,.14);color:#ff4d6d}
+.qz-ocexp{margin:0 20px 16px;padding:13px 16px;background:var(--bg2,#0d0d1a);border:1px solid var(--border,#2a2a45);border-radius:8px;font-size:13px;color:var(--text2,#9898be);line-height:1.75}
+.qz-ocexp strong{color:var(--acc,#ffb300)}
+.qz-ocexp em{color:var(--text,#c0c0e0)}
+.qz-ocexp code{font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;color:var(--acc,#ffb300);background:rgba(255,179,0,.08);padding:1px 5px;border-radius:3px}
+@media(max-width:720px){.qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px}.qz-ocards{padding:20px 16px 60px}.qz-oscore{font-size:44px}}
+/* ════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>
@@ -379,109 +448,94 @@ avg = <span class="fn">sum</span>(times) <span class="op">/</span> <span class="
   </div>
 </div>
 
-<h2 class="sec-h2" id="quiz">Knowledge Check</h2>
-<div class="quiz-wrap">
-  <div class="quiz-header">
-    <span style="font-size:22px">&#128221;</span>
-    <div>
-      <div class="quiz-title">Day 1 Quiz &mdash; FHE Foundations</div>
-      <div class="quiz-sub">7 questions &middot; select one answer per question, then submit</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
+    <div><div class="qz-title">Day 01 Quiz — FHE Foundations</div><div class="qz-sub">7 questions · FHE math & schemes</div></div>
+  </div>
+  <div class="qz-list">
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 01 / 07</div>
+      <div class="qz-qtext">Why does FHEVM use TFHE instead of BGV or CKKS?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>CKKS does not support integer arithmetic at all</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>TFHE bootstraps at ~1 ms per gate — fast enough for practical smart contract execution within block time</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>BGV ciphertexts are too large to store on-chain</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>TFHE is the only scheme that supports 256-bit integers</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> BGV and CKKS bootstrap in seconds — far too slow for on-chain use. TFHE's ~1 ms gate-level bootstrap makes it the only practical choice for smart contract FHE today. CKKS supports approximate floating-point arithmetic, making it unsuitable for exact financial arithmetic.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 02 / 07</div>
+      <div class="qz-qtext">In the LWE sample <code>b = &lt;a, s&gt; + e (mod q)</code>, what is the primary role of the noise term <em>e</em>?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It compresses ciphertexts to reduce storage size</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It speeds up decryption by reducing computation</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It masks the secret key, making <code>(a, b)</code> pairs computationally indistinguishable from random — providing semantic security</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It adds to the plaintext to prevent integer overflow</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> Without noise, <code>b = &lt;a, s&gt; mod q</code> would be a system of linear equations trivially solvable by Gaussian elimination. The small error <code>e</code> makes the system computationally hard — this is the core security guarantee of LWE-based cryptography.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 03 / 07</div>
+      <div class="qz-qtext">What does bootstrapping accomplish in a fully homomorphic encryption scheme?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It converts a ciphertext from one scheme to another</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It reveals the plaintext to a trusted third party for verification</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It compresses a ciphertext to reduce on-chain storage</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It refreshes the accumulated noise in a ciphertext, enabling unlimited-depth computation without decrypting</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> Without bootstrapping, noise grows until it crosses the decryption failure threshold. Bootstrapping homomorphically evaluates the decryption circuit, producing a fresh ciphertext with small noise that still encrypts the same plaintext. This is Gentry's 2009 breakthrough that made FHE "fully" homomorphic.</div>
+    </div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-qnum">QUESTION 04 / 07</div>
+      <div class="qz-qtext">A <code>euint64</code> addition in FHEVM requires approximately how many TFHE bootstrapping operations?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>~64, because euint64 is 64 individual TFHE bit-ciphertexts computing a 64-bit adder circuit</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Exactly 1, because the entire 64-bit value is stored in a single ciphertext</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>~256, proportional to the security parameter size</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>0, because addition does not require bootstrapping</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> In FHEVM's TFHE implementation, euint64 is 64 separate TFHE bit-ciphertexts. A 64-bit ripple-carry adder evaluates ~64 full-adder gates, each of which includes a bootstrap. This is why euint64 operations cost ~8× more than euint8 operations — it's 8× more bits.</div>
+    </div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-qnum">QUESTION 05 / 07</div>
+      <div class="qz-qtext">Why is Ring-LWE considered post-quantum secure?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It uses elliptic curve groups that Shor's algorithm cannot efficiently attack</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It reduces to hard lattice problems (SVP/CVP) for which no efficient quantum algorithm is known — Shor's algorithm does not apply</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The key length of 4096+ bits is too long for any quantum computer to process</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Quantum computers cannot perform modular arithmetic</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Shor's algorithm efficiently breaks RSA (integer factoring) and ECC (discrete log). However, Shor's provides no useful speedup for lattice problems like SVP. The best quantum approach (Grover's) gives only a quadratic speedup — not enough to break parameters used in practice.</div>
+    </div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-qnum">QUESTION 06 / 07</div>
+      <div class="qz-qtext">You need to store an encrypted age value (0–150) in a smart contract. Which type gives the best gas efficiency?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>euint256</code> — always use the largest type to avoid overflow</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>euint16</code> — standard choice for small integers</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>euint8</code> — holds 0–255, comfortably covers all ages, and has the lowest cost</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>euint32</code> — needed for future-proof compatibility</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> euint8 holds 0–255, more than covering human ages. At 2× baseline cost, it saves 4× vs euint16, 8× vs euint32, and 16× vs euint256. Always use the smallest type that safely holds your value range — this is the single most impactful gas optimization in FHEVM.</div>
+    </div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-qnum">QUESTION 07 / 07</div>
+      <div class="qz-qtext">What makes TFHE's Programmable Bootstrapping (PBS) particularly valuable for smart contracts?</div>
+      <div class="qz-opts">
+        <div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>It allows bootstrapping to run across multiple CPU cores in parallel</div>
+        <div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>It enables FHE computation on floating-point numbers</div>
+        <div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>It is a paid cloud service for handling heavy bootstrap operations</div>
+        <div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>It applies an arbitrary lookup table (LUT) during the noise-refresh step, enabling comparisons and non-linear functions at no extra cost beyond a regular gate</div>
+      </div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> During TFHE's mandatory per-gate noise refresh, PBS simultaneously evaluates a programmable LUT — computing any function f(x) for free alongside the bootstrap. This makes comparisons like <code>FHE.gt()</code>, <code>FHE.eq()</code>, and min/max very efficient. Without PBS, comparisons would require expensive multi-gate circuits.</div>
     </div>
   </div>
-  <div class="quiz-body" id="quiz-body">
-
-    <div class="q-item" data-correct="B">
-      <div class="q-num">QUESTION 01 / 07</div>
-      <div class="q-text">Why does FHEVM use TFHE instead of BGV or CKKS?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>CKKS does not support integer arithmetic at all</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>TFHE bootstraps at ~1 ms per gate — fast enough for practical smart contract execution within block time</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>BGV ciphertexts are too large to store on-chain</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>TFHE is the only scheme that supports 256-bit integers</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — B.</strong> BGV and CKKS bootstrap in seconds — far too slow for on-chain use. TFHE's ~1 ms gate-level bootstrap makes it the only practical choice for smart contract FHE today. CKKS supports approximate floating-point arithmetic, making it unsuitable for exact financial arithmetic.</div>
-    </div>
-
-    <div class="q-item" data-correct="C">
-      <div class="q-num">QUESTION 02 / 07</div>
-      <div class="q-text">In the LWE sample <code>b = &lt;a, s&gt; + e (mod q)</code>, what is the primary role of the noise term <em>e</em>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>It compresses ciphertexts to reduce storage size</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>It speeds up decryption by reducing computation</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>It masks the secret key, making <code>(a, b)</code> pairs computationally indistinguishable from random — providing semantic security</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>It adds to the plaintext to prevent integer overflow</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — C.</strong> Without noise, <code>b = &lt;a, s&gt; mod q</code> would be a system of linear equations trivially solvable by Gaussian elimination. The small error <code>e</code> makes the system computationally hard — this is the core security guarantee of LWE-based cryptography.</div>
-    </div>
-
-    <div class="q-item" data-correct="D">
-      <div class="q-num">QUESTION 03 / 07</div>
-      <div class="q-text">What does bootstrapping accomplish in a fully homomorphic encryption scheme?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>It converts a ciphertext from one scheme to another</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>It reveals the plaintext to a trusted third party for verification</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>It compresses a ciphertext to reduce on-chain storage</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>It refreshes the accumulated noise in a ciphertext, enabling unlimited-depth computation without decrypting</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — D.</strong> Without bootstrapping, noise grows until it crosses the decryption failure threshold. Bootstrapping homomorphically evaluates the decryption circuit, producing a fresh ciphertext with small noise that still encrypts the same plaintext. This is Gentry's 2009 breakthrough that made FHE "fully" homomorphic.</div>
-    </div>
-
-    <div class="q-item" data-correct="A">
-      <div class="q-num">QUESTION 04 / 07</div>
-      <div class="q-text">A <code>euint64</code> addition in FHEVM requires approximately how many TFHE bootstrapping operations?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>~64, because euint64 is 64 individual TFHE bit-ciphertexts computing a 64-bit adder circuit</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>Exactly 1, because the entire 64-bit value is stored in a single ciphertext</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>~256, proportional to the security parameter size</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>0, because addition does not require bootstrapping</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — A.</strong> In FHEVM's TFHE implementation, euint64 is 64 separate TFHE bit-ciphertexts. A 64-bit ripple-carry adder evaluates ~64 full-adder gates, each of which includes a bootstrap. This is why euint64 operations cost ~8× more than euint8 operations — it's 8× more bits.</div>
-    </div>
-
-    <div class="q-item" data-correct="B">
-      <div class="q-num">QUESTION 05 / 07</div>
-      <div class="q-text">Why is Ring-LWE considered post-quantum secure?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>It uses elliptic curve groups that Shor's algorithm cannot efficiently attack</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>It reduces to hard lattice problems (SVP/CVP) for which no efficient quantum algorithm is known — Shor's algorithm does not apply</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>The key length of 4096+ bits is too long for any quantum computer to process</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>Quantum computers cannot perform modular arithmetic</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — B.</strong> Shor's algorithm efficiently breaks RSA (integer factoring) and ECC (discrete log). However, Shor's provides no useful speedup for lattice problems like SVP. The best quantum approach (Grover's) gives only a quadratic speedup — not enough to break parameters used in practice.</div>
-    </div>
-
-    <div class="q-item" data-correct="C">
-      <div class="q-num">QUESTION 06 / 07</div>
-      <div class="q-text">You need to store an encrypted age value (0–150) in a smart contract. Which type gives the best gas efficiency?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span><code>euint256</code> — always use the largest type to avoid overflow</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span><code>euint16</code> — standard choice for small integers</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span><code>euint8</code> — holds 0–255, comfortably covers all ages, and has the lowest cost</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span><code>euint32</code> — needed for future-proof compatibility</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — C.</strong> euint8 holds 0–255, more than covering human ages. At 2× baseline cost, it saves 4× vs euint16, 8× vs euint32, and 16× vs euint256. Always use the smallest type that safely holds your value range — this is the single most impactful gas optimization in FHEVM.</div>
-    </div>
-
-    <div class="q-item" data-correct="D">
-      <div class="q-num">QUESTION 07 / 07</div>
-      <div class="q-text">What makes TFHE's Programmable Bootstrapping (PBS) particularly valuable for smart contracts?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-val="A"><span class="q-letter">A</span>It allows bootstrapping to run across multiple CPU cores in parallel</div>
-        <div class="q-opt" data-val="B"><span class="q-letter">B</span>It enables FHE computation on floating-point numbers</div>
-        <div class="q-opt" data-val="C"><span class="q-letter">C</span>It is a paid cloud service for handling heavy bootstrap operations</div>
-        <div class="q-opt" data-val="D"><span class="q-letter">D</span>It applies an arbitrary lookup table (LUT) during the noise-refresh step, enabling comparisons and non-linear functions at no extra cost beyond a regular gate</div>
-      </div>
-      <div class="q-explanation"><strong>Correct — D.</strong> During TFHE's mandatory per-gate noise refresh, PBS simultaneously evaluates a programmable LUT — computing any function f(x) for free alongside the bootstrap. This makes comparisons like <code>FHE.gt()</code>, <code>FHE.eq()</code>, and min/max very efficient. Without PBS, comparisons would require expensive multi-gate circuits.</div>
-    </div>
-
-  </div>
-  <button class="quiz-submit" id="quiz-submit" onclick="submitQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score-panel" id="score-panel">
-    <div class="score-num" id="score-num">0/7</div>
-    <div class="score-info">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="score-msg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="day01-prog">0 / 7 answered</span>
+    <button class="qz-btn" id="day01-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
@@ -501,44 +555,129 @@ const tocItems=document.querySelectorAll('.toc-item[data-target]');
 const targets=[...document.querySelectorAll('[id]')].filter(e=>['overview','what-is-fhe','core-intuition','three-props','schemes','why-tfhe','ring-lwe','lwe-problem','noise','bootstrapping','bootstrap-steps','pbs','euint','lab','quiz'].includes(e.id));
 new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){tocItems.forEach(t=>t.classList.remove('active'));const m=document.querySelector(`.toc-item[data-target="${e.target.id}"]`);if(m)m.classList.add('active');}});},{rootMargin:'-20% 0px -65% 0px'}).observe? targets.forEach(t=>new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){tocItems.forEach(i=>i.classList.remove('active'));const m=document.querySelector('.toc-item[data-target="'+e.target.id+'"]');if(m)m.classList.add('active');}});},{rootMargin:'-20% 0px -65% 0px'}).observe(t)):null;
 tocItems.forEach(item=>item.addEventListener('click',()=>{const el=document.getElementById(item.dataset.target);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}));
-let selectedCount=0;
-document.querySelectorAll('.q-opt').forEach(opt=>{
-  opt.addEventListener('click',()=>{
-    const q=opt.closest('.q-item');
-    if(q.dataset.submitted)return;
-    const wasSelected=opt.classList.contains('selected');
-    q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('selected'));
-    if(!wasSelected){opt.classList.add('selected');}
-    selectedCount=document.querySelectorAll('.q-opt.selected').length;
-    document.getElementById('quiz-submit').disabled=(selectedCount<7);
-  });
-});
-function submitQuiz(){
-  let correct=0;
-  document.querySelectorAll('.q-item').forEach(q=>{
-    q.dataset.submitted='true';
-    const sel=q.querySelector('.q-opt.selected');
-    const cv=q.dataset.correct;
-    q.querySelectorAll('.q-opt').forEach(o=>{
-      if(o.dataset.val===cv)o.classList.add('correct');
-      else if(sel&&o.dataset.val===sel.dataset.val)o.classList.add('incorrect');
+
+(function() {
+  var ID      = 'day01';
+  var optEls  = document.querySelectorAll('#quiz .qz-opt');
+  var btnEl   = document.getElementById(ID + '-btn');
+  var progEl  = document.getElementById(ID + '-prog');
+  var total   = document.querySelectorAll('#quiz .qz-q').length;
+
+  function picked() { return document.querySelectorAll('#quiz .qz-q .qz-opt.sel').length; }
+
+  function refresh() {
+    if (btnEl)  btnEl.disabled       = (picked() < total);
+    if (progEl) progEl.textContent   = picked() + ' / ' + total + ' answered';
+  }
+
+  for (var i = 0; i < optEls.length; i++) {
+    optEls[i].addEventListener('click', function() {
+      var q = this.closest('.qz-q');
+      if (!q) return;
+      var s = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < s.length; j++) s[j].classList.remove('sel');
+      this.classList.add('sel');
+      refresh();
     });
-    if(sel&&sel.dataset.val===cv)correct++;
-    const exp=q.querySelector('.q-explanation');
-    if(exp)exp.classList.add('show');
+  }
+
+  if (btnEl) btnEl.addEventListener('click', function() {
+    if (this.disabled) return;
+    render();
   });
-  const pct=Math.round(correct/7*100);
-  const msgs=['Review the sections above before moving on.','Good — review the explanations for missed questions.','Great understanding!','Excellent work!','Perfect score — you\'re ready for Day 2!'];
-  const idx=pct===100?4:pct>=85?3:pct>=71?2:pct>=57?1:0;
-  document.getElementById('score-num').textContent=correct+'/7';
-  document.getElementById('score-msg').textContent=msgs[idx];
-  document.getElementById('score-panel').classList.add('show');
-  document.getElementById('quiz-submit').disabled=true;
-}
-function copyCode(btn){
-  const pre=btn.closest('.code-wrap').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',2000);});
-}
+
+  function render() {
+    var qEls = document.querySelectorAll('#quiz .qz-q');
+    var ok   = 0;
+    var html = '';
+
+    for (var i = 0; i < qEls.length; i++) {
+      var q     = qEls[i];
+      var ans   = q.getAttribute('data-ans');
+      var selEl = q.querySelector('.qz-opt.sel');
+      var selV  = selEl ? selEl.getAttribute('data-v') : null;
+      var isOk  = selV === ans;
+      if (isOk) ok++;
+
+      var qtEl  = q.querySelector('.qz-qtext');
+      var expEl = q.querySelector('.qz-exp');
+      var qText = qtEl  ? qtEl.innerHTML  : '';
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      var rows  = '';
+      var oEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < oEls.length; j++) {
+        var o    = oEls[j];
+        var v    = o.getAttribute('data-v');
+        var lEl  = o.querySelector('.qz-ltr');
+        var lTx  = lEl ? lEl.textContent : v;
+        var cl   = o.cloneNode(true);
+        var lc   = cl.querySelector('.qz-ltr');
+        if (lc)  lc.parentNode.removeChild(lc);
+        var cls  = v === ans ? 'oo-r' : (v === selV ? 'oo-w' : '');
+        rows += '<div class="qz-oco ' + cls + '"><span class="qz-ocltr">' + lTx + '</span>' + cl.innerHTML.trim() + '</div>';
+      }
+
+      html += '<div class="qz-oc ' + (isOk ? 'oc-ok' : 'oc-no') + '">'
+        + '<div class="qz-och"><span class="qz-ocn">Q' + (i+1) + '</span>'
+        + '<div class="qz-ocq">' + qText + '</div>'
+        + '<span class="qz-ocv ' + (isOk?'ocv-ok':'ocv-no') + '">' + (isOk?'✓ Correct':'✗ Wrong') + '</span></div>'
+        + '<div class="qz-ocopts">' + rows + '</div>'
+        + (exp ? '<div class="qz-ocexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var pct  = Math.round(ok / total * 100);
+    var circ = 251.3;
+    var off  = circ - (pct/100)*circ;
+    var rc   = pct===100?'#69ff47':pct>=80?'#00e5ff':pct>=60?'#ffb300':'#ff4d6d';
+    var bdg  = pct===100?'<span class="qz-obadge gb-s">🏆 Perfect Score</span>'
+              :pct>=80  ?'<span class="qz-obadge gb-a">✓ Excellent</span>'
+              :pct>=60  ?'<span class="qz-obadge gb-b">~ Needs Review</span>'
+              :'<span class="qz-obadge gb-c">↺ Try Again</span>';
+    var msg  = pct===100?'Flawless — every concept nailed.'
+              :pct>=80  ?'Strong work. Check any flagged questions.'
+              :pct>=60  ?'Good base — re-read sections for wrong answers.'
+              :'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-oring">'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+rc+'" stroke-width="7"'
+      +' stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"'
+      +' transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/></svg>';
+
+    var ov = document.getElementById(ID+'-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = ID+'-ov';
+      ov.className = 'qz-ov';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="qz-ob">'
+      +'<button class="qz-ob-back" id="'+ID+'-close">← Back to Quiz</button>'
+      +'<span class="qz-ob-pill">'+ok+'/'+total+' correct &nbsp;·&nbsp; '+pct+'%</span>'
+      +'</div>'
+      +'<div class="qz-oh">'+ring
+      +'<div class="qz-oht"><div class="qz-oscore">'+ok+'<sup>/'+total+'</sup></div>'
+      +'<div class="qz-omsg">'+msg+'</div>'+bdg+'</div></div>'
+      +'<div class="qz-ocards">'+html+'</div>';
+
+    ov.classList.add('open');
+    ov.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(ID+'-close').addEventListener('click', function() {
+      ov.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
+    });
+  }
+
+  refresh();
+})();
+
 </script>
 </body>
 </html>
