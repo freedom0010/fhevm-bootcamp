@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 14 — Sealed-Bid Auction DApp | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711; --ink2: #0d0d1a; --ink3: #141426;
+  --plate:  #1a1a2e; --plate2: #20203a;
+  --wire:   #2a2a45; --wire2: #383860;
+  --cyan:   #00e5ff; --cyan2: #00b8d4;
+  --lime:   #69ff47; --amber: #ffb300;
+  --rose:   #ff4d6d; --violet: #bf5af2;
+  --sky:    #4db8ff; --dim:   #6b6b95;
+  --mid:    #9898be; --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+  --body: 'Instrument Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body); font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+        background: linear-gradient(90deg, var(--amber), var(--violet));
+        z-index: 1000; transition: width .1s linear; }
+
+.topbar { position: sticky; top: 0; z-index: 100; height: 52px;
+  background: rgba(7,7,17,.96); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--wire); display: flex; align-items: center; }
+.tb-home { display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 22px;
+  border-right: 1px solid var(--wire); font-family: var(--mono); font-size: 12px;
+  color: var(--dim); text-decoration: none; transition: color .15s; letter-spacing: .5px; }
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb { display: flex; align-items: center; gap: 8px; padding: 0 20px;
+  font-family: var(--mono); font-size: 11px; }
+.tb-crumb .sep { color: var(--wire2); } .tb-crumb .cur { color: var(--mid); }
+.tb-badge { margin-left: auto; margin-right: 18px; padding: 3px 11px; border-radius: 20px;
+  background: rgba(191,90,242,.08); border: 1px solid rgba(191,90,242,.22);
+  font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 1.5px; text-transform: uppercase; }
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px;
+  animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+
+.sidebar { position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto;
+  background: var(--ink2); border-right: 1px solid var(--wire); padding: 22px 0 50px; }
+.sb-section { margin-bottom: 4px; }
+.sb-head { font-family: var(--mono); font-size: 9px; color: var(--dim);
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 14px 18px 5px; }
+.sb-a { display: block; padding: 6px 18px; font-family: var(--body); font-size: 12px;
+  color: var(--mid); border-left: 2px solid transparent;
+  cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45; }
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--violet); border-left-color: var(--violet); background: rgba(191,90,242,.04); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+
+.main { padding: 56px 70px 120px; max-width: 900px; }
+
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill { display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px;
+  border-radius: 3px; margin-bottom: 24px;
+  background: rgba(191,90,242,.07); border: 1px solid rgba(191,90,242,.18);
+  font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-family: var(--head); font-size: clamp(34px,4vw,52px);
+  font-weight: 800; line-height: 1.08; letter-spacing: -1px;
+  margin-bottom: 20px; color: var(--white); }
+.hero h1 em { font-style: italic; color: var(--violet); font-weight: 600; }
+.hero .lead { font-size: 15.5px; color: var(--mid); line-height: 1.84;
+  max-width: 640px; margin-bottom: 32px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim);
+  display: flex; align-items: center; gap: 6px; }
+
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700; color: var(--white);
+  margin: 56px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--wire);
+  scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600;
+  color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code { font-family: var(--mono); font-size: 12px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 2px 6px; border-radius: 3px; }
+
+.code { background: #040408; border: 1px solid var(--wire); border-radius: 10px;
+  margin: 20px 0; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.code-top { display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  background: var(--ink3); border-bottom: 1px solid var(--wire); }
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang { font-family: var(--mono); font-size: 10px; color: var(--violet);
+  letter-spacing: 1.5px; text-transform: uppercase; }
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy { background: none; border: 1px solid var(--wire); color: var(--dim);
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: all .14s; letter-spacing: .8px; }
+.copy:hover { border-color: var(--violet); color: var(--violet); }
+pre { padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.8; color: #c8d0e0; tab-size: 2; }
+.k  { color: #ff79c6; } .f  { color: #8be9fd; } .s  { color: #f1fa8c; }
+.c  { color: #525270; font-style: italic; } .n  { color: #bd93f9; }
+.t  { color: #ffb86c; } .a  { color: #50fa7b; } .ev { color: #50fa7b; }
+.d  { color: #8be9fd; } .v  { color: #f8f8f2; }
+
+.box { border-radius: 8px; padding: 15px 20px; margin: 20px 0;
+  border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start; }
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title { font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code { font-family: var(--mono); font-size: 11.5px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+.tip   { background: rgba(105,255,71,.05);  border-color: var(--lime);   }
+.tip .box-title   { color: var(--lime);   }
+.warn  { background: rgba(255,179,0,.06);   border-color: var(--amber);  }
+.warn .box-title  { color: var(--amber);  }
+.alert { background: rgba(255,77,109,.07);  border-color: var(--rose);   }
+.alert .box-title { color: var(--rose);   }
+.info  { background: rgba(191,90,242,.05);  border-color: var(--violet); }
+.info .box-title  { color: var(--violet); }
+.key   { background: rgba(0,229,255,.05);   border-color: var(--cyan); border-width: 2px; }
+.key .box-title   { color: var(--cyan);   }
+
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--ink3); padding: 9px 14px; text-align: left;
+  font-family: var(--mono); font-size: 9.5px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.2px; border: 1px solid var(--wire); }
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code { font-family: var(--mono); font-size: 11px; color: var(--violet);
+  background: rgba(191,90,242,.07); padding: 1px 5px; border-radius: 3px; }
+
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 36px;
+  bottom: -6px; width: 1px; background: var(--wire2); }
+.step-num { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.22);
+  color: var(--violet); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 18px; margin-top: 1px; z-index: 1; }
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white);
+  margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code { font-family: var(--mono); font-size: 11.5px; color: var(--violet);
+  background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+
+/* phase strip */
+.phase-strip { display: flex; gap: 0; margin: 24px 0; border: 1px solid var(--wire);
+  border-radius: 10px; overflow: hidden; }
+.phase { flex: 1; padding: 14px 16px; }
+.phase-label { font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 5px; }
+.phase-title { font-family: var(--head); font-size: 14px; font-weight: 700;
+  color: var(--white); margin-bottom: 4px; }
+.phase-desc { font-size: 12px; color: var(--dim); line-height: 1.5; }
+.ph-bid  { background: rgba(0,229,255,.04);   border-right: 1px solid var(--wire); }
+.ph-bid .phase-label { color: var(--cyan); }
+.ph-end  { background: rgba(255,179,0,.04);   border-right: 1px solid var(--wire); }
+.ph-end .phase-label { color: var(--amber); }
+.ph-rev  { background: rgba(191,90,242,.04);  border-right: 1px solid var(--wire); }
+.ph-rev .phase-label { color: var(--violet); }
+.ph-ref  { background: rgba(105,255,71,.04); }
+.ph-ref .phase-label { color: var(--lime); }
+
+.quiz { background: var(--ink2); border: 1px solid var(--wire2);
+  border-radius: 14px; margin: 52px 0; overflow: hidden; }
+.quiz-head { padding: 20px 24px; background: rgba(191,90,242,.07);
+  border-bottom: 1px solid var(--wire2); display: flex; align-items: flex-start; gap: 14px; }
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700;
+  color: var(--violet); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim);
+  letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65;
+  margin-bottom: 13px; font-weight: 500; }
+.q-q code { font-family: var(--mono); font-size: 12px; color: var(--violet);
+  background: rgba(191,90,242,.09); padding: 1px 5px; border-radius: 3px; }
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+  border-radius: 8px; cursor: pointer; border: 1px solid var(--wire);
+  font-size: 13px; color: var(--mid); transition: all .14s;
+  user-select: none; line-height: 1.58; }
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr { width: 22px; height: 22px; border-radius: 50%; background: var(--plate);
+  color: var(--dim); font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px; }
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp { margin-top: 10px; padding: 11px 14px;
+  background: rgba(191,90,242,.04); border: 1px solid rgba(191,90,242,.12);
+  border-radius: 7px; font-size: 13px; color: var(--mid);
+  line-height: 1.68; display: none; }
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--violet); }
+.quiz-submit { display: block; margin: 2px 24px 24px; padding: 11px 24px;
+  border-radius: 8px; background: rgba(191,90,242,.1);
+  border: 1px solid rgba(191,90,242,.28); color: var(--violet);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px;
+  text-transform: uppercase; cursor: pointer; transition: all .14s; }
+.quiz-submit:hover { background: rgba(191,90,242,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score { margin: 0 24px 24px; padding: 16px 20px; background: var(--ink3);
+  border: 1px solid var(--wire); border-radius: 9px;
+  display: none; align-items: center; gap: 20px; }
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800;
+  color: var(--violet); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+.pnav { display: flex; justify-content: space-between; align-items: center;
+  margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire); }
+.pnav a { display: flex; align-items: center; gap: 8px; padding: 9px 18px;
+  border-radius: 8px; text-decoration: none; font-family: var(--mono);
+  font-size: 11px; color: var(--mid); border: 1px solid var(--wire);
+  transition: all .14s; letter-spacing: .5px; }
+.pnav a:hover { border-color: var(--violet); color: var(--violet); }
+.pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
+.pnav .next:hover { background: rgba(191,90,242,.14); }
+
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 30px 18px 60px; }
+  .diff { grid-template-columns: 1fr; }
+  .phase-strip { flex-direction: column; }
+  .phase { border-right: none; border-bottom: 1px solid var(--wire); }
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 3</span>
+    <span class="sep">/</span>
+    <span class="cur">Day 14</span>
+  </div>
+  <div class="tb-badge">Week 3 — Advanced DApp</div>
+</nav>
+
+<div class="page">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="design">DApp Design</a>
+    <a class="sb-a sub" data-id="phases">Auction Phases</a>
+    <a class="sb-a sub" data-id="data-model">Data Model</a>
+    <a class="sb-a" data-id="contract">Smart Contract</a>
+    <a class="sb-a sub" data-id="state-vars">State Variables</a>
+    <a class="sb-a sub" data-id="bid-fn">placeBid</a>
+    <a class="sb-a sub" data-id="end-fn">endAuction</a>
+    <a class="sb-a sub" data-id="callback-fn">revealCallback</a>
+    <a class="sb-a sub" data-id="refund-fn">claimRefund</a>
+    <a class="sb-a" data-id="tests">Contract Tests</a>
+    <a class="sb-a sub" data-id="test-cases">Required Test Cases</a>
+    <a class="sb-a" data-id="frontend">Frontend</a>
+    <a class="sb-a sub" data-id="project-structure">Project Structure</a>
+    <a class="sb-a sub" data-id="bid-hook">usePlaceBid Hook</a>
+    <a class="sb-a sub" data-id="result-hook">useAuctionResult Hook</a>
+    <a class="sb-a sub" data-id="ui-states">UI States</a>
+    <a class="sb-a" data-id="privacy-model">Privacy Model</a>
+    <a class="sb-a" data-id="gas">Gas Reference</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- HERO -->
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127760; Day 14 of 20</div>
+  <h1>Sealed-Bid<br><em>Auction DApp</em></h1>
+  <p class="lead">
+    Today you build the canonical FHEVM showcase: a <strong>fully private sealed-bid auction</strong>
+    where bids are encrypted on-chain, the highest bidder is determined without anyone
+    seeing any bid, and the winner is revealed only after the auction closes — all via
+    a Gateway async callback. You'll combine everything from Days 11–13: fhevmjs
+    client-side encryption, Gateway decryption, cross-contract ACL, and a React frontend
+    that reacts to on-chain events in real time.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#127979; Full-stack DApp</div>
+    <div class="stat">&#128274; End-to-end privacy</div>
+    <div class="stat">&#9989; 7-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- DESIGN -->
+<h2 class="sec" id="design">DApp Design</h2>
+<p>
+  A sealed-bid auction gives every bidder complete privacy during the bidding phase.
+  No bidder can see any other bid — not even after the auction ends (only the winner
+  and winning amount are revealed). This is impossible with a normal on-chain auction
+  where all storage is public.
+</p>
+
+<h3 class="sub" id="phases">Auction Phases</h3>
+<div class="phase-strip">
+  <div class="phase ph-bid">
+    <div class="phase-label">Phase 1</div>
+    <div class="phase-title">Bidding Open</div>
+    <div class="phase-desc">Bidders submit encrypted bids. Contract tracks encrypted running maximum without revealing any value.</div>
+  </div>
+  <div class="phase ph-end">
+    <div class="phase-label">Phase 2</div>
+    <div class="phase-title">Auction Ended</div>
+    <div class="phase-desc">Owner calls <code>endAuction()</code>. Contract requests Gateway decryption of highest bid handle.</div>
+  </div>
+  <div class="phase ph-rev">
+    <div class="phase-label">Phase 3</div>
+    <div class="phase-title">Reveal Pending</div>
+    <div class="phase-desc">KMS processes the decryption request (1–6 seconds). All state locked.</div>
+  </div>
+  <div class="phase ph-ref">
+    <div class="phase-label">Phase 4</div>
+    <div class="phase-title">Results Public</div>
+    <div class="phase-desc">Callback fires. Winner and amount public. Losers can claim refunds.</div>
+  </div>
+</div>
+
+<h3 class="sub" id="data-model">Data Model</h3>
+<div class="tw">
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Visibility</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>_bids</code></td><td><code>mapping(address => euint64)</code></td><td>Private</td><td>Each bidder's encrypted bid amount</td></tr>
+      <tr><td><code>_highestBid</code></td><td><code>euint64</code></td><td>Private</td><td>Running encrypted maximum across all bids</td></tr>
+      <tr><td><code>_highestBidder</code></td><td><code>eaddress</code></td><td>Private</td><td>Address of current highest bidder (encrypted)</td></tr>
+      <tr><td><code>revealedWinner</code></td><td><code>address</code></td><td>Public</td><td>Set by callback — address of winner</td></tr>
+      <tr><td><code>revealedAmount</code></td><td><code>uint64</code></td><td>Public</td><td>Set by callback — winning bid in plaintext</td></tr>
+      <tr><td><code>phase</code></td><td><code>AuctionPhase (uint8)</code></td><td>Public</td><td>Current phase: Bidding / Ended / Revealed</td></tr>
+      <tr><td><code>endTime</code></td><td><code>uint256</code></td><td>Public</td><td>Unix timestamp when bidding closes</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="box info">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">Why eaddress for Highest Bidder?</div>
+    <div class="box-text">
+      If <code>_highestBidder</code> were a plaintext <code>address</code>, observers
+      could track which bidder was "winning" at any point during the auction — leaking
+      information about relative bid sizes. Using <code>eaddress</code> keeps the leading
+      bidder hidden until the reveal.
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT -->
+<h2 class="sec" id="contract">Smart Contract: SealedBidAuction.sol</h2>
+
+<h3 class="sub" id="state-vars">State Variables & Setup</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/SealedBidAuction.sol</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^0.8.24;
+
+<span class="k">import</span> <span class="s">"fhevm/lib/TFHE.sol"</span>;
+<span class="k">import</span> <span class="s">"fhevm/gateway/GatewayLib.sol"</span>;
+<span class="k">import</span> <span class="s">"@openzeppelin/contracts/access/Ownable.sol"</span>;
+<span class="k">import</span> <span class="s">"@openzeppelin/contracts/utils/ReentrancyGuard.sol"</span>;
+
+<span class="k">contract</span> SealedBidAuction <span class="k">is</span> Ownable, ReentrancyGuard {
+
+    <span class="c">// ── Auction state ─────────────────────────────</span>
+    <span class="k">enum</span> AuctionPhase { Bidding, Ended, Revealed }
+
+    AuctionPhase <span class="k">public</span>  phase;
+    uint256      <span class="k">public</span>  endTime;
+    string       <span class="k">public</span>  itemDescription;
+
+    <span class="c">// Encrypted state — never readable on-chain</span>
+    euint64      <span class="k">private</span> _highestBid;
+    eaddress     <span class="k">private</span> _highestBidder;
+    mapping(address => euint64) <span class="k">private</span> _bids;
+
+    <span class="c">// Revealed after callback</span>
+    address      <span class="k">public</span>  revealedWinner;
+    uint64       <span class="k">public</span>  revealedAmount;
+
+    <span class="c">// Refund tracking</span>
+    mapping(address => bool) <span class="k">public</span> refundClaimed;
+
+    <span class="c">// ── Events ────────────────────────────────────</span>
+    <span class="ev">event</span> BidPlaced(address indexed bidder);
+    <span class="ev">event</span> AuctionEnded(uint256 requestId);
+    <span class="ev">event</span> WinnerRevealed(address indexed winner, uint64 amount);
+    <span class="ev">event</span> RefundClaimed(address indexed bidder);
+
+    <span class="k">modifier</span> onlyGateway() {
+        <span class="k">require</span>(msg.sender == GatewayLib.gatewayContractAddress(), <span class="s">"Only gateway"</span>);
+        _;
+    }
+    <span class="k">modifier</span> inPhase(AuctionPhase p) {
+        <span class="k">require</span>(phase == p, <span class="s">"Wrong auction phase"</span>);
+        _;
+    }
+
+    <span class="k">constructor</span>(string <span class="k">memory</span> description, uint256 durationSeconds)
+        Ownable(msg.sender)
+    {
+        itemDescription = description;
+        endTime = block.timestamp + durationSeconds;
+        phase   = AuctionPhase.Bidding;
+
+        <span class="c">// Initialise highest bid to 0 so first real bid always wins</span>
+        _highestBid    = TFHE.asEuint64(<span class="n">0</span>);
+        _highestBidder = TFHE.asEaddress(address(<span class="n">0</span>));
+        TFHE.allow(_highestBid,    address(<span class="k">this</span>));
+        TFHE.allow(_highestBidder, address(<span class="k">this</span>));
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="bid-fn">placeBid — The Core Logic</h3>
+<p>
+  The trickiest part: updating the running maximum <em>without branching on the encrypted comparison</em>.
+  We use <code>TFHE.select</code> to obliviously update both the highest bid and the highest bidder.
+</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/SealedBidAuction.sol — placeBid</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @dev Submit an encrypted bid.
+ *      The contract obliviously updates the running maximum:
+ *        newHighest = isNew > old  ?  newBid  :  oldHighest
+ *        newLeader  = isNew > old  ?  msg.sender  :  oldLeader
+ *      No branch is taken — both paths computed, one selected.
+ */</span>
+<span class="k">function</span> <span class="f">placeBid</span>(
+    bytes32 encryptedBid,
+    bytes calldata inputProof
+) <span class="k">external</span> inPhase(AuctionPhase.Bidding) nonReentrant {
+    <span class="k">require</span>(block.timestamp &lt; endTime, <span class="s">"Auction has expired"</span>);
+
+    euint64 bid = TFHE.asEuint64(encryptedBid, inputProof);
+
+    <span class="c">// Store personal bid (for refund path)</span>
+    _bids[msg.sender] = bid;
+    TFHE.allow(bid, msg.sender);
+    TFHE.allow(bid, address(<span class="k">this</span>));
+
+    <span class="c">// ── Oblivious maximum update ──────────────────</span>
+    <span class="c">// isHigher: ebool — true if new bid beats current highest</span>
+    ebool isHigher = TFHE.gt(bid, _highestBid);
+
+    <span class="c">// newHighest = isHigher ? bid : _highestBid</span>
+    euint64 newHighest = TFHE.select(isHigher, bid, _highestBid);
+
+    <span class="c">// newLeader  = isHigher ? msg.sender : _highestBidder</span>
+    eaddress newLeader = TFHE.select(
+        isHigher,
+        TFHE.asEaddress(msg.sender),
+        _highestBidder
+    );
+
+    _highestBid    = newHighest;
+    _highestBidder = newLeader;
+
+    <span class="c">// This contract needs persistent access to operate on these in future txs</span>
+    TFHE.allow(_highestBid,    address(<span class="k">this</span>));
+    TFHE.allow(_highestBidder, address(<span class="k">this</span>));
+
+    <span class="k">emit</span> BidPlaced(msg.sender);
+}
+
+<span class="c">/// @dev Bidder can re-encrypt and view their own bid</span>
+<span class="k">function</span> <span class="f">getMyBid</span>(
+    address bidder,
+    bytes32 publicKey,
+    bytes calldata signature
+) <span class="k">external view returns</span> (bytes <span class="k">memory</span>) {
+    <span class="k">require</span>(msg.sender == bidder, <span class="s">"Can only view own bid"</span>);
+    <span class="k">return</span> TFHE.reencrypt(_bids[bidder], publicKey, <span class="n">0</span>);
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">Re-bid Replaces Previous Bid</div>
+    <div class="box-text">
+      If a bidder calls <code>placeBid</code> twice, their second bid overwrites the first
+      in <code>_bids[msg.sender]</code>. The running maximum already includes their first
+      bid — you may want to restrict bidding to once per address, or handle the delta
+      carefully. The simplest production approach: <code>require(_bids[msg.sender] == 0, "Already bid")</code>.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="end-fn">endAuction — Trigger the Reveal</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/SealedBidAuction.sol — endAuction</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @dev Called by the owner after bidding closes.
+ *      Requests decryption of BOTH the winning bid amount
+ *      AND the winning bidder's address in a single batch call.
+ */</span>
+<span class="k">function</span> <span class="f">endAuction</span>()
+    <span class="k">external</span> onlyOwner inPhase(AuctionPhase.Bidding) nonReentrant
+{
+    <span class="k">require</span>(block.timestamp >= endTime, <span class="s">"Auction not yet expired"</span>);
+    phase = AuctionPhase.Ended;
+
+    <span class="c">// Grant Gateway permission to decrypt both handles</span>
+    TFHE.allowForDecryption(_highestBid);
+    TFHE.allowForDecryption(_highestBidder);
+
+    <span class="c">// Batch: decrypt amount (euint64) + bidder address (eaddress) together</span>
+    uint256[] <span class="k">memory</span> handles = <span class="k">new</span> uint256[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = euint64.unwrap(_highestBid);
+    handles[<span class="n">1</span>] = eaddress.unwrap(_highestBidder);
+
+    uint256 reqId = GatewayLib.requestDecryption(
+        handles,
+        <span class="k">this</span>.revealCallback.selector,
+        <span class="n">0</span>,
+        block.timestamp + <span class="n">1 days</span>,
+        <span class="n">false</span>
+    );
+
+    <span class="k">emit</span> AuctionEnded(reqId);
+}</pre>
+</div>
+
+<h3 class="sub" id="callback-fn">revealCallback — Store the Result</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/SealedBidAuction.sol — revealCallback</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @dev Called by the Gateway after KMS decrypts the results.
+ *      Receives: requestId, winning amount, winning address — in handle order.
+ *      Note the address comes back as uint256 from the Gateway; cast it.
+ */</span>
+<span class="k">function</span> <span class="f">revealCallback</span>(
+    uint256 <span class="c">/* requestId */</span>,
+    uint64  winningBid,
+    address winningBidder
+) <span class="k">external</span> onlyGateway inPhase(AuctionPhase.Ended) {
+    revealedAmount = winningBid;
+    revealedWinner = winningBidder;
+    phase = AuctionPhase.Revealed;
+
+    <span class="k">emit</span> WinnerRevealed(winningBidder, winningBid);
+}</pre>
+</div>
+
+<h3 class="sub" id="refund-fn">claimRefund — Losers Get Their ETH Back</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div><div class="fname">contracts/SealedBidAuction.sol — claimRefund</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @dev Non-winners reclaim their bid after results are public.
+ *      Uses msg.value-based bidding model for simplicity:
+ *      bidders send ETH == their bid amount on placeBid.
+ *      Winner keeps ETH locked in contract; losers withdraw here.
+ *
+ *      Privacy note: we check msg.sender != revealedWinner ONLY
+ *      after the reveal — during bidding, no refund is possible.
+ */</span>
+<span class="k">function</span> <span class="f">claimRefund</span>()
+    <span class="k">external</span> inPhase(AuctionPhase.Revealed) nonReentrant
+{
+    <span class="k">require</span>(msg.sender != revealedWinner, <span class="s">"Winner cannot claim refund"</span>);
+    <span class="k">require</span>(!refundClaimed[msg.sender],   <span class="s">"Already refunded"</span>);
+    <span class="k">require</span>(address(<span class="k">this</span>).balance > <span class="n">0</span>,   <span class="s">"No balance"</span>);
+
+    refundClaimed[msg.sender] = <span class="n">true</span>;
+
+    <span class="c">// Checks-Effects-Interactions: mark refunded before transfer</span>
+    uint256 refund = bidAmounts[msg.sender];  <span class="c">// plain ETH tracking mapping</span>
+    bidAmounts[msg.sender] = <span class="n">0</span>;
+
+    (bool ok,) = msg.sender.call{value: refund}(<span class="s">""</span>);
+    <span class="k">require</span>(ok, <span class="s">"Transfer failed"</span>);
+
+    <span class="k">emit</span> RefundClaimed(msg.sender);
+}</pre>
+</div>
+
+<!-- TESTS -->
+<h2 class="sec" id="tests">Contract Tests</h2>
+<h3 class="sub" id="test-cases">Required Test Cases</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">test/SealedBidAuction.test.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { expect } <span class="k">from</span> <span class="s">'chai'</span>
+<span class="k">import</span> { ethers } <span class="k">from</span> <span class="s">'hardhat'</span>
+<span class="k">import</span> { createInstances } <span class="k">from</span> <span class="s">'../test/instance'</span>
+<span class="k">import</span> { getSigners } <span class="k">from</span> <span class="s">'../test/signers'</span>
+
+<span class="f">describe</span>(<span class="s">'SealedBidAuction'</span>, () => {
+  <span class="k">let</span> auction: <span class="t">any</span>, instances: <span class="t">any</span>, signers: <span class="t">any</span>
+
+  <span class="f">beforeEach</span>(<span class="k">async</span> () => {
+    signers = <span class="k">await</span> getSigners()
+    instances = <span class="k">await</span> createInstances(signers)
+    <span class="k">const</span> factory = <span class="k">await</span> ethers.getContractFactory(<span class="s">'SealedBidAuction'</span>)
+    auction = <span class="k">await</span> factory.deploy(<span class="s">'Mona Lisa NFT'</span>, <span class="n">3600</span>)  <span class="c">// 1h</span>
+  })
+
+  <span class="f">it</span>(<span class="s">'T01: bidder can place encrypted bid'</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> input = instances.alice.createEncryptedInput(auction.target, signers.alice.address)
+    input.add64(<span class="n">100n</span>)
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.encrypt()
+    <span class="k">await</span> <span class="f">expect</span>(
+      auction.connect(signers.alice).placeBid(handles[<span class="n">0</span>], inputProof)
+    ).to.emit(auction, <span class="s">'BidPlaced'</span>).withArgs(signers.alice.address)
+  })
+
+  <span class="f">it</span>(<span class="s">'T02: highest bidder updates obliviously across multiple bids'</span>, <span class="k">async</span> () => {
+    <span class="c">// Alice bids 100, Bob bids 200 — Bob should win (without either knowing the other's bid)</span>
+    <span class="k">const</span> aliceInput = instances.alice.createEncryptedInput(auction.target, signers.alice.address)
+    aliceInput.add64(<span class="n">100n</span>)
+    <span class="k">const</span> aliceEnc = <span class="k">await</span> aliceInput.encrypt()
+    <span class="k">await</span> auction.connect(signers.alice).placeBid(aliceEnc.handles[<span class="n">0</span>], aliceEnc.inputProof)
+
+    <span class="k">const</span> bobInput = instances.bob.createEncryptedInput(auction.target, signers.bob.address)
+    bobInput.add64(<span class="n">200n</span>)
+    <span class="k">const</span> bobEnc = <span class="k">await</span> bobInput.encrypt()
+    <span class="k">await</span> auction.connect(signers.bob).placeBid(bobEnc.handles[<span class="n">0</span>], bobEnc.inputProof)
+
+    <span class="c">// Advance time past end</span>
+    <span class="k">await</span> ethers.provider.send(<span class="s">'evm_increaseTime'</span>, [<span class="n">3601</span>])
+    <span class="k">await</span> ethers.provider.send(<span class="s">'evm_mine'</span>, [])
+
+    <span class="k">await</span> auction.endAuction()
+    <span class="c">// Simulate Gateway callback</span>
+    <span class="k">await</span> auction.connect(signers.gateway).revealCallback(<span class="n">0</span>, <span class="n">200n</span>, signers.bob.address)
+
+    <span class="f">expect</span>(<span class="k">await</span> auction.revealedWinner()).to.equal(signers.bob.address)
+    <span class="f">expect</span>(<span class="k">await</span> auction.revealedAmount()).to.equal(<span class="n">200n</span>)
+  })
+
+  <span class="f">it</span>(<span class="s">'T03: non-gateway caller cannot invoke revealCallback'</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> <span class="f">expect</span>(
+      auction.connect(signers.alice).revealCallback(<span class="n">0</span>, <span class="n">100n</span>, signers.alice.address)
+    ).to.be.revertedWith(<span class="s">'Only gateway'</span>)
+  })
+
+  <span class="f">it</span>(<span class="s">'T04: cannot bid after auction expires'</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> ethers.provider.send(<span class="s">'evm_increaseTime'</span>, [<span class="n">3601</span>])
+    <span class="k">await</span> ethers.provider.send(<span class="s">'evm_mine'</span>, [])
+    <span class="k">const</span> input = instances.alice.createEncryptedInput(auction.target, signers.alice.address)
+    input.add64(<span class="n">50n</span>)
+    <span class="k">const</span> enc = <span class="k">await</span> input.encrypt()
+    <span class="k">await</span> <span class="f">expect</span>(
+      auction.connect(signers.alice).placeBid(enc.handles[<span class="n">0</span>], enc.inputProof)
+    ).to.be.revertedWith(<span class="s">'Auction has expired'</span>)
+  })
+
+  <span class="f">it</span>(<span class="s">'T05: loser can claim refund after reveal'</span>, <span class="k">async</span> () => {
+    <span class="c">// Setup: Alice bids 100 (loser), Bob bids 200 (winner)</span>
+    <span class="c">// ... (place bids, endAuction, revealCallback as in T02)</span>
+    <span class="k">const</span> aliceBalBefore = <span class="k">await</span> ethers.provider.getBalance(signers.alice.address)
+    <span class="k">await</span> auction.connect(signers.alice).claimRefund()
+    <span class="k">const</span> aliceBalAfter = <span class="k">await</span> ethers.provider.getBalance(signers.alice.address)
+    <span class="f">expect</span>(aliceBalAfter).to.be.gt(aliceBalBefore)  <span class="c">// net positive after gas</span>
+  })
+
+  <span class="f">it</span>(<span class="s">'T06: winner cannot claim refund'</span>, <span class="k">async</span> () => {
+    <span class="c">// After reveal with Bob as winner...</span>
+    <span class="k">await</span> <span class="f">expect</span>(
+      auction.connect(signers.bob).claimRefund()
+    ).to.be.revertedWith(<span class="s">'Winner cannot claim refund'</span>)
+  })
+
+  <span class="f">it</span>(<span class="s">'T07: WinnerRevealed event emitted with correct values'</span>, <span class="k">async</span> () => {
+    <span class="c">// ...setup bids, end, then:</span>
+    <span class="k">await</span> <span class="f">expect</span>(
+      auction.connect(signers.gateway).revealCallback(<span class="n">0</span>, <span class="n">200n</span>, signers.bob.address)
+    ).to.emit(auction, <span class="s">'WinnerRevealed'</span>)
+      .withArgs(signers.bob.address, <span class="n">200n</span>)
+  })
+})</pre>
+</div>
+
+<!-- FRONTEND -->
+<h2 class="sec" id="frontend">Frontend Architecture</h2>
+<h3 class="sub" id="project-structure">Project Structure</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">text</div><div class="fname">frontend/</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre>fhevm-auction-frontend/
+├── app/
+│   ├── layout.tsx          <span class="c"># Providers wrapper</span>
+│   └── page.tsx            <span class="c"># Root — renders AuctionDApp component</span>
+├── components/
+│   ├── AuctionDApp.tsx     <span class="c"># Top-level state machine</span>
+│   ├── AuctionStatus.tsx   <span class="c"># Phase indicator + countdown timer</span>
+│   ├── BidForm.tsx         <span class="c"># Encrypt + submit bid</span>
+│   ├── MyBidCard.tsx       <span class="c"># Re-encrypt + reveal own bid</span>
+│   ├── ResultCard.tsx      <span class="c"># Shown after WinnerRevealed event</span>
+│   └── RefundButton.tsx    <span class="c"># Losers claim ETH back</span>
+├── hooks/
+│   ├── usePlaceBid.ts      <span class="c"># Encrypt + send bid tx</span>
+│   ├── useAuctionResult.ts <span class="c"># Watch WinnerRevealed event</span>
+│   ├── useMyBid.ts         <span class="c"># Re-encrypt own bid for display</span>
+│   └── useCountdown.ts     <span class="c"># Live countdown to endTime</span>
+├── lib/
+│   ├── encrypt.ts          <span class="c"># getFhevmInstance + encryptBid</span>
+│   ├── reencrypt.ts        <span class="c"># getDecryptedBid</span>
+│   └── contract.ts         <span class="c"># ABI + address constants</span>
+└── next.config.ts          <span class="c"># asyncWebAssembly: true</span></pre>
+</div>
+
+<h3 class="sub" id="bid-hook">usePlaceBid Hook</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">hooks/usePlaceBid.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="s">'use client'</span>
+<span class="k">import</span> { useState } <span class="k">from</span> <span class="s">'react'</span>
+<span class="k">import</span> { useAccount, useWriteContract } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { getFhevmInstance } <span class="k">from</span> <span class="s">'../lib/encrypt'</span>
+<span class="k">import</span> { AUCTION_ADDRESS, AUCTION_ABI } <span class="k">from</span> <span class="s">'../lib/contract'</span>
+
+<span class="k">export function</span> <span class="f">usePlaceBid</span>() {
+  <span class="k">const</span> [status, setStatus] = useState&lt;<span class="s">'idle'</span> | <span class="s">'encrypting'</span> | <span class="s">'pending'</span> | <span class="s">'done'</span> | <span class="s">'error'</span>&gt;(<span class="s">'idle'</span>)
+  <span class="k">const</span> [txHash, setTxHash] = useState&lt;<span class="t">string</span> | <span class="t">null</span>&gt;(<span class="t">null</span>)
+  <span class="k">const</span> { address } = useAccount()
+  <span class="k">const</span> { writeContractAsync } = useWriteContract()
+
+  <span class="k">async function</span> <span class="f">placeBid</span>(amountWei: <span class="t">bigint</span>) {
+    <span class="k">if</span> (!address) <span class="k">return</span>
+
+    <span class="k">try</span> {
+      <span class="c">// Step 1: Encrypt the bid amount in the browser</span>
+      setStatus(<span class="s">'encrypting'</span>)
+      <span class="k">const</span> instance = <span class="k">await</span> getFhevmInstance()
+      <span class="k">const</span> input = instance.createEncryptedInput(AUCTION_ADDRESS, address)
+      input.add64(amountWei)
+      <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.encrypt()
+
+      <span class="c">// Step 2: Send transaction with encrypted bid + ZK proof</span>
+      setStatus(<span class="s">'pending'</span>)
+      <span class="k">const</span> hash = <span class="k">await</span> writeContractAsync({
+        address: AUCTION_ADDRESS,
+        abi: AUCTION_ABI,
+        functionName: <span class="s">'placeBid'</span>,
+        args: [handles[<span class="n">0</span>], inputProof],
+        value: amountWei,   <span class="c">// ETH deposit equal to bid (for refund path)</span>
+      })
+      setTxHash(hash)
+      setStatus(<span class="s">'done'</span>)
+    } <span class="k">catch</span> (e) {
+      console.error(e)
+      setStatus(<span class="s">'error'</span>)
+    }
+  }
+
+  <span class="k">return</span> { placeBid, status, txHash }
+}</pre>
+</div>
+
+<h3 class="sub" id="result-hook">useAuctionResult Hook</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div><div class="fname">hooks/useAuctionResult.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="s">'use client'</span>
+<span class="k">import</span> { useState, useEffect } <span class="k">from</span> <span class="s">'react'</span>
+<span class="k">import</span> { useConfig } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { watchContractEvent } <span class="k">from</span> <span class="s">'wagmi/actions'</span>
+<span class="k">import</span> { AUCTION_ADDRESS, AUCTION_ABI } <span class="k">from</span> <span class="s">'../lib/contract'</span>
+
+<span class="k">interface</span> AuctionResult {
+  winner: <span class="t">string</span>
+  amount: <span class="t">bigint</span>
+}
+
+<span class="k">export function</span> <span class="f">useAuctionResult</span>() {
+  <span class="k">const</span> [result, setResult] = useState&lt;AuctionResult | <span class="t">null</span>&gt;(<span class="t">null</span>)
+  <span class="k">const</span> [isRevealing, setIsRevealing] = useState(<span class="n">false</span>)
+  <span class="k">const</span> config = useConfig()
+
+  useEffect(() => {
+    <span class="k">const</span> unwatch = watchContractEvent(config, {
+      address: AUCTION_ADDRESS,
+      abi: AUCTION_ABI,
+      eventName: <span class="s">'WinnerRevealed'</span>,
+      onLogs: (logs) => {
+        <span class="k">const</span> [log] = logs
+        <span class="k">if</span> (log.args.winner && log.args.amount !== <span class="t">undefined</span>) {
+          setResult({ winner: log.args.winner, amount: log.args.amount })
+          setIsRevealing(<span class="n">false</span>)
+        }
+      },
+    })
+    <span class="k">return</span> () => unwatch()
+  }, [config])
+
+  <span class="c">// Call this when endAuction tx confirms — shows "waiting for reveal" UI</span>
+  <span class="k">function</span> <span class="f">markRevealPending</span>() { setIsRevealing(<span class="n">true</span>) }
+
+  <span class="k">return</span> { result, isRevealing, markRevealPending }
+}</pre>
+</div>
+
+<h3 class="sub" id="ui-states">UI State Machine</h3>
+<p>
+  The frontend has four distinct UI states that map directly to the contract's <code>AuctionPhase</code>:
+</p>
+<div class="tw">
+  <table>
+    <thead><tr><th>Phase</th><th>UI State</th><th>Primary Action</th><th>Key Elements</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Bidding</td>
+        <td>Active auction</td>
+        <td>Show bid form</td>
+        <td>Countdown timer, BidForm component, "Your bid is private" notice</td>
+      </tr>
+      <tr>
+        <td>Ended</td>
+        <td>Awaiting reveal</td>
+        <td>Owner: "End Auction" button</td>
+        <td>Spinner + "Decryption in progress…" message, estimated wait time</td>
+      </tr>
+      <tr>
+        <td>Reveal pending</td>
+        <td>KMS processing</td>
+        <td>Disabled — waiting</td>
+        <td>Animated progress bar, "KMS decrypting result (1–6 seconds)…"</td>
+      </tr>
+      <tr>
+        <td>Revealed</td>
+        <td>Results public</td>
+        <td>Losers: "Claim Refund"</td>
+        <td>ResultCard (winner + amount), RefundButton for non-winners, MyBidCard</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PRIVACY MODEL -->
+<h2 class="sec" id="privacy-model">Privacy Guarantees & Limitations</h2>
+<div class="tw">
+  <table>
+    <thead><tr><th>What is Private</th><th>What is Public</th><th>Limitation</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Every individual bid amount</td>
+        <td>The fact that an address placed a bid</td>
+        <td>Participation is visible on-chain via <code>BidPlaced</code> events</td>
+      </tr>
+      <tr>
+        <td>The leading bidder during bidding</td>
+        <td>Winning bid amount (after reveal)</td>
+        <td>The winning amount becomes permanently public</td>
+      </tr>
+      <tr>
+        <td>All losing bid amounts (never revealed)</td>
+        <td>Winner's address (after reveal)</td>
+        <td>Winner identity is public; privacy only for losers post-auction</td>
+      </tr>
+      <tr>
+        <td>Running maximum calculation</td>
+        <td>Number of bidders</td>
+        <td>Transaction count leaks participation metadata</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="box tip">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">This Is Much Better Than Public Auctions</div>
+    <div class="box-text">
+      In a standard on-chain auction, every bid is visible in real time. Bidders can
+      simply outbid the current leader by 1 wei. FHEVM's sealed-bid model forces everyone
+      to commit their true valuation — delivering the auction-theory ideal of truthful bidding.
+    </div>
+  </div>
+</div>
+
+<!-- GAS REFERENCE -->
+<h2 class="sec" id="gas">Gas Reference</h2>
+<div class="tw">
+  <table>
+    <thead><tr><th>Operation</th><th>Approx Gas</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>placeBid</code> (first bid)</td><td>~320k</td><td>asEuint64 + gt + select×2 + allow×4</td></tr>
+      <tr><td><code>placeBid</code> (subsequent)</td><td>~280k</td><td>Same ops, storage already warm</td></tr>
+      <tr><td><code>endAuction</code></td><td>~95k</td><td>allowForDecryption×2 + requestDecryption</td></tr>
+      <tr><td><code>revealCallback</code></td><td>~48k</td><td>Two SSTORE + event emit</td></tr>
+      <tr><td><code>claimRefund</code></td><td>~35k</td><td>SSTORE + ETH transfer</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LAB -->
+<h2 class="sec" id="lab">Lab 3D — Complete the Auction DApp</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Implement the complete <code>SealedBidAuction.sol</code> contract and its Next.js frontend.
+      The system must support all four auction phases end-to-end, pass all 7 required tests,
+      and correctly display the live auction state in the UI.
+    </div>
+  </div>
+</div>
+
+<p><strong>Deliverables:</strong></p>
+<ul>
+  <li><code>contracts/SealedBidAuction.sol</code> — complete contract with all functions shown above</li>
+  <li><code>test/SealedBidAuction.test.ts</code> — all 7 test cases passing</li>
+  <li><code>frontend/</code> — Next.js app with at minimum: <code>BidForm</code>, <code>AuctionStatus</code>, <code>ResultCard</code>, <code>RefundButton</code></li>
+  <li><code>scripts/deploy.ts</code> — deploys contract and writes address to <code>lib/contract.ts</code></li>
+</ul>
+
+<p><strong>Extension tasks (bonus):</strong></p>
+<ul>
+  <li>Add a <code>MyBidCard</code> component that lets a bidder re-encrypt and reveal their own bid after the auction ends (uses re-encryption pattern from Day 11)</li>
+  <li>Support multiple simultaneous auctions: store a list of auction addresses in a factory contract; the frontend fetches and lists all active auctions</li>
+  <li>Add a dispute flow: if the KMS doesn't respond within 48 hours, the owner can cancel and refund all bidders</li>
+</ul>
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 14 Quiz</div>
+      <div class="quiz-subtitle">7 questions · sealed-bid auction DApp</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 07</div>
+      <div class="q-q">Why is the current highest bidder stored as <code>eaddress</code> rather than a plain <code>address</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To save gas by compressing address storage</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The Gateway requires eaddress for its decryption callback</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A plaintext address would allow observers to track which bidder is winning in real time, leaking information about relative bid sizes</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Solidity cannot store addresses in mappings without encryption</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> If the leading bidder were public, observers could infer that anyone who becomes the leader must have bid higher than the previous leader. Over multiple bids, this leaks comparative information. Encrypting the leader keeps the field entirely private until the reveal.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 07</div>
+      <div class="q-q">In <code>placeBid</code>, why must you use <code>TFHE.select(isHigher, bid, _highestBid)</code> to update the maximum, instead of <code>if (TFHE.decrypt(isHigher)) { _highestBid = bid; }</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>TFHE.decrypt is not available in Solidity</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Decrypting inside placeBid would reveal whether the new bid is higher, breaking bid privacy for every transaction</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>TFHE.select is cheaper in gas</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The if-statement would revert on an ebool</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Decrypting inside <code>placeBid</code> would leak whether the new bid beat the previous maximum — revealing comparative information to anyone watching the transaction outcome. <code>TFHE.select</code> performs the update homomorphically, keeping both bids secret throughout.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 07</div>
+      <div class="q-q">The <code>endAuction</code> function requests decryption of <em>two</em> handles: <code>_highestBid</code> and <code>_highestBidder</code>. What must the callback signature look like?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>revealCallback(uint256 requestId)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>revealCallback(uint64 amount, address winner)</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>revealCallback(uint256 requestId, bytes[] results)</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>revealCallback(uint256 requestId, uint64 winningBid, address winningBidder)</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The callback receives: (1) requestId first, (2) plaintext values in the same order as the handles array. Handle 0 was <code>_highestBid</code> (euint64 → uint64), handle 1 was <code>_highestBidder</code> (eaddress → address). So: <code>revealCallback(uint256, uint64, address)</code>.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 07</div>
+      <div class="q-q">In the frontend <code>usePlaceBid</code> hook, why is <code>value: amountWei</code> passed alongside the encrypted bid?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The ETH is the actual payment deposited so losers can claim a refund later — the encrypted bid amount determines who wins, but the ETH value is what gets held in escrow</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The FHEVM node charges ETH for encryption</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Without value, the ZK proof fails</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It is required by the Gateway for decryption fees</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The encrypted bid value determines who wins (via homomorphic comparison). The ETH deposit is a separate mechanism: the contract holds it on behalf of the bidder, and losers can call <code>claimRefund</code> to get it back after the reveal.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 07</div>
+      <div class="q-q">Which privacy guarantee does this sealed-bid auction <strong>NOT</strong> provide?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Losing bid amounts are never revealed</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The running leader is hidden during bidding</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The fact that an address participated is hidden</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Individual bid values are hidden during bidding</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The <code>BidPlaced(address indexed bidder)</code> event reveals that an address participated. On-chain, anyone can see which addresses called <code>placeBid</code> and the transaction count. Participation metadata is inherently public in this design.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 07</div>
+      <div class="q-q">What is the correct order of operations when a bidder submits a bid from the frontend?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Send tx → wait for confirmation → encrypt the amount client-side → include in next tx</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Encrypt amount + generate ZK proof in browser → send tx with <code>(handles[0], inputProof)</code> as args → await tx confirmation</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Request encryption from the FHEVM node → node returns ciphertext → include in tx</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Sign the amount with EIP-712 → send to the Gateway → Gateway encrypts and forwards to contract</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> All encryption happens client-side using fhevmjs before the transaction is sent. The browser generates both the ciphertext (handles[0]) and the ZK proof (inputProof). The transaction carries both as calldata. No additional round-trips to any server are needed.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 07</div>
+      <div class="q-q">After <code>endAuction()</code> is called, the UI should show "waiting for reveal." How should the frontend know when the reveal is complete?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Poll <code>auction.phase()</code> every 500 ms</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Wait a fixed 10 seconds — the KMS always responds within this time</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Check the Gateway contract for a <code>DecryptionFulfilled</code> event</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Subscribe to the <code>WinnerRevealed</code> event on the auction contract using <code>watchContractEvent</code> before calling endAuction</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Subscribe to the event <em>before</em> sending the endAuction transaction to avoid race conditions. When the Gateway callback executes, your contract emits <code>WinnerRevealed</code>, the wagmi listener fires, and you update the UI — no polling required.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/7</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE NAV -->
+<div class="pnav">
+  <a href="day13.html">&#8592; Day 13 — Cross-Contract Patterns</a>
+  <a class="next" href="day15.html">Day 15 — Week 3 Capstone &#8594;</a>
+</div>
+
+</main>
+</div><!-- end page -->
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = [
+  'intro','design','phases','data-model',
+  'contract','state-vars','bid-fn','end-fn','callback-fn','refund-fn',
+  'tests','test-cases',
+  'frontend','project-structure','bid-hook','result-hook','ui-states',
+  'privacy-model','gas','lab','quiz'
+];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+
+const TOTAL = 7;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans    = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! Ready for the Week 3 Capstone.' :
+    pct >= 85   ? 'Excellent — strong DApp fundamentals.'   :
+    pct >= 57   ? 'Good — review the callback and bid patterns.' :
+                  'Re-read the contract section.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
