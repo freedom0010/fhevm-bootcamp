@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 12 — Gateway Async Decryption | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711; --ink2: #0d0d1a; --ink3: #141426;
+  --plate:  #1a1a2e; --plate2: #20203a;
+  --wire:   #2a2a45; --wire2: #383860;
+  --cyan:   #00e5ff; --cyan2: #00b8d4;
+  --lime:   #69ff47; --amber: #ffb300;
+  --rose:   #ff4d6d; --violet: #bf5af2;
+  --sky:    #4db8ff; --dim:   #6b6b95;
+  --mid:    #9898be; --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+  --body: 'Instrument Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body); font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, var(--violet), var(--lime)); z-index: 1000; transition: width .1s linear; }
+.topbar { position: sticky; top: 0; z-index: 100; height: 52px; background: rgba(7,7,17,.96); backdrop-filter: blur(20px); border-bottom: 1px solid var(--wire); display: flex; align-items: center; }
+.tb-home { display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 22px; border-right: 1px solid var(--wire); font-family: var(--mono); font-size: 12px; color: var(--dim); text-decoration: none; transition: color .15s; letter-spacing: .5px; }
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb { display: flex; align-items: center; gap: 8px; padding: 0 20px; font-family: var(--mono); font-size: 11px; }
+.tb-crumb .sep { color: var(--wire2); } .tb-crumb .cur { color: var(--mid); }
+.tb-badge { margin-left: auto; margin-right: 18px; padding: 3px 11px; border-radius: 20px; background: rgba(191,90,242,.08); border: 1px solid rgba(191,90,242,.22); font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 1.5px; text-transform: uppercase; }
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; background: var(--ink2); border-right: 1px solid var(--wire); padding: 22px 0 50px; }
+.sb-section { margin-bottom: 4px; }
+.sb-head { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 2.5px; text-transform: uppercase; padding: 14px 18px 5px; }
+.sb-a { display: block; padding: 6px 18px; font-family: var(--body); font-size: 12px; color: var(--mid); border-left: 2px solid transparent; cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45; }
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--violet); border-left-color: var(--violet); background: rgba(191,90,242,.04); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+.main { padding: 56px 70px 120px; max-width: 900px; }
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill { display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px; border-radius: 3px; margin-bottom: 24px; background: rgba(191,90,242,.07); border: 1px solid rgba(191,90,242,.18); font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-family: var(--head); font-size: clamp(34px,4vw,52px); font-weight: 800; line-height: 1.08; letter-spacing: -1px; margin-bottom: 20px; color: var(--white); }
+.hero h1 em { font-style: italic; color: var(--violet); font-weight: 600; }
+.hero .lead { font-size: 15.5px; color: var(--mid); line-height: 1.84; max-width: 640px; margin-bottom: 32px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700; color: var(--white); margin: 56px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--wire); scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600; color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code { font-family: var(--mono); font-size: 12px; color: var(--violet); background: rgba(191,90,242,.08); padding: 2px 6px; border-radius: 3px; }
+.code { background: #040408; border: 1px solid var(--wire); border-radius: 10px; margin: 20px 0; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.code-top { display: flex; align-items: center; gap: 10px; padding: 9px 16px; background: var(--ink3); border-bottom: 1px solid var(--wire); }
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang { font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 1.5px; text-transform: uppercase; }
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy { background: none; border: 1px solid var(--wire); color: var(--dim); font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; cursor: pointer; transition: all .14s; letter-spacing: .8px; }
+.copy:hover { border-color: var(--violet); color: var(--violet); }
+pre { padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0; tab-size: 2; }
+.k { color: #ff79c6; } .f { color: #8be9fd; } .s { color: #f1fa8c; }
+.c { color: #525270; font-style: italic; } .n { color: #bd93f9; }
+.t { color: #ffb86c; } .a { color: #50fa7b; } .ev { color: #50fa7b; }
+.d { color: #8be9fd; } .v { color: #f8f8f2; }
+.box { border-radius: 8px; padding: 15px 20px; margin: 20px 0; border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start; }
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title { font-family: var(--mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code { font-family: var(--mono); font-size: 11.5px; color: var(--violet); background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); }
+.tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); }
+.warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); }
+.alert .box-title{ color: var(--rose); }
+.info { background: rgba(191,90,242,.05); border-color: var(--violet); }
+.info .box-title { color: var(--violet); }
+.key  { background: rgba(0,229,255,.05); border-color: var(--cyan); border-width: 2px; }
+.key .box-title  { color: var(--cyan); }
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--ink3); padding: 9px 14px; text-align: left; font-family: var(--mono); font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.2px; border: 1px solid var(--wire); }
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code { font-family: var(--mono); font-size: 11px; color: var(--violet); background: rgba(191,90,242,.07); padding: 1px 5px; border-radius: 3px; }
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 36px; bottom: -6px; width: 1px; background: var(--wire2); }
+.step-num { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.22); color: var(--violet); font-family: var(--mono); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-right: 18px; margin-top: 1px; z-index: 1; }
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code { font-family: var(--mono); font-size: 11.5px; color: var(--violet); background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+.quiz { background: var(--ink2); border: 1px solid var(--wire2); border-radius: 14px; margin: 52px 0; overflow: hidden; }
+.quiz-head { padding: 20px 24px; background: rgba(191,90,242,.07); border-bottom: 1px solid var(--wire2); display: flex; align-items: flex-start; gap: 14px; }
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--violet); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code { font-family: var(--mono); font-size: 12px; color: var(--violet); background: rgba(191,90,242,.09); padding: 1px 5px; border-radius: 3px; }
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--wire); font-size: 13px; color: var(--mid); transition: all .14s; user-select: none; line-height: 1.58; }
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr { width: 22px; height: 22px; border-radius: 50%; background: var(--plate); color: var(--dim); font-family: var(--mono); font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp { margin-top: 10px; padding: 11px 14px; background: rgba(191,90,242,.04); border: 1px solid rgba(191,90,242,.12); border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68; display: none; }
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--violet); }
+.quiz-submit { display: block; margin: 2px 24px 24px; padding: 11px 24px; border-radius: 8px; background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.28); color: var(--violet); font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all .14s; }
+.quiz-submit:hover { background: rgba(191,90,242,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score { margin: 0 24px 24px; padding: 16px 20px; background: var(--ink3); border: 1px solid var(--wire); border-radius: 9px; display: none; align-items: center; gap: 20px; }
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--violet); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.pnav { display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire); }
+.pnav a { display: flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 8px; text-decoration: none; font-family: var(--mono); font-size: 11px; color: var(--mid); border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px; }
+.pnav a:hover { border-color: var(--violet); color: var(--violet); }
+.pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
+.pnav .next:hover { background: rgba(191,90,242,.14); }
+@media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } .diff { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 3</span>
+    <span class="sep">/</span>
+    <span class="cur">Day 12</span>
+  </div>
+  <div class="tb-badge">Week 3 — Advanced DApp</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="why-async">Why Async?</a>
+    <a class="sb-a sub" data-id="lifecycle">Decryption Lifecycle</a>
+    <a class="sb-a" data-id="gateway-contract">Gateway Contract</a>
+    <a class="sb-a sub" data-id="request-decrypt">requestDecryption</a>
+    <a class="sb-a sub" data-id="callback">Callback Pattern</a>
+    <a class="sb-a" data-id="single-value">Single Value Reveal</a>
+    <a class="sb-a sub" data-id="auction-reveal">Auction Reveal</a>
+    <a class="sb-a" data-id="multi-value">Multi-Value Batch</a>
+    <a class="sb-a sub" data-id="batch-code">Batch Code</a>
+    <a class="sb-a" data-id="conditional-reveal">Conditional Reveal</a>
+    <a class="sb-a" data-id="frontend-poll">Frontend Polling</a>
+    <a class="sb-a sub" data-id="events">Listening for Events</a>
+    <a class="sb-a sub" data-id="wagmi-watch">Wagmi watchContractEvent</a>
+    <a class="sb-a" data-id="security">Security Checklist</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127760; Day 12 of 20</div>
+  <h1>Gateway<br><em>Async Decryption</em></h1>
+  <p class="lead">
+    In FHEVM, decryption is never instantaneous. A request goes on-chain, the KMS cluster
+    signs a threshold decryption, and the result is delivered back via a callback transaction
+    — potentially seconds or blocks later. Mastering this async pattern is essential for
+    building auctions, voting systems, and any contract that publicly reveals encrypted
+    results. Today you learn every variant: single-value reveal, batch, conditional, and
+    how to keep your frontend in sync.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#128275; Gateway deep-dive</div>
+    <div class="stat">&#128260; Callback patterns</div>
+    <div class="stat">&#9989; 6-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- WHY ASYNC -->
+<h2 class="sec" id="why-async">Why is Decryption Always Async?</h2>
+<p>
+  Decryption requires the KMS — a threshold MPC cluster of independent nodes that must
+  each sign the decryption before a result is released. This consensus round cannot happen
+  within a single Ethereum block's execution. Instead, FHEVM uses a two-transaction model:
+</p>
+<ul>
+  <li><strong>Transaction 1</strong> — Your contract calls <code>Gateway.requestDecryption()</code>, emitting an event that the KMS monitors.</li>
+  <li><strong>KMS processing</strong> — Nodes jointly compute the threshold decryption and sign the result.</li>
+  <li><strong>Transaction 2</strong> — The Gateway submits the decrypted plaintext back to your contract's callback function.</li>
+</ul>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">Never Try to Read Decryption Synchronously</div>
+    <div class="box-text">
+      You cannot know the decrypted value in the same transaction as the request. Any
+      contract that attempts to use a decrypted value synchronously is broken by design.
+      Always split into request + callback.
+    </div>
+  </div>
+</div>
+
+<h3 class="sub" id="lifecycle">Decryption Lifecycle</h3>
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Contract calls <code>allowForDecryption(handle)</code></h4>
+      <p>Grants the Gateway permission to decrypt the handle. Must be called before or in the same tx as the request.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Contract calls <code>Gateway.requestDecryption(...)</code></h4>
+      <p>Registers the request on-chain. The callback selector, request ID, and encrypted handles are stored in Gateway state.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>KMS monitors the Gateway event</h4>
+      <p>Off-chain KMS nodes detect the <code>EventDecryption</code> event, reach threshold consensus, sign the plaintext result.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Gateway calls your callback</h4>
+      <p>Gateway contract invokes <code>yourContract.callbackName(requestId, plaintext)</code>. Your contract handles the revealed value.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Frontend detects callback event</h4>
+      <p>Watch for your contract's <code>ResultRevealed</code> (or similar) event to update the UI without polling.</p>
+    </div>
+  </div>
+</div>
+
+<!-- GATEWAY CONTRACT -->
+<h2 class="sec" id="gateway-contract">The Gateway Contract</h2>
+<p>
+  The <strong>Gateway</strong> is a pre-deployed system contract. You interact with it
+  through the <code>GatewayLib</code> helper that ships with <code>fhevm/lib/GatewayLib.sol</code>.
+  You never deploy the Gateway yourself.
+</p>
+
+<h3 class="sub" id="request-decrypt">requestDecryption Signature</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">GatewayLib reference</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// Simplified signature (from fhevm/lib/GatewayLib.sol)</span>
+<span class="k">function</span> <span class="f">requestDecryption</span>(
+    uint256[] calldata ciphertextHandles,  <span class="c">// handles to decrypt</span>
+    bytes4   callbackSelector,            <span class="c">// your callback function selector</span>
+    uint256  msgValue,                    <span class="c">// ETH to forward to callback (usually 0)</span>
+    uint256  maxTimestamp,                <span class="c">// deadline for KMS response</span>
+    bool     passSignaturesToCaller       <span class="c">// true = KMS sigs forwarded to callback</span>
+) <span class="k">external returns</span> (uint256 requestID)</pre>
+</div>
+
+<h3 class="sub" id="callback">Callback Function Rules</h3>
+<p>Your callback function must follow a strict signature pattern:</p>
+<ul>
+  <li>First parameter: <code>uint256 requestID</code></li>
+  <li>Remaining parameters: one <strong>plaintext</strong> value per handle requested, in the same order</li>
+  <li>Must be marked <code>external</code></li>
+  <li>Must use the <code>onlyGateway</code> modifier to prevent spoofing</li>
+</ul>
+
+<div class="box alert">
+  <div class="box-ico">&#128683;</div>
+  <div class="box-inner">
+    <div class="box-title">Always Use onlyGateway</div>
+    <div class="box-text">
+      Without <code>onlyGateway</code>, any address can call your callback with forged plaintext values.
+      The modifier verifies the caller is the official Gateway contract address.
+    </div>
+  </div>
+</div>
+
+<!-- SINGLE VALUE REVEAL -->
+<h2 class="sec" id="single-value">Pattern 1 — Single Value Reveal</h2>
+<p>
+  The simplest case: reveal one encrypted value after a condition is met (e.g., auction ends).
+</p>
+
+<h3 class="sub" id="auction-reveal">Auction Winner Reveal</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/SealedAuction.sol</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^0.8.24;
+
+<span class="k">import</span> <span class="s">"fhevm/lib/TFHE.sol"</span>;
+<span class="k">import</span> <span class="s">"fhevm/gateway/GatewayLib.sol"</span>;
+<span class="k">import</span> <span class="s">"fhevm/gateway/GatewayLib.sol"</span>;
+
+<span class="k">contract</span> SealedAuction {
+    <span class="k">using</span> GatewayLib <span class="k">for</span> GatewayLib.Gateway;
+
+    euint64  <span class="k">private</span> _highestBid;
+    address  <span class="k">public</span>  highestBidder;
+    bool     <span class="k">public</span>  auctionEnded;
+    bool     <span class="k">public</span>  resultRevealed;
+    uint64   <span class="k">public</span>  revealedWinningBid;
+
+    <span class="c">// requestID → bidder (so callback can store result)</span>
+    mapping(uint256 => address) <span class="k">private</span> _pendingReveal;
+
+    <span class="ev">event</span> AuctionEnded(address indexed winner);
+    <span class="ev">event</span> BidRevealed(address indexed winner, uint64 amount);
+
+    <span class="k">modifier</span> onlyGateway() {
+        <span class="k">require</span>(msg.sender == GatewayLib.gatewayContractAddress(), <span class="s">"Only gateway"</span>);
+        _;
+    }
+
+    <span class="k">function</span> <span class="f">endAuction</span>() <span class="k">external</span> {
+        <span class="k">require</span>(!auctionEnded, <span class="s">"Already ended"</span>);
+        auctionEnded = <span class="n">true</span>;
+
+        <span class="c">// Grant Gateway permission to decrypt the winning bid</span>
+        TFHE.allowForDecryption(_highestBid);
+
+        uint256[] <span class="k">memory</span> handles = <span class="k">new</span> uint256[](<span class="n">1</span>);
+        handles[<span class="n">0</span>] = euint64.unwrap(_highestBid);
+
+        <span class="c">// Request decryption — callback is revealCallback(uint256, uint64)</span>
+        uint256 reqId = GatewayLib.requestDecryption(
+            handles,
+            <span class="k">this</span>.revealCallback.selector,
+            <span class="n">0</span>,             <span class="c">// no ETH forwarded</span>
+            block.timestamp + <span class="n">1 days</span>,
+            <span class="n">false</span>
+        );
+        _pendingReveal[reqId] = highestBidder;
+
+        <span class="k">emit</span> AuctionEnded(highestBidder);
+    }
+
+    <span class="c">/// @dev Called by the Gateway after KMS decrypts the winning bid</span>
+    <span class="k">function</span> <span class="f">revealCallback</span>(uint256 requestId, uint64 winningBid)
+        <span class="k">external</span> onlyGateway
+    {
+        address winner = _pendingReveal[requestId];
+        <span class="k">delete</span> _pendingReveal[requestId];
+
+        revealedWinningBid = winningBid;
+        resultRevealed = <span class="n">true</span>;
+
+        <span class="k">emit</span> BidRevealed(winner, winningBid);
+    }
+}</pre>
+</div>
+
+<!-- MULTI-VALUE BATCH -->
+<h2 class="sec" id="multi-value">Pattern 2 — Multi-Value Batch Decrypt</h2>
+<p>
+  You can request decryption of up to several handles in a single call. All plaintext
+  values are delivered together in one callback invocation.
+</p>
+
+<h3 class="sub" id="batch-code">Batch Decryption Example</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/VotingResult.sol (excerpt)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// Reveal yes votes + no votes in one batch request</span>
+<span class="k">function</span> <span class="f">revealResults</span>() <span class="k">external</span> {
+    <span class="k">require</span>(block.timestamp > votingEnd, <span class="s">"Voting ongoing"</span>);
+
+    TFHE.allowForDecryption(_yesVotes);
+    TFHE.allowForDecryption(_noVotes);
+
+    uint256[] <span class="k">memory</span> handles = <span class="k">new</span> uint256[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = euint32.unwrap(_yesVotes);
+    handles[<span class="n">1</span>] = euint32.unwrap(_noVotes);
+
+    GatewayLib.requestDecryption(
+        handles,
+        <span class="k">this</span>.resultsCallback.selector,
+        <span class="n">0</span>,
+        block.timestamp + <span class="n">1 days</span>,
+        <span class="n">false</span>
+    );
+}
+
+<span class="c">/// @dev Callback receives BOTH plaintext values at once</span>
+<span class="k">function</span> <span class="f">resultsCallback</span>(
+    uint256 <span class="c">/* requestId */</span>,
+    uint32 yesCount,
+    uint32 noCount
+) <span class="k">external</span> onlyGateway {
+    revealedYes = yesCount;
+    revealedNo  = noCount;
+    resultsPublished = <span class="n">true</span>;
+    <span class="k">emit</span> ResultsPublished(yesCount, noCount);
+}</pre>
+</div>
+
+<div class="box tip">
+  <div class="box-ico">&#128161;</div>
+  <div class="box-inner">
+    <div class="box-title">Order Matters</div>
+    <div class="box-text">
+      The plaintext parameters in your callback must be in the <em>same order</em> as the
+      handles in the <code>ciphertextHandles</code> array. Mixing up the order silently
+      assigns the wrong values.
+    </div>
+  </div>
+</div>
+
+<!-- CONDITIONAL REVEAL -->
+<h2 class="sec" id="conditional-reveal">Pattern 3 — Conditional Reveal</h2>
+<p>
+  Sometimes you want to reveal a value only if an encrypted condition is true — for example,
+  "reveal the salary only if both parties have signed". You cannot branch on encrypted
+  conditions synchronously, but you can compute an encrypted boolean, then reveal the
+  result value only after decrypting the condition first.
+</p>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/ConditionalReveal.sol (excerpt)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// Phase 1: request decryption of the CONDITION (ebool)</span>
+<span class="k">function</span> <span class="f">requestConditionCheck</span>() <span class="k">external</span> {
+    TFHE.allowForDecryption(_bothSigned);
+    uint256[] <span class="k">memory</span> h = <span class="k">new</span> uint256[](<span class="n">1</span>);
+    h[<span class="n">0</span>] = ebool.unwrap(_bothSigned);
+    GatewayLib.requestDecryption(h, <span class="k">this</span>.conditionCallback.selector, <span class="n">0</span>,
+                                  block.timestamp + <span class="n">1 days</span>, <span class="n">false</span>);
+}
+
+<span class="c">// Phase 2: only if condition is true, request the value reveal</span>
+<span class="k">function</span> <span class="f">conditionCallback</span>(uint256 <span class="c">/* reqId */</span>, bool bothSigned)
+    <span class="k">external</span> onlyGateway
+{
+    <span class="k">if</span> (!bothSigned) {
+        <span class="k">emit</span> RevealDenied();
+        <span class="k">return</span>;
+    }
+    <span class="c">// Now safe to reveal the value</span>
+    TFHE.allowForDecryption(_salary);
+    uint256[] <span class="k">memory</span> h = <span class="k">new</span> uint256[](<span class="n">1</span>);
+    h[<span class="n">0</span>] = euint64.unwrap(_salary);
+    GatewayLib.requestDecryption(h, <span class="k">this</span>.salaryCallback.selector, <span class="n">0</span>,
+                                  block.timestamp + <span class="n">1 days</span>, <span class="n">false</span>);
+}
+
+<span class="k">function</span> <span class="f">salaryCallback</span>(uint256 <span class="c">/* reqId */</span>, uint64 salary)
+    <span class="k">external</span> onlyGateway
+{
+    revealedSalary = salary;
+    <span class="k">emit</span> SalaryRevealed(salary);
+}</pre>
+</div>
+
+<!-- FRONTEND POLLING -->
+<h2 class="sec" id="frontend-poll">Frontend: Watching for the Callback</h2>
+<p>
+  Because decryption is async, your UI must listen for the callback completion rather than
+  waiting on a single transaction. The cleanest approach is event-driven using wagmi's
+  <code>watchContractEvent</code>.
+</p>
+
+<h3 class="sub" id="events">What Events to Watch</h3>
+<p>
+  Emit a dedicated event in your callback (e.g., <code>BidRevealed</code>, <code>ResultsPublished</code>)
+  and have the frontend subscribe before triggering the request. This avoids race conditions.
+</p>
+
+<h3 class="sub" id="wagmi-watch">Wagmi watchContractEvent Pattern</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">TypeScript</div>
+    <div class="fname">hooks/useAuctionResult.ts</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">import</span> { useState, useEffect } <span class="k">from</span> <span class="s">'react'</span>
+<span class="k">import</span> { useConfig, useWriteContract } <span class="k">from</span> <span class="s">'wagmi'</span>
+<span class="k">import</span> { watchContractEvent } <span class="k">from</span> <span class="s">'wagmi/actions'</span>
+<span class="k">import</span> { AUCTION_ADDRESS, AUCTION_ABI } <span class="k">from</span> <span class="s">'../lib/contract'</span>
+
+<span class="k">export function</span> <span class="f">useAuctionResult</span>() {
+  <span class="k">const</span> [result, setResult] = useState&lt;{
+    winner: <span class="t">string</span>; amount: <span class="t">bigint</span>
+  } | <span class="t">null</span>&gt;(<span class="t">null</span>)
+  <span class="k">const</span> [waiting, setWaiting] = useState(<span class="n">false</span>)
+  <span class="k">const</span> config = useConfig()
+  <span class="k">const</span> { writeContract } = useWriteContract()
+
+  useEffect(() => {
+    <span class="c">// Subscribe to BidRevealed event</span>
+    <span class="k">const</span> unwatch = watchContractEvent(config, {
+      address: AUCTION_ADDRESS,
+      abi: AUCTION_ABI,
+      eventName: <span class="s">'BidRevealed'</span>,
+      onLogs: (logs) => {
+        <span class="k">const</span> log = logs[<span class="n">0</span>]
+        setResult({ winner: log.args.winner!, amount: log.args.amount! })
+        setWaiting(<span class="n">false</span>)
+      },
+    })
+    <span class="k">return</span> () => unwatch()
+  }, [config])
+
+  <span class="k">async function</span> <span class="f">endAuction</span>() {
+    setWaiting(<span class="n">true</span>)
+    writeContract({
+      address: AUCTION_ADDRESS,
+      abi: AUCTION_ABI,
+      functionName: <span class="s">'endAuction'</span>,
+    })
+    <span class="c">// BidRevealed event fires in a later block — useEffect handles it</span>
+  }
+
+  <span class="k">return</span> { result, waiting, endAuction }
+}</pre>
+</div>
+
+<div class="box info">
+  <div class="box-ico">&#128203;</div>
+  <div class="box-inner">
+    <div class="box-title">Typical Callback Latency</div>
+    <div class="box-text">
+      On Zama Devnet, the KMS typically responds within 2–6 seconds (1–2 blocks). On a
+      production mainnet, this could be 12–30 seconds depending on KMS node availability
+      and block times. Design your UX to show a "waiting for reveal..." state.
+    </div>
+  </div>
+</div>
+
+<!-- SECURITY CHECKLIST -->
+<h2 class="sec" id="security">Async Decryption Security Checklist</h2>
+<div class="tw">
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Risk if Missing</th><th>Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>onlyGateway</code> modifier</td>
+        <td>Anyone can forge a callback with arbitrary plaintext</td>
+        <td>Always verify <code>msg.sender == GatewayLib.gatewayContractAddress()</code></td>
+      </tr>
+      <tr>
+        <td><code>allowForDecryption</code> before request</td>
+        <td>KMS cannot decrypt — request silently ignored</td>
+        <td>Call in same tx or prior tx</td>
+      </tr>
+      <tr>
+        <td>Validate <code>requestId</code> in callback</td>
+        <td>Replay or substitution of old results</td>
+        <td>Map <code>requestId → expected context</code> and validate</td>
+      </tr>
+      <tr>
+        <td><code>maxTimestamp</code> expiry</td>
+        <td>Contract waits forever if KMS is down</td>
+        <td>Set 1–7 day deadline; add fallback recovery path</td>
+      </tr>
+      <tr>
+        <td>Reentrancy guard in callback</td>
+        <td>Callback could trigger re-entry during state update</td>
+        <td>Use OpenZeppelin <code>ReentrancyGuard</code> or checks-effects pattern</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LAB -->
+<h2 class="sec" id="lab">Lab 3B — Async Reveal for Sealed Auction</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Extend the <code>SealedAuction</code> contract from Day 9 with a full async decryption
+      reveal flow. Add a callback that: (1) stores the revealed winning bid, (2) emits a
+      <code>WinnerRevealed</code> event, (3) triggers a refund loop for losing bidders.
+      Then build a frontend hook that watches for the event and updates the UI.
+    </div>
+  </div>
+</div>
+<ul>
+  <li><code>contracts/SealedAuction.sol</code> — add <code>revealWinner()</code> + <code>revealCallback(uint256, uint64)</code></li>
+  <li><code>test/SealedAuction.reveal.test.ts</code> — at minimum 3 tests: request emits event, callback updates state, non-gateway caller reverts</li>
+  <li><code>hooks/useAuctionReveal.ts</code> — React hook watching <code>WinnerRevealed</code> event</li>
+</ul>
+<p><strong>Extension:</strong> Add a <code>maxTimestamp</code> check — if the KMS hasn't responded after 2 days, allow the auction owner to cancel and refund all bidders.</p>
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 12 Quiz</div>
+      <div class="quiz-subtitle">6 questions · Gateway async decryption</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 06</div>
+      <div class="q-q">Why is FHEVM decryption always asynchronous (two transactions)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It's a design choice for gas efficiency</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The EVM cannot execute WASM code in-block</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Threshold decryption requires consensus across multiple KMS nodes, which cannot complete within a single block's execution</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway contract stores ciphertexts in a queue to batch decryptions</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The KMS is a distributed MPC cluster. Each node must independently compute a partial decryption and the results must be combined. This consensus round spans network roundtrips and cannot fit inside one EVM execution context.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 02 / 06</div>
+      <div class="q-q">What is the consequence of omitting the <code>onlyGateway</code> modifier on a decryption callback?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Any address can call the callback with forged plaintext values, completely bypassing the decryption security</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The callback can only be called once</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Gas costs increase</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The function can only be called internally</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Without <code>onlyGateway</code>, your callback is a public function. A malicious actor could call it directly with any plaintext values, for example setting a winning auction bid to 0 and claiming the prize without paying.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 06</div>
+      <div class="q-q">You request decryption of <strong>two</strong> handles in order: <code>[yesVotes, noVotes]</code>. What should your callback signature look like?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>callback(uint256 requestId, uint256[] plaintext)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>callback(uint32 yesCount, uint32 noCount)</code></div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>callback(uint256 requestId)</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>callback(uint256 requestId, uint32 yesCount, uint32 noCount)</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> The Gateway passes the requestId first, then the decrypted plaintext values in the exact same order as the handles array. Each plaintext is a separate parameter of its original Solidity type.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 04 / 06</div>
+      <div class="q-q">What happens if you call <code>Gateway.requestDecryption</code> without first calling <code>TFHE.allowForDecryption(handle)</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The request succeeds but the callback receives 0 for that value</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The KMS will not decrypt it — the ACL check fails and the request is ignored or reverts</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The Gateway automatically grants the permission on your behalf</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The transaction succeeds but emits no event</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> <code>allowForDecryption</code> is the ACL step that tells the on-chain ACL contract that the Gateway is permitted to decrypt this handle. Without it, the KMS's ACL check will reject the decryption request.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 06</div>
+      <div class="q-q">In the conditional reveal pattern, why must you make <strong>two</strong> separate Gateway calls (condition first, value second)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To save gas by batching in two requests</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Because the Gateway limits each request to one handle</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>You cannot branch on encrypted values in Solidity — you must first reveal the boolean condition as plaintext before deciding whether to reveal the value</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The KMS processes two-step requests faster</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> In FHEVM, <code>if (encryptedBool)</code> is not possible — all branches must be oblivious. To gate a reveal on a condition, you must first decrypt the condition to plaintext via the Gateway, then use the resulting boolean in a normal Solidity if-statement to decide whether to proceed with the value reveal.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 06 / 06</div>
+      <div class="q-q">What is the recommended frontend pattern to know when a Gateway callback has executed?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Emit a dedicated event in your callback function and watch it with <code>watchContractEvent</code> before triggering the request transaction</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Poll the contract's storage every 500 ms until the value changes</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Wait for the request transaction to confirm — the callback is always in the same block</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Call a <code>getDecryptionStatus(requestId)</code> view function on the Gateway</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Event-driven is the cleanest approach. Subscribe to your contract's callback event before sending the request transaction. When the callback executes (1–2 blocks later), the event fires and your UI updates. Polling is wasteful and introduces latency.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/6</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day11.html">&#8592; Day 11 — fhevmjs Frontend</a>
+  <a class="next" href="day13.html">Day 13 — Cross-Contract Patterns &#8594;</a>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = ['intro','why-async','lifecycle','gateway-contract','request-decrypt','callback',
+  'single-value','auction-reveal','multi-value','batch-code','conditional-reveal',
+  'frontend-poll','events','wagmi-watch','security','lab','quiz'];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const TOTAL = 6;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! On to Day 13.' :
+    pct >= 83   ? 'Excellent!'              :
+    pct >= 50   ? 'Review the callback patterns.' :
+                  'Re-read from the top.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
