@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 9 — Gateway &amp; Async Decryption | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#060b10;--ink2:#0b1018;--ink3:#101820;--plate:#151e28;--wire:#202c38;--wire2:#2c3c4e;--acc:#22d3ee;--acc2:#0891b2;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--purple:#c084fc;--teal:#2dd4bf;--dim:#5a6e80;--mid:#8aa0b0;--bright:#d4e8f0;--white:#e8f8ff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--teal));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(6,11,16,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(34,211,238,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:920px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(34,211,238,.09);padding:2px 6px;border-radius:3px}
+.code{background:#030608;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(34,211,238,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(34,211,238,.05);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(34,211,238,.07);padding:1px 5px;border-radius:3px}td strong{color:var(--bright)}
+.flow{display:flex;flex-direction:column;margin:22px 0;gap:0}
+.flow-step{display:flex;gap:0;align-items:flex-start;position:relative}
+.flow-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;bottom:-6px;width:1px;background:var(--wire2)}
+.step-num{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.22);color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-right:18px;margin-top:1px;z-index:1}
+.step-body{padding-bottom:24px;flex:1}.step-body h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:5px}.step-body p{font-size:13px;margin-bottom:0;line-height:1.72}
+.step-body code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(34,211,238,.09);padding:1px 5px;border-radius:3px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(34,211,238,.06);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(34,211,238,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(34,211,238,.07);border-color:rgba(34,211,238,.22);color:var(--acc)}.pnav .next:hover{background:rgba(34,211,238,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 2</span><span class="sep">/</span><span class="cur">Day 9</span></div>
+  <div class="tb-badge">Week 2 — Patterns</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="why-gateway">Why a Gateway?</a>
+  <a class="sb-a" data-id="architecture">Gateway Architecture</a>
+  <a class="sb-a sub" data-id="components">Components</a>
+  <a class="sb-a sub" data-id="flow">End-to-End Flow</a>
+  <a class="sb-a" data-id="request-api">requestDecryption API</a>
+  <a class="sb-a sub" data-id="params">Parameters</a>
+  <a class="sb-a sub" data-id="multi-type">Multi-Type Requests</a>
+  <a class="sb-a" data-id="callback">Callback Patterns</a>
+  <a class="sb-a sub" data-id="only-gateway">onlyGateway Modifier</a>
+  <a class="sb-a sub" data-id="state-machine">State Machine Pattern</a>
+  <a class="sb-a" data-id="timeout">Timeout &amp; Retry</a>
+  <a class="sb-a" data-id="multi-request">Multiple Pending Requests</a>
+  <a class="sb-a" data-id="testing">Testing Async Callbacks</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127760; Day 9 of 20</div>
+  <h1>Gateway &amp;<br><em>Async Decryption</em></h1>
+  <p class="lead">The Gateway is FHEVM's bridge between encrypted on-chain state and plaintext results. When you need a contract to act on decrypted values — finalizing an auction, settling a game, triggering a liquidation — you go through the Gateway. Today you master the full request-callback lifecycle, multi-type decryption, timeout handling, and testing strategies.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#127760; Full Gateway API</div>
+    <div class="stat">&#128260; Async callback patterns</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="why-gateway">Why a Gateway?</h2>
+<p>FHE ciphertexts can be <strong>computed on</strong> (add, multiply, compare) without decryption. But sometimes a contract needs the actual plaintext — to branch its logic, emit a result, trigger a payout, or make a public announcement. Decrypting directly in the EVM is impossible (the KMS holds the secret key). The Gateway is the trusted intermediary that:</p>
+<ul>
+  <li><strong>Receives</strong> a decryption request from a smart contract</li>
+  <li><strong>Forwards</strong> it to the KMS (multi-party key management service)</li>
+  <li><strong>Delivers</strong> the plaintext result back to the contract via a callback transaction</li>
+</ul>
+
+<div class="box key">
+  <span class="box-ico">&#128274;</span>
+  <div class="box-inner">
+    <div class="box-title">Re-encryption vs Public Decryption</div>
+    <div class="box-text">
+      <strong>Re-encryption</strong> (user views own data): The KMS re-encrypts the ciphertext under the user's ephemeral public key. Plaintext never appears on-chain. Used for balance queries, private data views.<br><br>
+      <strong>Public decryption</strong> (Gateway callback): The KMS decrypts and the Gateway sends plaintext to your contract callback. The plaintext appears in the callback transaction's calldata — visible to everyone. Use only when you <em>intend</em> to make the value public (auction winner, game result, tally).
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="architecture">Gateway Architecture</h2>
+<h3 class="sub" id="components">Components</h3>
+<div class="tw"><table>
+  <thead><tr><th>Component</th><th>Role</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Gateway Contract</strong></td><td>On-chain receiver of decryption requests; dispatcher of callbacks</td><td>On-chain (address in ZamaConfig)</td></tr>
+    <tr><td><strong>KMS (Key Management Service)</strong></td><td>Multi-party system holding the FHE secret key; performs decryption</td><td>Off-chain, Zama-operated</td></tr>
+    <tr><td><strong>GatewayCaller</strong></td><td>Base contract your contract inherits; provides <code>onlyGateway</code> modifier</td><td><code>@fhevm/solidity/gateway/GatewayCaller.sol</code></td></tr>
+    <tr><td><strong>Your Contract</strong></td><td>Calls <code>Gateway.requestDecryption()</code>; receives callback</td><td>Your deployment</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="flow">End-to-End Decryption Flow</h3>
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Contract calls <code>Gateway.requestDecryption(handles[], callbackSelector, 0, deadline, false)</code></h4>
+      <p>The Gateway emits a <code>DecryptionRequest</code> event with a unique <code>requestId</code>. Returns the requestId for tracking.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>KMS monitors the Gateway for events</h4>
+      <p>KMS nodes observe the blockchain for <code>DecryptionRequest</code> events. They fetch the ciphertexts from the coprocessor.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>KMS threshold decryption</h4>
+      <p>Multiple KMS nodes independently decrypt (threshold scheme). They reach consensus and generate a signed plaintext result.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Gateway submits callback transaction</h4>
+      <p>Gateway calls your contract's callback function (identified by <code>callbackSelector</code>) with the plaintext values. Typically takes 1–5 seconds on Devnet, up to 30s on Sepolia.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Your callback function executes</h4>
+      <p>Receives <code>(uint256 requestId, T1 val1, T2 val2, ...)</code>. The <code>onlyGateway</code> modifier verifies the sender is the legitimate Gateway. You finalize state: set winner, trigger payout, update result.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="request-api">The requestDecryption API</h2>
+<h3 class="sub" id="params">Function Signature &amp; Parameters</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Gateway.requestDecryption() signature</span></div>
+  <pre><span class="c">// From GatewayCaller base contract:</span>
+<span class="k">function</span> <span class="f">requestDecryption</span>(
+    <span class="t">uint256</span>[] <span class="k">memory</span> ctsHandles,    <span class="c">// array of handle.unwrap() values</span>
+    <span class="t">bytes4</span>           callbackSelector, <span class="c">// this.myCallback.selector</span>
+    <span class="t">uint256</span>          msgValue,         <span class="c">// always 0 (reserved)</span>
+    <span class="t">uint256</span>          deadline,         <span class="c">// block.timestamp + N seconds</span>
+    <span class="k">bool</span>             passSignaturesToCaller <span class="c">// false for most use cases</span>
+) <span class="k">external returns</span> (<span class="t">uint256</span> requestId)</pre>
+</div>
+
+<div class="tw"><table>
+  <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>ctsHandles</code></td><td>Array of <code>euintX.unwrap(h)</code> values</td><td>All handles must have <code>makePubliclyDecryptable</code> set</td></tr>
+    <tr><td><code>callbackSelector</code></td><td><code>this.myCallback.selector</code></td><td>4-byte selector of your callback function</td></tr>
+    <tr><td><code>msgValue</code></td><td><code>0</code></td><td>Always 0, reserved for future use</td></tr>
+    <tr><td><code>deadline</code></td><td><code>block.timestamp + 1 hours</code></td><td>Request expires after this; set generously</td></tr>
+    <tr><td><code>passSignaturesToCaller</code></td><td><code>false</code></td><td><code>true</code> only for advanced KMS signature verification in callback</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="multi-type">Requesting Multiple Types</h3>
+<p>You can decrypt up to several handles in one request. The callback receives them as positional parameters in declaration order. Mix types freely — the callback signature must match exactly.</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Multi-type decryption request</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">function</span> <span class="f">revealAuctionResult</span>() <span class="k">external onlyOwner</span> {
+    FHE.<span class="f">makePubliclyDecryptable</span>(_winningBid);     <span class="c">// euint64</span>
+    FHE.<span class="f">makePubliclyDecryptable</span>(_winnerAddress);  <span class="c">// eaddress</span>
+    FHE.<span class="f">makePubliclyDecryptable</span>(_winnerScore);    <span class="c">// euint32</span>
+
+    <span class="t">uint256</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">uint256</span>[](<span class="n">3</span>);
+    handles[<span class="n">0</span>] = <span class="t">euint64</span>.<span class="f">unwrap</span>(_winningBid);
+    handles[<span class="n">1</span>] = <span class="t">eaddress</span>.<span class="f">unwrap</span>(_winnerAddress);
+    handles[<span class="n">2</span>] = <span class="t">euint32</span>.<span class="f">unwrap</span>(_winnerScore);
+
+    <span class="t">uint256</span> reqId = Gateway.<span class="f">requestDecryption</span>(
+        handles,
+        <span class="k">this</span>.auctionResultCallback.selector,
+        <span class="n">0</span>,
+        block.timestamp + <span class="n">1 hours</span>,
+        <span class="k">false</span>
+    );
+    _pendingRequestId = reqId;
+    state = State.Settling;
+}
+
+<span class="c">// Callback: parameters match request order exactly</span>
+<span class="c">// uint256 requestId is ALWAYS the first parameter</span>
+<span class="k">function</span> <span class="f">auctionResultCallback</span>(
+    <span class="t">uint256</span> requestId,   <span class="c">// always first</span>
+    <span class="t">uint64</span>  winningBid,  <span class="c">// handles[0] — euint64 → uint64</span>
+    <span class="t">address</span> winner,     <span class="c">// handles[1] — eaddress → address</span>
+    <span class="t">uint32</span>  score        <span class="c">// handles[2] — euint32 → uint32</span>
+) <span class="k">external onlyGateway</span> {
+    <span class="k">require</span>(requestId == _pendingRequestId, <span class="s">"Wrong request"</span>);
+    <span class="c">// Handle the results...</span>
+    _finalBid    = winningBid;
+    _finalWinner = winner;
+    _finalScore  = score;
+    state        = State.Settled;
+    <span class="k">emit</span> <span class="f">ResultRevealed</span>(winner, winningBid, score);
+}</pre>
+</div>
+
+<h2 class="sec" id="callback">Callback Patterns</h2>
+<h3 class="sub" id="only-gateway">The onlyGateway Modifier</h3>
+<div class="box alert">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">Always Use onlyGateway on Callbacks</div>
+    <div class="box-text">Without <code>onlyGateway</code>, any address can call your callback with fake plaintext values. An attacker could call <code>auctionResultCallback(requestId, 999999, attackerAddress, 255)</code> and set themselves as the winner. <code>onlyGateway</code> checks <code>msg.sender == GatewayContractAddress</code> — only the legitimate Gateway can deliver results.</div>
+  </div>
+</div>
+
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">onlyGateway source (from GatewayCaller.sol)</span></div>
+  <pre><span class="c">// What onlyGateway actually does (simplified):</span>
+<span class="k">modifier</span> <span class="f">onlyGateway</span>() {
+    <span class="k">require</span>(
+        msg.sender == <span class="t">address</span>(Gateway),
+        <span class="s">"GatewayCaller: caller is not the Gateway"</span>
+    );
+    _;
+}</pre>
+</div>
+
+<h3 class="sub" id="state-machine">State Machine Pattern for Async Flow</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Full async state machine</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">contract</span> <span class="t">AsyncReveal</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="k">enum</span> <span class="t">State</span> { Active, PendingReveal, Revealed }
+    <span class="t">State</span> <span class="k">public</span> state = <span class="t">State</span>.Active;
+
+    <span class="t">euint64</span>  <span class="k">private</span> _secret;
+    <span class="t">uint64</span>   <span class="k">public</span>  revealedValue;
+    <span class="t">uint256</span>  <span class="k">private</span> _pendingRequest;
+
+    <span class="c">// Step 1: initiate decryption</span>
+    <span class="k">function</span> <span class="f">requestReveal</span>() <span class="k">external</span> {
+        <span class="k">require</span>(state == <span class="t">State</span>.Active, <span class="s">"Not active"</span>);
+        state = <span class="t">State</span>.PendingReveal; <span class="c">// ← lock state to prevent re-entry</span>
+
+        FHE.<span class="f">makePubliclyDecryptable</span>(_secret);
+
+        <span class="t">uint256</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">uint256</span>[](<span class="n">1</span>);
+        handles[<span class="n">0</span>] = <span class="t">euint64</span>.<span class="f">unwrap</span>(_secret);
+
+        _pendingRequest = Gateway.<span class="f">requestDecryption</span>(
+            handles,
+            <span class="k">this</span>.revealCallback.selector,
+            <span class="n">0</span>,
+            block.timestamp + <span class="n">2 hours</span>,
+            <span class="k">false</span>
+        );
+    }
+
+    <span class="c">// Step 2: Gateway delivers result</span>
+    <span class="k">function</span> <span class="f">revealCallback</span>(
+        <span class="t">uint256</span> requestId,
+        <span class="t">uint64</span>  value
+    ) <span class="k">external onlyGateway</span> {
+        <span class="k">require</span>(requestId == _pendingRequest, <span class="s">"Unexpected request"</span>);
+        <span class="k">require</span>(state == <span class="t">State</span>.PendingReveal, <span class="s">"Wrong state"</span>);
+
+        revealedValue = value;
+        state         = <span class="t">State</span>.Revealed;
+        <span class="k">emit</span> <span class="f">ValueRevealed</span>(value);
+    }
+
+    <span class="c">// Guard: prevent reveal being called twice</span>
+    <span class="k">function</span> <span class="f">getSecret</span>() <span class="k">external view returns</span> (<span class="t">uint64</span>) {
+        <span class="k">require</span>(state == <span class="t">State</span>.Revealed, <span class="s">"Not revealed yet"</span>);
+        <span class="k">return</span> revealedValue;
+    }
+}</pre>
+</div>
+
+<h2 class="sec" id="timeout">Timeout &amp; Retry</h2>
+<div class="box warn">
+  <span class="box-ico">&#9200;</span>
+  <div class="box-inner">
+    <div class="box-title">Gateway Callbacks Are Not Guaranteed</div>
+    <div class="box-text">
+      The Gateway callback is delivered <em>eventually</em> by Zama infrastructure — it is not atomic with your request. If the KMS is down, the network is congested, or the deadline passes, the callback may never arrive. Design for this:<br><br>
+      • Set generous deadlines (<code>block.timestamp + 2 hours</code> for non-urgent, <code>+ 24 hours</code> for auction settlements)<br>
+      • Implement a <code>retryRequest()</code> function that can re-submit if the deadline passes<br>
+      • Use a <code>PendingReveal</code> state to prevent double-requests<br>
+      • Consider timeout-recovery paths (e.g., if no result after 24h, allow users to reclaim funds)
+    </div>
+  </div>
+</div>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Timeout recovery pattern</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="t">uint256</span> <span class="k">public</span>  requestDeadline;
+<span class="t">uint256</span> <span class="k">private</span> _pendingRequest;
+
+<span class="k">function</span> <span class="f">requestReveal</span>() <span class="k">external</span> {
+    <span class="k">require</span>(state == <span class="t">State</span>.Active, <span class="s">"Not active"</span>);
+    state = <span class="t">State</span>.PendingReveal;
+    requestDeadline = block.timestamp + <span class="n">2 hours</span>;
+    <span class="c">// ... request decryption ...</span>
+}
+
+<span class="c">// If callback never arrives, admin can retry after deadline</span>
+<span class="k">function</span> <span class="f">retryReveal</span>() <span class="k">external onlyOwner</span> {
+    <span class="k">require</span>(state == <span class="t">State</span>.PendingReveal, <span class="s">"Not pending"</span>);
+    <span class="k">require</span>(block.timestamp > requestDeadline, <span class="s">"Deadline not passed"</span>);
+    <span class="c">// Reset to allow a fresh request</span>
+    state = <span class="t">State</span>.Active;
+    <span class="f">requestReveal</span>(); <span class="c">// re-submit</span>
+}
+
+<span class="c">// Emergency escape: if KMS is permanently unavailable</span>
+<span class="k">function</span> <span class="f">emergencyRefund</span>() <span class="k">external</span> {
+    <span class="k">require</span>(state == <span class="t">State</span>.PendingReveal);
+    <span class="k">require</span>(block.timestamp > requestDeadline + <span class="n">24 hours</span>);
+    <span class="c">// Allow all participants to withdraw their deposits</span>
+    state = <span class="t">State</span>.Cancelled;
+}</pre>
+</div>
+
+<h2 class="sec" id="multi-request">Multiple Pending Requests</h2>
+<p>In complex protocols (e.g., multiple auctions running in parallel), you may have several pending Gateway requests simultaneously. Use a mapping to track them:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Multiple concurrent Gateway requests</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// Map requestId → auctionId for parallel auctions</span>
+<span class="k">mapping</span>(<span class="t">uint256</span> => <span class="t">uint256</span>) <span class="k">private</span> _requestToAuction;
+
+<span class="k">function</span> <span class="f">closeAuction</span>(<span class="t">uint256</span> auctionId) <span class="k">external</span> {
+    <span class="t">Auction</span> <span class="k">storage</span> a = auctions[auctionId];
+    <span class="k">require</span>(a.state == <span class="t">State</span>.Active && block.timestamp >= a.deadline);
+
+    FHE.<span class="f">makePubliclyDecryptable</span>(a.highestBid);
+    FHE.<span class="f">makePubliclyDecryptable</span>(a.highestBidder);
+
+    <span class="t">uint256</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">uint256</span>[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = <span class="t">euint64</span>.<span class="f">unwrap</span>(a.highestBid);
+    handles[<span class="n">1</span>] = <span class="t">eaddress</span>.<span class="f">unwrap</span>(a.highestBidder);
+
+    <span class="t">uint256</span> reqId = Gateway.<span class="f">requestDecryption</span>(
+        handles, <span class="k">this</span>.auctionCallback.selector,
+        <span class="n">0</span>, block.timestamp + <span class="n">2 hours</span>, <span class="k">false</span>
+    );
+
+    _requestToAuction[reqId] = auctionId;  <span class="c">// track which auction</span>
+    a.state = <span class="t">State</span>.Settling;
+}
+
+<span class="k">function</span> <span class="f">auctionCallback</span>(
+    <span class="t">uint256</span> requestId, <span class="t">uint64</span> bid, <span class="t">address</span> winner
+) <span class="k">external onlyGateway</span> {
+    <span class="t">uint256</span> auctionId = _requestToAuction[requestId];
+    auctions[auctionId].finalBid    = bid;
+    auctions[auctionId].winner      = winner;
+    auctions[auctionId].state       = <span class="t">State</span>.Settled;
+    <span class="k">emit</span> <span class="f">AuctionSettled</span>(auctionId, winner, bid);
+}</pre>
+</div>
+
+<h2 class="sec" id="testing">Testing Async Callbacks</h2>
+<p>Local Hardhat + the FHEVM mock Gateway fires callbacks automatically in the same block. No need to wait or poll. On production networks, you need to wait for the async callback:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">Testing Gateway callbacks on Hardhat vs Devnet</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { awaitAllDecryptionResults } <span class="k">from</span> <span class="s">"@fhevm/hardhat-plugin"</span>;
+
+it(<span class="s">"reveals value via Gateway callback"</span>, <span class="k">async</span> () => {
+  <span class="c">// Trigger the decryption request</span>
+  <span class="k">const</span> tx = <span class="k">await</span> contract.<span class="f">requestReveal</span>();
+  <span class="k">await</span> tx.<span class="f">wait</span>();
+
+  <span class="c">// On local Hardhat: this processes all pending mock Gateway callbacks</span>
+  <span class="c">// On Devnet/Sepolia: this polls until the real callback arrives (timeout: 30s)</span>
+  <span class="k">await</span> <span class="f">awaitAllDecryptionResults</span>();
+
+  <span class="c">// Callback has now been delivered — verify state</span>
+  expect(<span class="k">await</span> contract.<span class="f">state</span>()).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">2</span>); <span class="c">// State.Revealed</span>
+  <span class="k">const</span> val = <span class="k">await</span> contract.<span class="f">getSecret</span>();
+  console.<span class="f">log</span>(<span class="s">"  Revealed value:"</span>, val.<span class="f">toString</span>());
+  expect(val).<span class="f">to</span>.<span class="f">be</span>.<span class="f">greaterThan</span>(<span class="n">0n</span>);
+});
+
+<span class="c">// For multiple parallel requests:</span>
+it(<span class="s">"settles two auctions concurrently"</span>, <span class="k">async</span> () => {
+  <span class="k">await</span> auction.<span class="f">closeAuction</span>(<span class="n">0</span>);
+  <span class="k">await</span> auction.<span class="f">closeAuction</span>(<span class="n">1</span>);
+
+  <span class="c">// awaitAllDecryptionResults handles BOTH pending callbacks</span>
+  <span class="k">await</span> <span class="f">awaitAllDecryptionResults</span>();
+
+  expect((<span class="k">await</span> auction.<span class="f">auctions</span>(<span class="n">0</span>)).state).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">3</span>); <span class="c">// Settled</span>
+  expect((<span class="k">await</span> auction.<span class="f">auctions</span>(<span class="n">1</span>)).state).<span class="f">to</span>.<span class="f">equal</span>(<span class="n">3</span>); <span class="c">// Settled</span>
+});</pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 9 Quiz — Gateway &amp; Async Decryption</div>
+      <div class="quiz-subtitle">8 questions · select one answer each</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">What is the difference between re-encryption (user views own balance) and public decryption (Gateway callback)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Re-encryption is faster; public decryption uses a different key</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Re-encryption uses the Gateway; public decryption bypasses it</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Re-encryption delivers plaintext only to the user (encrypted under their key, decrypted locally — never on-chain); public decryption delivers plaintext to the contract via a callback where it becomes visible in calldata to all</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>They are identical — both routes deliver plaintext to the contract</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> Re-encryption is privacy-preserving: the KMS re-encrypts under the user's ephemeral key, user decrypts locally, plaintext stays client-side. Public decryption via Gateway makes the value visible to everyone in the callback transaction's calldata. Use Gateway only when you INTEND to make data public.</div>
+    </div>
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">Why must <code>FHE.makePubliclyDecryptable(handle)</code> be called before <code>Gateway.requestDecryption()</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>It converts the handle from encrypted to plaintext format for the Gateway</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It sets the ACL flag that authorizes the KMS to decrypt this handle for anyone — without it, the KMS would reject the decryption request as unauthorized</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>It locks the handle so no further FHE operations can modify it before decryption</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It signals the coprocessor to finalize the computation result</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> makePubliclyDecryptable() writes a flag in the ACL marking the handle as publicly decryptable. The KMS checks this ACL before performing decryption. Without it, the KMS sees that the handle is not marked for public decryption and rejects the request. Remember: this flag is irreversible.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">An attacker calls your callback function directly with fake plaintext values. What prevents this?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The requestId is unknown to attackers</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Only encrypted contracts can call callback functions</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The callback parameters are automatically validated by the EVM</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The <code>onlyGateway</code> modifier checks <code>msg.sender == Gateway contract address</code> — only the legitimate on-chain Gateway contract can call it, and the Gateway only calls it after receiving validated KMS signatures</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> onlyGateway is the critical security check. RequestIds are on-chain events (public), so knowing one doesn't help. Without onlyGateway, any address could call your callback with fabricated results — declaring themselves the winner, setting fake values, etc. Always use onlyGateway on ALL callback functions.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">In a callback function that receives results for multiple handles, what is the first parameter?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>uint256 requestId</code> — always the first parameter in every Gateway callback, regardless of how many handles are being decrypted</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The first decrypted value in the handles array</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The address of the original requester</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A boolean indicating success or failure</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Gateway callback convention: the first parameter is ALWAYS uint256 requestId. This lets you match the callback to the correct pending request (especially important for parallel requests). After requestId come the decrypted values in the same order as you supplied handles in the request array.</div>
+    </div>
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Why should your contract transition to a "PendingReveal" state (or equivalent) when calling requestDecryption?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The Gateway requires the contract to be in a specific state</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To prevent the KMS from processing the request until ready</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>To prevent duplicate requests — if someone calls requestDecryption again while a callback is pending, the state check rejects it. Also prevents state from being modified between the request and the callback</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway reads the contract state to validate the request</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The state machine pattern is essential for async safety. Between your request (Tx A) and the callback (Tx B), other transactions can modify your contract. Setting PendingReveal prevents: (1) double requests via the same function, (2) state changes that would invalidate the pending decryption, (3) race conditions in multi-step flows.</div>
+    </div>
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">You have 5 auctions running in parallel. Each calls <code>closeAuction()</code> and gets a different requestId. What mechanism routes each callback to the correct auction?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The Gateway sends a different callback selector per auction</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A <code>mapping(uint256 requestId => uint256 auctionId)</code> lets the callback look up which auction each requestId corresponds to</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The callback receives the auctionId as a hidden extra parameter</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>You need a separate callback function per auction</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Store the mapping when you submit the request: _requestToAuction[reqId] = auctionId. In the callback, look it up: uint256 auctionId = _requestToAuction[requestId]. This pattern scales to any number of parallel requests with one shared callback function.</div>
+    </div>
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">What happens if the Gateway callback never arrives (KMS downtime, network issue)?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The request is automatically retried by the Gateway after 1 hour</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The ciphertext is automatically decrypted using a backup key</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The contract reverts to its pre-request state automatically</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Your contract stays stuck in PendingReveal forever unless you implement a timeout recovery — a retryReveal() function that checks block.timestamp > deadline and resubmits, plus an emergency escape hatch for prolonged outages</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> There's no automatic retry — your contract design must handle this. Best practice: retryReveal() callable after deadline passes (requiring onlyOwner), and an emergencyRefund() callable after a much longer period (e.g., 7 days) that lets users reclaim their funds if the system is permanently down.</div>
+    </div>
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">How does <code>awaitAllDecryptionResults()</code> from <code>@fhevm/hardhat-plugin</code> work differently on local Hardhat vs production Devnet?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>On Hardhat: it triggers the mock Gateway to synchronously process all pending callbacks in the test. On Devnet: it polls the blockchain for the real KMS callback transaction until it appears or times out (~30s)</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>It works identically on both — just waits 2 seconds</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>On Hardhat: it skips the Gateway step entirely. On Devnet: it simulates the KMS</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>It only works on Hardhat — Devnet requires manual waiting</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> The hardhat-plugin provides a mock Gateway that runs in-process. awaitAllDecryptionResults() triggers it to synchronously deliver all pending callbacks — making async flows testable as regular synchronous tests. On Devnet, the real KMS is used and the function polls for the callback transaction to arrive on-chain.</div>
+    </div>
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right"><div class="score-label">questions correct</div><div class="score-msg" id="smsg"></div></div>
+  </div>
+</div>
+<div class="pnav">
+  <a href="day08.html">&#8592; Day 8 — Access Control Patterns</a>
+  <a class="next" href="day10.html">Day 10 — Testing &amp; Debugging &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','why-gateway','architecture','components','flow','request-api','params','multi-type','callback','only-gateway','state-machine','timeout','multi-request','testing','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect score!':pct>=75?'Great work!':pct>=50?'Good — review the explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
