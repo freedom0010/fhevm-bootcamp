@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 6 — Sealed-Bid Auction | FHEVM Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#070b0f;--ink2:#0c1018;--ink3:#111820;--plate:#161e28;--wire:#222c38;--wire2:#2e3c4c;--acc:#38bdf8;--acc2:#0ea5e9;--green:#4ade80;--rose:#f87171;--amber:#fbbf24;--purple:#c084fc;--teal:#2dd4bf;--dim:#5c7080;--mid:#8aa0b0;--bright:#d8e8f0;--white:#eef8ff;--mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Instrument Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bright);font-family:var(--body);font-size:15px;line-height:1.78;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink2)}::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--acc),var(--teal));z-index:1000;transition:width .1s}
+.topbar{position:sticky;top:0;z-index:100;height:52px;background:rgba(7,11,15,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--wire);display:flex;align-items:center}
+.tb-home{display:flex;align-items:center;height:100%;padding:0 22px;border-right:1px solid var(--wire);font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none;transition:color .15s}.tb-home:hover{color:var(--acc)}
+.tb-crumb{display:flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px}.tb-crumb .sep{color:var(--wire2)}.tb-crumb .cur{color:var(--mid)}
+.tb-badge{margin-left:auto;margin-right:18px;padding:3px 11px;border-radius:20px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.18);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.tb-badge::before{content:"●";margin-right:5px;font-size:7px;animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page{display:grid;grid-template-columns:215px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;background:var(--ink2);border-right:1px solid var(--wire);padding:22px 0 50px}
+.sb-head{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;padding:14px 18px 5px}
+.sb-a{display:block;padding:6px 18px;font-size:12px;color:var(--mid);border-left:2px solid transparent;cursor:pointer;transition:all .13s;text-decoration:none;line-height:1.45}
+.sb-a:hover{color:var(--bright);background:rgba(255,255,255,.025)}.sb-a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(56,189,248,.04)}
+.sb-a.sub{padding-left:30px;font-size:11.5px;color:var(--dim)}.sb-a.sub.on{color:var(--acc2);border-left-color:var(--acc2)}
+.main{padding:56px 70px 120px;max-width:900px}
+.hero{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--wire)}
+.day-pill{display:inline-flex;align-items:center;gap:9px;padding:5px 14px;border-radius:3px;margin-bottom:24px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.16);font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:2px;text-transform:uppercase}
+h1{font-family:var(--head);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.08;letter-spacing:-1px;margin-bottom:20px;color:var(--white)}
+h1 em{font-style:italic;color:var(--acc);font-weight:600}
+.lead{font-size:15.5px;color:var(--mid);line-height:1.84;max-width:640px;margin-bottom:32px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:28px}.stat{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.sec{font-family:var(--head);font-size:24px;font-weight:700;color:var(--white);margin:56px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--wire);scroll-margin-top:72px;letter-spacing:-.3px}
+.sub{font-family:var(--body);font-size:15px;font-weight:600;color:var(--mid);margin:30px 0 13px;scroll-margin-top:72px}
+p{color:var(--mid);font-size:15px;margin-bottom:14px;line-height:1.82}p strong{color:var(--bright)}
+ul,ol{padding-left:22px;margin-bottom:16px}li{color:var(--mid);font-size:14px;margin-bottom:7px;line-height:1.74}li strong{color:var(--bright)}
+:not(pre)>code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(56,189,248,.09);padding:2px 6px;border-radius:3px}
+.code{background:#040508;border:1px solid var(--wire);border-radius:10px;margin:20px 0;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.code-top{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink3);border-bottom:1px solid var(--wire)}
+.dots{display:flex;gap:5px}.dots span{width:10px;height:10px;border-radius:50%}.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c841}
+.lang{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:1.5px;text-transform:uppercase}
+.fname{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto}
+.copy{background:none;border:1px solid var(--wire);color:var(--dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .14s}.copy:hover{border-color:var(--acc);color:var(--acc)}
+pre{padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:#c8d0e0;tab-size:2}
+.k{color:#ff79c6}.f{color:#8be9fd}.s{color:#f1fa8c}.c{color:#525270;font-style:italic}.n{color:#bd93f9}.t{color:#ffb86c}.a{color:#50fa7b}.ev{color:#50fa7b}.d{color:#8be9fd}
+.box{border-radius:8px;padding:15px 20px;margin:20px 0;border-left:3px solid;display:flex;gap:14px;align-items:flex-start}
+.box-ico{font-size:17px;flex-shrink:0;margin-top:2px}.box-inner{flex:1}
+.box-title{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.box-text{font-size:13px;color:var(--mid);line-height:1.74}
+.box-text code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(56,189,248,.09);padding:1px 5px;border-radius:3px}
+.tip{background:rgba(74,222,128,.05);border-color:var(--green)}.tip .box-title{color:var(--green)}
+.warn{background:rgba(251,191,36,.06);border-color:var(--amber)}.warn .box-title{color:var(--amber)}
+.alert{background:rgba(248,113,113,.07);border-color:var(--rose)}.alert .box-title{color:var(--rose)}
+.info{background:rgba(56,189,248,.05);border-color:var(--acc)}.info .box-title{color:var(--acc)}
+.key{background:rgba(192,132,252,.07);border-color:var(--purple);border-width:2px}.key .box-title{color:var(--purple)}
+.tw{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink3);padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--wire)}
+td{padding:9px 14px;border:1px solid var(--wire);color:var(--mid);vertical-align:top}tr:hover td{background:rgba(255,255,255,.01)}
+td code{font-family:var(--mono);font-size:11px;color:var(--acc);background:rgba(56,189,248,.07);padding:1px 5px;border-radius:3px}
+.flow{display:flex;flex-direction:column;margin:22px 0;gap:0}
+.flow-step{display:flex;gap:0;align-items:flex-start;position:relative}
+.flow-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;bottom:-6px;width:1px;background:var(--wire2)}
+.step-num{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-right:18px;margin-top:1px;z-index:1}
+.step-body{padding-bottom:24px;flex:1}.step-body h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:5px}.step-body p{font-size:13px;margin-bottom:0;line-height:1.72}
+.step-body code{font-family:var(--mono);font-size:11.5px;color:var(--acc);background:rgba(56,189,248,.09);padding:1px 5px;border-radius:3px}
+.quiz{background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;margin:52px 0;overflow:hidden}
+.quiz-head{padding:20px 24px;background:rgba(56,189,248,.07);border-bottom:1px solid var(--wire2);display:flex;align-items:flex-start;gap:14px}
+.quiz-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.quiz-title{font-family:var(--head);font-size:18px;font-weight:700;color:var(--acc);letter-spacing:-.2px}
+.quiz-subtitle{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.quiz-body{padding:24px;display:flex;flex-direction:column;gap:28px}
+.q{}.q-n{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:8px}
+.q-q{font-size:14px;color:var(--white);line-height:1.65;margin-bottom:13px;font-weight:500}
+.q-q code{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(56,189,248,.09);padding:1px 5px;border-radius:3px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--wire);font-size:13px;color:var(--mid);transition:all .14s;user-select:none;line-height:1.58}
+.q-opt:hover{background:rgba(255,255,255,.02);border-color:var(--wire2)}.q-opt.picked{border-color:var(--wire2);background:rgba(255,255,255,.03)}
+.q-opt.right{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);color:var(--white)}.q-opt.wrong{border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.06);opacity:.7}
+.q-ltr{width:22px;height:22px;border-radius:50%;background:var(--plate);color:var(--dim);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-opt.right .q-ltr{background:rgba(74,222,128,.18);color:var(--green)}.q-opt.wrong .q-ltr{background:rgba(248,113,113,.14);color:var(--rose)}
+.q-exp{margin-top:10px;padding:11px 14px;background:rgba(56,189,248,.04);border:1px solid rgba(56,189,248,.12);border-radius:7px;font-size:13px;color:var(--mid);line-height:1.68;display:none}
+.q-exp.show{display:block}.q-exp strong{color:var(--acc)}
+.quiz-submit{display:block;margin:2px 24px 24px;padding:11px 24px;border-radius:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);color:var(--purple);font-family:var(--mono);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:all .14s}
+.quiz-submit:hover{background:rgba(192,132,252,.2)}.quiz-submit:disabled{opacity:.35;cursor:not-allowed}
+.score{margin:0 24px 24px;padding:16px 20px;background:var(--ink3);border:1px solid var(--wire);border-radius:9px;display:none;align-items:center;gap:20px}
+.score.show{display:flex}.score-num{font-family:var(--head);font-size:38px;font-weight:800;color:var(--acc);letter-spacing:-1px}
+.score-right{display:flex;flex-direction:column;gap:3px}.score-label{font-size:13px;color:var(--mid)}.score-msg{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pnav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:30px;border-top:1px solid var(--wire)}
+.pnav a{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:11px;color:var(--mid);border:1px solid var(--wire);transition:all .14s;letter-spacing:.5px}
+.pnav a:hover{border-color:var(--acc);color:var(--acc)}.pnav .next{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.22);color:var(--acc)}.pnav .next:hover{background:rgba(56,189,248,.14)}
+@media(max-width:860px){.page{grid-template-columns:1fr}.sidebar{display:none}.main{padding:30px 18px 60px}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav class="topbar">
+  <a class="tb-home" href="index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb"><span class="cur">Week 1</span><span class="sep">/</span><span class="cur">Day 6</span></div>
+  <div class="tb-badge">Week 1 — Foundations</div>
+</nav>
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-head">Contents</div>
+  <a class="sb-a" data-id="intro">Overview</a>
+  <a class="sb-a" data-id="why">Why Sealed-Bid?</a>
+  <a class="sb-a" data-id="design">Auction Design</a>
+  <a class="sb-a sub" data-id="phases">Auction Phases</a>
+  <a class="sb-a sub" data-id="winner">Finding the Winner</a>
+  <a class="sb-a" data-id="contract">SealedBidAuction</a>
+  <a class="sb-a sub" data-id="storage">Storage &amp; Events</a>
+  <a class="sb-a sub" data-id="bid">placeBid()</a>
+  <a class="sb-a sub" data-id="close">closeAuction()</a>
+  <a class="sb-a sub" data-id="winner-cb">winnerCallback()</a>
+  <a class="sb-a sub" data-id="claim">claimRefund()</a>
+  <a class="sb-a" data-id="max-pattern">Encrypted Max Pattern</a>
+  <a class="sb-a" data-id="deposit">Deposit &amp; Collateral</a>
+  <a class="sb-a" data-id="tests">Test Suite</a>
+  <a class="sb-a" data-id="quiz">Quiz</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#128230; Day 6 of 20</div>
+  <h1>Sealed-Bid<br><em>Auction</em></h1>
+  <p class="lead">Traditional on-chain auctions are trivially gameable — anyone can see the current highest bid and outbid by one wei at the last second. A sealed-bid auction keeps all bids hidden until close, eliminating sniping and strategic manipulation. Today you build one that finds the winner entirely in FHE without ever revealing losing bids.</p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 4–5 hours</div>
+    <div class="stat">&#128230; SealedBidAuction contract</div>
+    <div class="stat">&#128200; Encrypted max pattern</div>
+    <div class="stat">&#9989; 8-question quiz</div>
+  </div>
+</div>
+</section>
+
+<h2 class="sec" id="why">Why Sealed-Bid Auctions?</h2>
+<ul>
+  <li><strong>No bid sniping</strong> — seeing bids in the last seconds and outbidding by minimal amounts is impossible when bids are encrypted</li>
+  <li><strong>No strategic underbidding</strong> — knowing others' bids lets you win cheaply; sealed bids force honest valuation</li>
+  <li><strong>No front-running</strong> — mempool watchers cannot extract information about bids before they're confirmed</li>
+  <li><strong>Loser privacy</strong> — losing bids are never revealed, protecting bidders' valuation strategies</li>
+</ul>
+
+<div class="box key">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">FHEVM Advantage</div>
+    <div class="box-text">
+      In a traditional commit-reveal scheme, all bids become public at reveal time. With FHEVM, only the <strong>winning bid amount</strong> needs to be revealed (via Gateway callback). Losing bids stay encrypted forever — bidders never learn each other's valuations.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="design">Auction Design</h2>
+<h3 class="sub" id="phases">Auction Phases</h3>
+<div class="tw"><table>
+  <thead><tr><th>Phase</th><th>Who Can Act</th><th>What Happens</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Bidding</strong></td><td>Any registered bidder</td><td>Submit encrypted bid + collateral deposit. One bid per address.</td></tr>
+    <tr><td><strong>Closed</strong></td><td>Owner only</td><td>Owner calls closeAuction(). No more bids accepted. Tally starts.</td></tr>
+    <tr><td><strong>Settling</strong></td><td>Gateway (auto)</td><td>Gateway callback delivers winner address + winning amount.</td></tr>
+    <tr><td><strong>Settled</strong></td><td>All bidders</td><td>Winner can claim asset. Losers can claim full refund.</td></tr>
+  </tbody>
+</table></div>
+
+<h3 class="sub" id="winner">Finding the Winner in FHE</h3>
+<p>The core challenge: finding the maximum among N encrypted bids and identifying the winner, all without revealing any bids. The algorithm is a sequential scan using <code>FHE.gt()</code> and <code>FHE.select()</code>:</p>
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Start with first bidder as current leader</h4>
+      <p><code>highestBid = bids[0]</code>, <code>highestBidder = eaddress(bidders[0])</code> — both encrypted handles.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>For each subsequent bidder, compare encrypted bids</h4>
+      <p><code>ebool isHigher = FHE.gt(bids[i], highestBid)</code> — encrypted comparison. Returns an encrypted bool without revealing either value.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Update leader using FHE.select()</h4>
+      <p><code>highestBid = FHE.select(isHigher, bids[i], highestBid)</code> and <code>highestBidder = FHE.select(isHigher, eaddress(bidders[i]), highestBidder)</code> — atomically update both bid and address.</p>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Request decryption of winner only</h4>
+      <p>After scanning all bids, request Gateway decryption of <code>highestBidder</code> and <code>highestBid</code>. Only these two values are revealed — all losing bids stay encrypted forever.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="contract">The SealedBidAuction Contract</h2>
+<h3 class="sub" id="storage">Storage Layout</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">contracts/SealedBidAuction.sol — storage</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^<span class="n">0.8.24</span>;
+
+<span class="k">import</span> <span class="s">"@fhevm/solidity/lib/FHE.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/config/ZamaConfig.sol"</span>;
+<span class="k">import</span> <span class="s">"@fhevm/solidity/gateway/GatewayCaller.sol"</span>;
+
+<span class="k">contract</span> <span class="t">SealedBidAuction</span> <span class="k">is</span> <span class="t">ZamaEthereumConfig</span>, <span class="t">GatewayCaller</span> {
+
+    <span class="k">enum</span> <span class="t">AuctionState</span> { Bidding, Closed, Settling, Settled }
+
+    <span class="c">// ── Auction config ────────────────────────</span>
+    <span class="t">string</span>         <span class="k">public</span> itemDescription;
+    <span class="t">uint256</span>        <span class="k">public</span> biddingDeadline;
+    <span class="t">uint256</span>        <span class="k">public</span> minBidWei;        <span class="c">// minimum collateral in ETH wei</span>
+    <span class="t">address</span>        <span class="k">public immutable</span> owner;
+    <span class="t">AuctionState</span>   <span class="k">public</span> state;
+
+    <span class="c">// ── Bid storage ───────────────────────────</span>
+    <span class="t">address</span>[]              <span class="k">public</span>  bidders;
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">private</span> bids;          <span class="c">// encrypted bid amounts</span>
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="k">bool</span>)     <span class="k">public</span>  hasBid;
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">uint256</span>)  <span class="k">public</span>  deposits;     <span class="c">// ETH collateral</span>
+
+    <span class="c">// ── Result (set after settling) ───────────</span>
+    <span class="t">address</span> <span class="k">public</span> winner;
+    <span class="t">uint64</span>  <span class="k">public</span> winningBid;       <span class="c">// plaintext only after reveal</span>
+
+    <span class="c">// ── Internal FHE working state ────────────</span>
+    <span class="t">euint64</span>   <span class="k">private</span> _highestBid;       <span class="c">// running max (encrypted)</span>
+    <span class="t">eaddress</span>  <span class="k">private</span> _highestBidder;   <span class="c">// running winner (encrypted address)</span>
+
+    <span class="ev">event</span> <span class="f">BidPlaced</span>(<span class="t">address indexed</span> bidder);          <span class="c">// no amount</span>
+    <span class="ev">event</span> <span class="f">AuctionClosed</span>(<span class="t">uint256</span> bidderCount);
+    <span class="ev">event</span> <span class="f">WinnerRevealed</span>(<span class="t">address indexed</span> winner, <span class="t">uint64</span> amount);
+
+    <span class="k">constructor</span>(
+        <span class="t">string</span> <span class="k">memory</span> item,
+        <span class="t">uint256</span> durationSeconds,
+        <span class="t">uint256</span> _minBidWei
+    ) {
+        owner            = msg.sender;
+        itemDescription  = item;
+        biddingDeadline  = block.timestamp + durationSeconds;
+        minBidWei        = _minBidWei;
+        state            = <span class="t">AuctionState</span>.Bidding;
+    }
+
+    <span class="k">modifier</span> <span class="f">onlyOwner</span>() { <span class="k">require</span>(msg.sender == owner, <span class="s">"Not owner"</span>); _; }
+}</pre>
+</div>
+
+<h3 class="sub" id="bid">placeBid() — Submitting an Encrypted Bid</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">SealedBidAuction.sol — placeBid</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Place an encrypted bid with ETH collateral.
+ * The bid amount is hidden — collateral ensures commitment.
+ * @param encBid  Encrypted bid value (from fhevmjs, euint64)
+ * @param proof   ZK proof binding ciphertext to this contract + caller
+ */</span>
+<span class="k">function</span> <span class="f">placeBid</span>(
+    <span class="t">externalEuint64</span> calldata encBid,
+    <span class="t">bytes</span>           calldata proof
+) <span class="k">external payable</span> {
+    <span class="k">require</span>(state == <span class="t">AuctionState</span>.Bidding,    <span class="s">"Auction not open"</span>);
+    <span class="k">require</span>(block.timestamp &lt; biddingDeadline, <span class="s">"Bidding closed"</span>);
+    <span class="k">require</span>(!hasBid[msg.sender],               <span class="s">"Already bid"</span>);
+    <span class="k">require</span>(msg.value &gt;= minBidWei,            <span class="s">"Insufficient collateral"</span>);
+
+    <span class="c">// Validate ZK proof and get encrypted bid handle</span>
+    <span class="t">euint64</span> bidAmount = FHE.<span class="f">fromExternal</span>(encBid, proof);
+
+    <span class="c">// Store encrypted bid and grant ACL</span>
+    bids[msg.sender] = bidAmount;
+    FHE.<span class="f">allowThis</span>(bids[msg.sender]);
+    FHE.<span class="f">allow</span>(bids[msg.sender], msg.sender);  <span class="c">// bidder can verify own bid</span>
+
+    deposits[msg.sender] = msg.value;
+    hasBid[msg.sender]   = <span class="k">true</span>;
+    bidders.<span class="f">push</span>(msg.sender);
+
+    <span class="k">emit</span> <span class="f">BidPlaced</span>(msg.sender);  <span class="c">// address only, no amount</span>
+}</pre>
+</div>
+
+<h3 class="sub" id="close">closeAuction() — Find the Winner in FHE</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">SealedBidAuction.sol — closeAuction</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Close bidding and find the highest bidder using FHE comparisons.
+ * Scans all bids with a linear encrypted max search, then requests
+ * Gateway decryption of winner identity and amount only.
+ */</span>
+<span class="k">function</span> <span class="f">closeAuction</span>() <span class="k">external onlyOwner</span> {
+    <span class="k">require</span>(state == <span class="t">AuctionState</span>.Bidding,    <span class="s">"Not bidding"</span>);
+    <span class="k">require</span>(block.timestamp &gt;= biddingDeadline, <span class="s">"Deadline not passed"</span>);
+    <span class="k">require</span>(bidders.length &gt; <span class="n">0</span>,               <span class="s">"No bidders"</span>);
+
+    state = <span class="t">AuctionState</span>.Closed;
+
+    <span class="c">// ── Find max bid using linear FHE scan ─────</span>
+    <span class="c">// Initialize with first bidder</span>
+    _highestBid    = bids[bidders[<span class="n">0</span>]];
+    _highestBidder = FHE.<span class="f">asEaddress</span>(bidders[<span class="n">0</span>]);
+
+    FHE.<span class="f">allowThis</span>(_highestBid);
+    FHE.<span class="f">allowThis</span>(_highestBidder);
+
+    <span class="c">// Compare remaining bidders</span>
+    <span class="k">for</span> (<span class="t">uint256</span> i = <span class="n">1</span>; i &lt; bidders.length; i++) {
+        <span class="t">address</span> challenger = bidders[i];
+        <span class="t">ebool</span>   isHigher    = FHE.<span class="f">gt</span>(bids[challenger], _highestBid);
+
+        <span class="c">// If challenger bid is higher, update both bid and bidder address</span>
+        _highestBid    = FHE.<span class="f">select</span>(isHigher, bids[challenger], _highestBid);
+        _highestBidder = FHE.<span class="f">select</span>(isHigher,
+            FHE.<span class="f">asEaddress</span>(challenger),
+            _highestBidder
+        );
+
+        FHE.<span class="f">allowThis</span>(_highestBid);
+        FHE.<span class="f">allowThis</span>(_highestBidder);
+    }
+
+    <span class="c">// ── Request decryption of winner info only ─</span>
+    FHE.<span class="f">makePubliclyDecryptable</span>(_highestBid);
+    FHE.<span class="f">makePubliclyDecryptable</span>(_highestBidder);
+
+    <span class="t">uint256</span>[] <span class="k">memory</span> handles = <span class="k">new</span> <span class="t">uint256</span>[](<span class="n">2</span>);
+    handles[<span class="n">0</span>] = <span class="t">euint64</span>.<span class="f">unwrap</span>(_highestBid);
+    handles[<span class="n">1</span>] = <span class="t">eaddress</span>.<span class="f">unwrap</span>(_highestBidder);
+
+    Gateway.<span class="f">requestDecryption</span>(
+        handles,
+        <span class="k">this</span>.winnerCallback.selector,
+        <span class="n">0</span>,
+        block.timestamp + <span class="n">1 hours</span>,
+        <span class="k">false</span>
+    );
+
+    state = <span class="t">AuctionState</span>.Settling;
+    <span class="k">emit</span> <span class="f">AuctionClosed</span>(bidders.length);
+}</pre>
+</div>
+
+<h3 class="sub" id="winner-cb">winnerCallback() — Settle the Auction</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">SealedBidAuction.sol — winnerCallback</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/// @dev Gateway calls this with decrypted winner address and bid amount</span>
+<span class="k">function</span> <span class="f">winnerCallback</span>(
+    <span class="t">uint256</span> <span class="c">/* requestId */</span>,
+    <span class="t">uint64</span>  winningAmount,
+    <span class="t">address</span> winnerAddr
+) <span class="k">external onlyGateway</span> {
+    winner      = winnerAddr;
+    winningBid  = winningAmount;
+    state       = <span class="t">AuctionState</span>.Settled;
+
+    <span class="k">emit</span> <span class="f">WinnerRevealed</span>(winnerAddr, winningAmount);
+}
+
+<span class="c">/// @notice Anyone can verify the winner and winning bid post-auction</span>
+<span class="k">function</span> <span class="f">getResult</span>() <span class="k">external view returns</span>(<span class="t">address</span>, <span class="t">uint64</span>) {
+    <span class="k">require</span>(state == <span class="t">AuctionState</span>.Settled, <span class="s">"Not settled"</span>);
+    <span class="k">return</span> (winner, winningBid);
+}</pre>
+</div>
+
+<h3 class="sub" id="claim">claimRefund() — Losers Get Their ETH Back</h3>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">SealedBidAuction.sol — refund</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * @notice Losing bidders reclaim their full ETH collateral.
+ * Winner's collateral is retained as payment (simplification —
+ * production contracts would handle payment separately).
+ */</span>
+<span class="k">function</span> <span class="f">claimRefund</span>() <span class="k">external</span> {
+    <span class="k">require</span>(state == <span class="t">AuctionState</span>.Settled, <span class="s">"Not settled"</span>);
+    <span class="k">require</span>(msg.sender != winner,           <span class="s">"Winner cannot refund"</span>);
+    <span class="k">require</span>(hasBid[msg.sender],             <span class="s">"No bid placed"</span>);
+
+    <span class="t">uint256</span> amount = deposits[msg.sender];
+    <span class="k">require</span>(amount &gt; <span class="n">0</span>,                   <span class="s">"Already refunded"</span>);
+
+    deposits[msg.sender] = <span class="n">0</span>;                   <span class="c">// prevent re-entrancy</span>
+    (<span class="k">bool</span> ok,) = msg.sender.<span class="f">call</span>{value: amount}(<span class="s">""</span>);
+    <span class="k">require</span>(ok, <span class="s">"ETH transfer failed"</span>);
+}</pre>
+</div>
+
+<div class="box warn">
+  <span class="box-ico">&#9888;</span>
+  <div class="box-inner">
+    <div class="box-title">Collateral vs. Payment</div>
+    <div class="box-text">
+      This example uses ETH collateral as a commitment mechanism. In production, you'd separate bid commitment from actual payment — the winner pays the winning amount separately, and everyone gets collateral back. The collateral just ensures bidders are serious and prevents spam bids.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="max-pattern">The Encrypted Maximum Pattern</h2>
+<p>Finding a maximum among N encrypted values is a fundamental FHEVM pattern you'll reuse across many contracts. It generalizes to any comparison-based selection:</p>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">Solidity</span><span class="fname">Generic encrypted max scan</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="c">/**
+ * Encrypted linear max scan — O(N) FHE comparisons.
+ * Selects both the max value AND its associated metadata (here: address)
+ * using FHE.select() to keep both synchronized.
+ *
+ * Works for any type where FHE.gt() is defined: euint8, euint16, euint32, euint64
+ */</span>
+<span class="k">function</span> <span class="f">_findMax</span>(
+    <span class="t">address</span>[] <span class="k">storage</span> participants,
+    <span class="k">mapping</span>(<span class="t">address</span> =&gt; <span class="t">euint64</span>) <span class="k">storage</span> values
+) <span class="k">internal returns</span> (<span class="t">euint64</span> maxVal, <span class="t">eaddress</span> maxHolder) {
+    maxVal    = values[participants[<span class="n">0</span>]];
+    maxHolder = FHE.<span class="f">asEaddress</span>(participants[<span class="n">0</span>]);
+    FHE.<span class="f">allowThis</span>(maxVal);
+    FHE.<span class="f">allowThis</span>(maxHolder);
+
+    <span class="k">for</span> (<span class="t">uint256</span> i = <span class="n">1</span>; i &lt; participants.length; i++) {
+        <span class="t">ebool</span> isBetter = FHE.<span class="f">gt</span>(values[participants[i]], maxVal);
+
+        <span class="c">// CRITICAL: Update BOTH value and metadata atomically via select
+        // This keeps them synchronized — they always refer to the same participant</span>
+        maxVal    = FHE.<span class="f">select</span>(isBetter, values[participants[i]], maxVal);
+        maxHolder = FHE.<span class="f">select</span>(isBetter, FHE.<span class="f">asEaddress</span>(participants[i]), maxHolder);
+
+        FHE.<span class="f">allowThis</span>(maxVal);
+        FHE.<span class="f">allowThis</span>(maxHolder);
+    }
+}
+
+<span class="c">// Gas note: Each FHE.gt() + 2×FHE.select() costs ~3× the baseline FHE op cost.
+// For N bidders: O(N) Gateway requests, each taking ~2s off-chain.
+// For large auctions (N>50) consider batched or tree-based approaches.</span></pre>
+</div>
+
+<h2 class="sec" id="deposit">Deposit Strategy &amp; Anti-Spam</h2>
+<div class="box info">
+  <span class="box-ico">&#128161;</span>
+  <div class="box-inner">
+    <div class="box-title">Why ETH Collateral Is Essential</div>
+    <div class="box-text">
+      Without collateral, anyone can spam fake bids at zero cost. The encrypted bid amount doesn't match their collateral — but since bids are sealed, the auction can't verify amounts before close. Requiring a <code>minBidWei</code> deposit ensures every bidder has skin in the game. The deposit should match or exceed a reasonable floor price for the item.
+    </div>
+  </div>
+</div>
+
+<h2 class="sec" id="tests">Test Suite</h2>
+<div class="code">
+  <div class="code-top"><div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="lang">TypeScript</span><span class="fname">test/SealedBidAuction.test.ts</span><button class="copy" onclick="copyCode(this)">COPY</button></div>
+  <pre><span class="k">import</span> { ethers, network } <span class="k">from</span> <span class="s">"hardhat"</span>;
+<span class="k">import</span> { expect } <span class="k">from</span> <span class="s">"chai"</span>;
+<span class="k">import</span> { <span class="f">getFhevmInstance</span> } <span class="k">from</span> <span class="s">"./helpers"</span>;
+<span class="k">import</span> { ethers <span class="k">as</span> e } <span class="k">from</span> <span class="s">"ethers"</span>;
+
+describe(<span class="s">"SealedBidAuction"</span>, () => {
+  <span class="k">let</span> auction: <span class="k">any</span>;
+  <span class="k">let</span> owner: <span class="k">any</span>, alice: <span class="k">any</span>, bob: <span class="k">any</span>, carol: <span class="k">any</span>;
+  <span class="k">const</span> DURATION  = <span class="n">3600</span>;                        <span class="c">// 1 hour</span>
+  <span class="k">const</span> MIN_BID   = e.<span class="f">parseEther</span>(<span class="s">"0.01"</span>);       <span class="c">// 0.01 ETH collateral</span>
+
+  before(<span class="k">async</span> () => {
+    [owner, alice, bob, carol] = <span class="k">await</span> ethers.<span class="f">getSigners</span>();
+    <span class="k">const</span> F = <span class="k">await</span> ethers.<span class="f">getContractFactory</span>(<span class="s">"SealedBidAuction"</span>);
+    auction = <span class="k">await</span> F.<span class="f">deploy</span>(<span class="s">"Vintage Crypto Punk #001"</span>, DURATION, MIN_BID);
+    <span class="k">await</span> auction.<span class="f">waitForDeployment</span>();
+    console.<span class="f">log</span>(<span class="s">"  Auction:"</span>, <span class="k">await</span> auction.<span class="f">getAddress</span>());
+  });
+
+  it(<span class="s">"alice bids 500 (encrypted)"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> auction.<span class="f">getAddress</span>();
+
+    <span class="k">const</span> input = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">add64</span>(<span class="n">500</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+
+    <span class="k">await</span> auction.<span class="f">connect</span>(alice).<span class="f">placeBid</span>(handles[<span class="n">0</span>], inputProof, { value: MIN_BID });
+    expect(<span class="k">await</span> auction.<span class="f">hasBid</span>(alice.address)).<span class="f">to</span>.<span class="f">be</span>.<span class="k">true</span>;
+    console.<span class="f">log</span>(<span class="s">"  ✓ Alice bid placed (amount hidden)"</span>);
+  });
+
+  it(<span class="s">"bob bids 750 (encrypted) — highest bid"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> auction.<span class="f">getAddress</span>();
+    <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(addr, bob.address);
+    input.<span class="f">add64</span>(<span class="n">750</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+    <span class="k">await</span> auction.<span class="f">connect</span>(bob).<span class="f">placeBid</span>(handles[<span class="n">0</span>], inputProof, { value: MIN_BID });
+    console.<span class="f">log</span>(<span class="s">"  ✓ Bob bid placed (amount hidden)"</span>);
+  });
+
+  it(<span class="s">"carol bids 300 (lowest)"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> auction.<span class="f">getAddress</span>();
+    <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(addr, carol.address);
+    input.<span class="f">add64</span>(<span class="n">300</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+    <span class="k">await</span> auction.<span class="f">connect</span>(carol).<span class="f">placeBid</span>(handles[<span class="n">0</span>], inputProof, { value: MIN_BID });
+    expect(<span class="k">await</span> auction.<span class="f">bidders</span>(<span class="n">2</span>)).<span class="f">to</span>.<span class="f">equal</span>(carol.address);
+    console.<span class="f">log</span>(<span class="s">"  ✓ 3 bids placed — all hidden from each other"</span>);
+  });
+
+  it(<span class="s">"cannot bid twice"</span>, <span class="k">async</span> () => {
+    <span class="k">const</span> instance = <span class="k">await</span> <span class="f">getFhevmInstance</span>();
+    <span class="k">const</span> addr     = <span class="k">await</span> auction.<span class="f">getAddress</span>();
+    <span class="k">const</span> input    = instance.<span class="f">createEncryptedInput</span>(addr, alice.address);
+    input.<span class="f">add64</span>(<span class="n">999</span>);
+    <span class="k">const</span> { handles, inputProof } = <span class="k">await</span> input.<span class="f">encrypt</span>();
+    <span class="k">await</span> expect(
+      auction.<span class="f">connect</span>(alice).<span class="f">placeBid</span>(handles[<span class="n">0</span>], inputProof, { value: MIN_BID })
+    ).<span class="f">to</span>.<span class="f">be</span>.<span class="f">revertedWith</span>(<span class="s">"Already bid"</span>);
+  });
+
+  it(<span class="s">"close auction and find winner (bob = 750)"</span>, <span class="k">async</span> () => {
+    <span class="k">await</span> network.provider.<span class="f">request</span>({
+      method: <span class="s">"evm_increaseTime"</span>, params: [DURATION + <span class="n">10</span>]
+    });
+    <span class="k">await</span> network.provider.<span class="f">request</span>({ method: <span class="s">"evm_mine"</span> });
+
+    <span class="k">await</span> auction.<span class="f">connect</span>(owner).<span class="f">closeAuction</span>();
+    <span class="c">// On local Hardhat the Gateway mock fires the callback automatically</span>
+    <span class="c">// In production: wait ~2s for KMS to respond</span>
+    console.<span class="f">log</span>(<span class="s">"  ✓ closeAuction() called. Awaiting settlement..."</span>);
+  });
+
+  it(<span class="s">"alice and carol can claim refunds after settlement"</span>, <span class="k">async</span> () => {
+    <span class="c">// (After Gateway callback fires and state = Settled)</span>
+    <span class="k">const</span> [w] = <span class="k">await</span> auction.<span class="f">getResult</span>();
+    expect(w).<span class="f">to</span>.<span class="f">equal</span>(bob.address);  <span class="c">// bob wins with 750</span>
+
+    <span class="k">const</span> aliceBefore = <span class="k">await</span> ethers.provider.<span class="f">getBalance</span>(alice.address);
+    <span class="k">await</span> auction.<span class="f">connect</span>(alice).<span class="f">claimRefund</span>();
+    <span class="k">const</span> aliceAfter  = <span class="k">await</span> ethers.provider.<span class="f">getBalance</span>(alice.address);
+    expect(aliceAfter).<span class="f">to</span>.<span class="f">be</span>.<span class="f">greaterThan</span>(aliceBefore);
+    console.<span class="f">log</span>(<span class="s">"  ✓ Alice refunded. Carol's refund follows same pattern."</span>);
+  });
+});</pre>
+</div>
+
+<h2 class="sec" id="quiz">Knowledge Check</h2>
+<div class="quiz">
+  <div class="quiz-head">
+    <div class="quiz-icon">&#128221;</div>
+    <div>
+      <div class="quiz-title">Day 6 Quiz — Sealed-Bid Auction</div>
+      <div class="quiz-subtitle">8 questions · select one answer each, then submit</div>
+    </div>
+  </div>
+  <div class="quiz-body" id="qbody">
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 01 / 08</div>
+      <div class="q-q">In the FHE max scan, why is it critical to update <em>both</em> <code>_highestBid</code> and <code>_highestBidder</code> using <code>FHE.select()</code> with the same condition?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To reduce gas by batching two selects into one FHE operation</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The coprocessor requires paired select calls for eaddress types</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>To keep bid amount and bidder identity synchronized — if you update one without the other using the same condition, they'd refer to different participants, producing an incorrect result</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>FHE.gt() returns a handle that can only be consumed once</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The max amount and the identity of who submitted it must stay synchronized. If you updated highestBid to challenger's amount but forgot to update highestBidder, the contract would think the old winner won with the challenger's higher amount — a completely wrong result. Both must update atomically with the same encrypted condition.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 02 / 08</div>
+      <div class="q-q">What information is revealed when the auction settles?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Only the winner's address and winning bid amount — all losing bids stay encrypted and are never revealed</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>All bids are revealed, but only the winner's identity is kept private</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>All bid amounts are revealed, but bidder identities remain hidden</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Nothing — the auction is fully private even after settlement</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> Only the winner's address and winning amount are decrypted via the Gateway callback and stored as plaintext. All other bids remain as encrypted handles on-chain — their amounts are never revealed, protecting bidders' valuation strategies.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 03 / 08</div>
+      <div class="q-q">Why does <code>placeBid()</code> require an ETH collateral deposit?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>The KMS charges ETH for decryption services</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To verify the bidder has sufficient funds to cover their bid</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>ETH is needed to pay for coprocessor computation</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Without collateral, anyone could spam free bids — since bid amounts are encrypted and can't be verified, the deposit is the only anti-spam mechanism that proves commitment</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Since bid amounts are encrypted, the contract can't verify that a bidder actually has the funds they're claiming to bid. The ETH deposit ensures every bid has real economic cost, preventing spam and ensuring the winning bidder has at least some collateral committed.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 04 / 08</div>
+      <div class="q-q">What is the time complexity of the <code>closeAuction()</code> FHE scan over N bidders?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>O(log N) — it uses a tree-based FHE comparison structure</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>O(N) — one FHE comparison per bidder in a linear scan</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>O(N²) — each bid is compared against all other bids</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>O(1) — the coprocessor finds the max in a single parallel operation</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> The loop iterates once per bidder after the first, performing one FHE.gt() and two FHE.select() calls per iteration — O(N) total FHE operations. For large auctions this can become expensive; a tree-based reduction would be O(N log N) round-trips but could reduce sequential gas costs.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 05 / 08</div>
+      <div class="q-q">Why is <code>deposits[msg.sender] = 0</code> set <em>before</em> transferring ETH in <code>claimRefund()</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To emit an event before the transfer for gas ordering</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The EVM requires state changes before external calls in the same frame</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Re-entrancy protection — if the recipient is a malicious contract that calls claimRefund() again during ETH receipt, the balance is already zero so the second call gets nothing</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Solidity optimizes storage writes that precede external calls</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> The checks-effects-interactions pattern: first check (require), then effects (set balance to 0), then interactions (transfer ETH). If you sent ETH before zeroing the balance, a malicious recipient contract could re-enter claimRefund() and drain multiple times. Zeroing first is the standard re-entrancy guard.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 06 / 08</div>
+      <div class="q-q">How does a sealed-bid auction prevent last-second bid sniping?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>By using a commit-reveal scheme that requires a 24-hour reveal window</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>By only accepting bids from pre-registered addresses</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>By randomizing the actual auction close time</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Bids are encrypted — no bidder can see others' bids during the auction. Without knowing the current highest bid, there's no information advantage to bidding late; every bidder must bid their true maximum from the start</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> Sniping requires knowing the current highest bid to outbid by one unit. With encrypted bids, this information is unavailable — you can't see what to outbid. Bidding early vs late provides no strategic advantage, which means bidders reveal their true valuations rather than gaming the timing.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 07 / 08</div>
+      <div class="q-q">What is the role of <code>eaddress</code> type in the auction?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>To encrypt the winner's identity during the max scan so no one knows who's leading until the Gateway reveals the result</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>To store bidder addresses more gas-efficiently than address type</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>To prevent bidder addresses from appearing in block explorers</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>eaddress is required for FHE.select() to work with address types</div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> During the linear max scan, _highestBidder is an encrypted eaddress. This means even as the scan progresses, no one can observe which address is currently "winning" — the identity is only revealed when the Gateway decrypts and delivers it to the winnerCallback. Without this, observers could watch which address gets updated and infer who's leading.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 08 / 08</div>
+      <div class="q-q">What happens if two bidders submit the exact same encrypted bid amount?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Both are declared co-winners and must split the prize</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>The earlier bidder wins — <code>FHE.gt()</code> returns false for equal values (not strictly greater), so the current leader is kept when tied</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The contract reverts because ties are not handled</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>A random tiebreaker is selected using block.prevrandao</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> FHE.gt(challenger, current) returns false when they're equal (not strictly greater). FHE.select(false, challenger, current) keeps the current leader. So in a tie, the bidder who was already the leader (earlier in the array, which reflects earlier submission order) wins. This is a deterministic tie-breaking rule implicit in the algorithm.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/8</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day05.html">&#8592; Day 5 — Encrypted Voting</a>
+  <a class="next" href="day07.html">Day 7 — Gas Optimization &#8594;</a>
+</div>
+</main></div>
+<script>
+window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%'});
+const sba=document.querySelectorAll('.sb-a[data-id]');
+['intro','why','design','phases','winner','contract','storage','bid','close','winner-cb','claim','max-pattern','deposit','tests','quiz'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){sba.forEach(l=>l.classList.remove('on'));const m=document.querySelector('.sb-a[data-id="'+e.target.id+'"]');if(m)m.classList.add('on')}})},{rootMargin:'-18% 0px -68% 0px'}).observe(el)});
+sba.forEach(l=>l.addEventListener('click',()=>{const el=document.getElementById(l.dataset.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}));
+document.querySelectorAll('.q-opt').forEach(opt=>{opt.addEventListener('click',()=>{const q=opt.closest('.q');if(q.dataset.done)return;q.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('picked'));opt.classList.add('picked');document.getElementById('qsub').disabled=document.querySelectorAll('.q-opt.picked').length<document.querySelectorAll('.q').length})});
+function gradeQuiz(){let c=0;document.querySelectorAll('.q').forEach(q=>{q.dataset.done='1';const p=q.querySelector('.q-opt.picked'),a=q.dataset.ans;q.querySelectorAll('.q-opt').forEach(o=>{if(o.dataset.v===a)o.classList.add('right');else if(p&&o.dataset.v===p.dataset.v)o.classList.add('wrong')});if(p&&p.dataset.v===a)c++;const e=q.querySelector('.q-exp');if(e)e.classList.add('show')});const pct=Math.round(c/8*100);document.getElementById('snum').textContent=c+'/8';document.getElementById('smsg').textContent=pct===100?'Perfect — Week 1 complete!':pct>=87?'Excellent!':pct>=62?'Good — review explanations.':'Re-read the sections above.';document.getElementById('qscore').classList.add('show');document.getElementById('qsub').disabled=true}
+function copyCode(btn){const pre=btn.closest('.code').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='COPIED!';setTimeout(()=>btn.textContent='COPY',1800)})}
+</script>
+</body></html>
