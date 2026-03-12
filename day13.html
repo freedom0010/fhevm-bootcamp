@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 13 — Cross-Contract Encrypted Passing | FHEVM Developer Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #070711; --ink2: #0d0d1a; --ink3: #141426;
+  --plate:  #1a1a2e; --plate2: #20203a;
+  --wire:   #2a2a45; --wire2: #383860;
+  --cyan:   #00e5ff; --cyan2: #00b8d4;
+  --lime:   #69ff47; --amber: #ffb300;
+  --rose:   #ff4d6d; --violet: #bf5af2;
+  --sky:    #4db8ff; --dim:   #6b6b95;
+  --mid:    #9898be; --bright: #ddddf5;
+  --white:  #f0f0ff;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+  --body: 'Instrument Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--bright); font-family: var(--body); font-size: 15px; line-height: 1.78; overflow-x: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink2); }
+::-webkit-scrollbar-thumb { background: var(--wire2); border-radius: 2px; }
+#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, var(--lime), var(--violet)); z-index: 1000; transition: width .1s linear; }
+.topbar { position: sticky; top: 0; z-index: 100; height: 52px; background: rgba(7,7,17,.96); backdrop-filter: blur(20px); border-bottom: 1px solid var(--wire); display: flex; align-items: center; }
+.tb-home { display: flex; align-items: center; gap: 8px; height: 100%; padding: 0 22px; border-right: 1px solid var(--wire); font-family: var(--mono); font-size: 12px; color: var(--dim); text-decoration: none; transition: color .15s; letter-spacing: .5px; }
+.tb-home:hover { color: var(--cyan); }
+.tb-crumb { display: flex; align-items: center; gap: 8px; padding: 0 20px; font-family: var(--mono); font-size: 11px; }
+.tb-crumb .sep { color: var(--wire2); } .tb-crumb .cur { color: var(--mid); }
+.tb-badge { margin-left: auto; margin-right: 18px; padding: 3px 11px; border-radius: 20px; background: rgba(191,90,242,.08); border: 1px solid rgba(191,90,242,.22); font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 1.5px; text-transform: uppercase; }
+.tb-badge::before { content: "●"; margin-right: 5px; font-size: 7px; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.page { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; background: var(--ink2); border-right: 1px solid var(--wire); padding: 22px 0 50px; }
+.sb-section { margin-bottom: 4px; }
+.sb-head { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 2.5px; text-transform: uppercase; padding: 14px 18px 5px; }
+.sb-a { display: block; padding: 6px 18px; font-family: var(--body); font-size: 12px; color: var(--mid); border-left: 2px solid transparent; cursor: pointer; transition: all .13s; text-decoration: none; line-height: 1.45; }
+.sb-a:hover { color: var(--bright); background: rgba(255,255,255,.025); }
+.sb-a.on { color: var(--violet); border-left-color: var(--violet); background: rgba(191,90,242,.04); }
+.sb-a.sub { padding-left: 30px; font-size: 11.5px; color: var(--dim); }
+.sb-a.sub.on { color: var(--cyan2); border-left-color: var(--cyan2); }
+.main { padding: 56px 70px 120px; max-width: 900px; }
+.hero { margin-bottom: 60px; padding-bottom: 44px; border-bottom: 1px solid var(--wire); }
+.day-pill { display: inline-flex; align-items: center; gap: 9px; padding: 5px 14px; border-radius: 3px; margin-bottom: 24px; background: rgba(191,90,242,.07); border: 1px solid rgba(191,90,242,.18); font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-family: var(--head); font-size: clamp(34px,4vw,52px); font-weight: 800; line-height: 1.08; letter-spacing: -1px; margin-bottom: 20px; color: var(--white); }
+.hero h1 em { font-style: italic; color: var(--violet); font-weight: 600; }
+.hero .lead { font-size: 15.5px; color: var(--mid); line-height: 1.84; max-width: 640px; margin-bottom: 32px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat { font-family: var(--mono); font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+.sec { font-family: var(--head); font-size: 24px; font-weight: 700; color: var(--white); margin: 56px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--wire); scroll-margin-top: 72px; letter-spacing: -.3px; }
+.sub { font-family: var(--body); font-size: 15px; font-weight: 600; color: var(--mid); margin: 30px 0 13px; scroll-margin-top: 72px; }
+p { color: var(--mid); font-size: 15px; margin-bottom: 14px; line-height: 1.82; }
+p strong { color: var(--bright); }
+ul, ol { padding-left: 22px; margin-bottom: 16px; }
+li { color: var(--mid); font-size: 14px; margin-bottom: 7px; line-height: 1.74; }
+li strong { color: var(--bright); }
+:not(pre) > code { font-family: var(--mono); font-size: 12px; color: var(--violet); background: rgba(191,90,242,.08); padding: 2px 6px; border-radius: 3px; }
+.code { background: #040408; border: 1px solid var(--wire); border-radius: 10px; margin: 20px 0; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.code-top { display: flex; align-items: center; gap: 10px; padding: 9px 16px; background: var(--ink3); border-bottom: 1px solid var(--wire); }
+.dots { display: flex; gap: 5px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; }
+.dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c841; }
+.lang { font-family: var(--mono); font-size: 10px; color: var(--violet); letter-spacing: 1.5px; text-transform: uppercase; }
+.fname { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+.copy { background: none; border: 1px solid var(--wire); color: var(--dim); font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; cursor: pointer; transition: all .14s; letter-spacing: .8px; }
+.copy:hover { border-color: var(--violet); color: var(--violet); }
+pre { padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #c8d0e0; tab-size: 2; }
+.k { color: #ff79c6; } .f { color: #8be9fd; } .s { color: #f1fa8c; }
+.c { color: #525270; font-style: italic; } .n { color: #bd93f9; }
+.t { color: #ffb86c; } .a { color: #50fa7b; }
+.d { color: #8be9fd; } .v { color: #f8f8f2; }
+.box { border-radius: 8px; padding: 15px 20px; margin: 20px 0; border-left: 3px solid; display: flex; gap: 14px; align-items: flex-start; }
+.box-ico { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+.box-inner { flex: 1; }
+.box-title { font-family: var(--mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+.box-text { font-size: 13px; color: var(--mid); line-height: 1.74; }
+.box-text code { font-family: var(--mono); font-size: 11.5px; color: var(--violet); background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+.tip  { background: rgba(105,255,71,.05); border-color: var(--lime); }
+.tip .box-title  { color: var(--lime); }
+.warn { background: rgba(255,179,0,.06); border-color: var(--amber); }
+.warn .box-title { color: var(--amber); }
+.alert{ background: rgba(255,77,109,.07); border-color: var(--rose); }
+.alert .box-title{ color: var(--rose); }
+.info { background: rgba(191,90,242,.05); border-color: var(--violet); }
+.info .box-title { color: var(--violet); }
+.key  { background: rgba(0,229,255,.05); border-color: var(--cyan); border-width: 2px; }
+.key .box-title  { color: var(--cyan); }
+.tw { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--ink3); padding: 9px 14px; text-align: left; font-family: var(--mono); font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.2px; border: 1px solid var(--wire); }
+td { padding: 9px 14px; border: 1px solid var(--wire); color: var(--mid); vertical-align: top; }
+tr:hover td { background: rgba(255,255,255,.01); }
+td code { font-family: var(--mono); font-size: 11px; color: var(--violet); background: rgba(191,90,242,.07); padding: 1px 5px; border-radius: 3px; }
+.flow { display: flex; flex-direction: column; margin: 22px 0; gap: 0; }
+.flow-step { display: flex; gap: 0; align-items: flex-start; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 36px; bottom: -6px; width: 1px; background: var(--wire2); }
+.step-num { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.22); color: var(--violet); font-family: var(--mono); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-right: 18px; margin-top: 1px; z-index: 1; }
+.step-body { padding-bottom: 24px; flex: 1; }
+.step-body h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 5px; font-family: var(--body); }
+.step-body p { font-size: 13px; margin-bottom: 0; line-height: 1.72; }
+.step-body code { font-family: var(--mono); font-size: 11.5px; color: var(--violet); background: rgba(191,90,242,.08); padding: 1px 5px; border-radius: 3px; }
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.diff-card { background: #040408; border: 1px solid var(--wire); border-radius: 10px; overflow: hidden; }
+.diff-label { padding: 8px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--wire); }
+.diff-label.bad  { color: var(--rose);  background: rgba(255,77,109,.06); }
+.diff-label.good { color: var(--lime);  background: rgba(105,255,71,.06); }
+.diff-card pre { font-size: 11.5px; padding: 14px; }
+.quiz { background: var(--ink2); border: 1px solid var(--wire2); border-radius: 14px; margin: 52px 0; overflow: hidden; }
+.quiz-head { padding: 20px 24px; background: rgba(191,90,242,.07); border-bottom: 1px solid var(--wire2); display: flex; align-items: flex-start; gap: 14px; }
+.quiz-head-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.quiz-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--violet); letter-spacing: -.2px; }
+.quiz-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.quiz-body { padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.q-n { font-family: var(--mono); font-size: 9.5px; color: var(--dim); letter-spacing: 1.2px; margin-bottom: 8px; }
+.q-q { font-size: 14px; color: var(--white); line-height: 1.65; margin-bottom: 13px; font-weight: 500; }
+.q-q code { font-family: var(--mono); font-size: 12px; color: var(--violet); background: rgba(191,90,242,.09); padding: 1px 5px; border-radius: 3px; }
+.q-opts { display: flex; flex-direction: column; gap: 7px; }
+.q-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--wire); font-size: 13px; color: var(--mid); transition: all .14s; user-select: none; line-height: 1.58; }
+.q-opt:hover { background: rgba(255,255,255,.02); border-color: var(--wire2); }
+.q-opt.picked { border-color: var(--wire2); background: rgba(255,255,255,.03); }
+.q-opt.right { border-color: rgba(105,255,71,.35); background: rgba(105,255,71,.06); color: var(--white); }
+.q-opt.wrong { border-color: rgba(255,77,109,.32); background: rgba(255,77,109,.06); opacity: .7; }
+.q-ltr { width: 22px; height: 22px; border-radius: 50%; background: var(--plate); color: var(--dim); font-family: var(--mono); font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.q-opt.right .q-ltr { background: rgba(105,255,71,.18); color: var(--lime); }
+.q-opt.wrong .q-ltr { background: rgba(255,77,109,.14); color: var(--rose); }
+.q-exp { margin-top: 10px; padding: 11px 14px; background: rgba(191,90,242,.04); border: 1px solid rgba(191,90,242,.12); border-radius: 7px; font-size: 13px; color: var(--mid); line-height: 1.68; display: none; }
+.q-exp.show { display: block; }
+.q-exp strong { color: var(--violet); }
+.quiz-submit { display: block; margin: 2px 24px 24px; padding: 11px 24px; border-radius: 8px; background: rgba(191,90,242,.1); border: 1px solid rgba(191,90,242,.28); color: var(--violet); font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all .14s; }
+.quiz-submit:hover { background: rgba(191,90,242,.2); }
+.quiz-submit:disabled { opacity: .35; cursor: not-allowed; }
+.score { margin: 0 24px 24px; padding: 16px 20px; background: var(--ink3); border: 1px solid var(--wire); border-radius: 9px; display: none; align-items: center; gap: 20px; }
+.score.show { display: flex; }
+.score-num { font-family: var(--head); font-size: 38px; font-weight: 800; color: var(--violet); letter-spacing: -1px; }
+.score-right { display: flex; flex-direction: column; gap: 3px; }
+.score-label { font-size: 13px; color: var(--mid); }
+.score-msg { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.pnav { display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 30px; border-top: 1px solid var(--wire); }
+.pnav a { display: flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 8px; text-decoration: none; font-family: var(--mono); font-size: 11px; color: var(--mid); border: 1px solid var(--wire); transition: all .14s; letter-spacing: .5px; }
+.pnav a:hover { border-color: var(--violet); color: var(--violet); }
+.pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
+.pnav .next:hover { background: rgba(191,90,242,.14); }
+@media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } .diff { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav class="topbar">
+  <a class="tb-home" href="../index.html">&#8592; Back to Course</a>
+  <div class="tb-crumb">
+    <span class="cur">Week 3</span>
+    <span class="sep">/</span>
+    <span class="cur">Day 13</span>
+  </div>
+  <div class="tb-badge">Week 3 — Advanced DApp</div>
+</nav>
+
+<div class="page">
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-head">Contents</div>
+    <a class="sb-a" data-id="intro">Overview</a>
+    <a class="sb-a" data-id="handle-model">The Handle Model</a>
+    <a class="sb-a sub" data-id="passing-handles">Passing Handles</a>
+    <a class="sb-a sub" data-id="acl-cross">ACL in Cross-Contract</a>
+    <a class="sb-a" data-id="transient-vs-persistent">Transient vs Persistent</a>
+    <a class="sb-a sub" data-id="transient-code">allowTransient Code</a>
+    <a class="sb-a sub" data-id="persistent-code">allow Code</a>
+    <a class="sb-a" data-id="pattern-router">Pattern: Token Router</a>
+    <a class="sb-a sub" data-id="router-code">Router Implementation</a>
+    <a class="sb-a" data-id="pattern-defi">Pattern: Encrypted DeFi</a>
+    <a class="sb-a sub" data-id="escrow">Escrow Example</a>
+    <a class="sb-a" data-id="delegate-view">Delegate View Access</a>
+    <a class="sb-a sub" data-id="delegate-code">Delegate Code</div>
+    <a class="sb-a" data-id="pitfalls">Common Pitfalls</a>
+    <a class="sb-a" data-id="lab">Lab Exercise</a>
+    <a class="sb-a" data-id="quiz">Quiz</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section id="intro">
+<div class="hero">
+  <div class="day-pill">&#127760; Day 13 of 20</div>
+  <h1>Cross-Contract<br><em>Encrypted Passing</em></h1>
+  <p class="lead">
+    Real DApps are composed from multiple contracts. An encrypted balance from a token
+    contract needs to flow through a router, into an escrow, and back — all without
+    ever exposing the plaintext. FHEVM's ACL system makes this possible through
+    <strong>handle passing</strong> and carefully scoped permissions.
+    Today you master every cross-contract pattern: transient allowances, persistent grants,
+    delegate view access, and the encrypted DeFi building blocks.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">&#9200; 3–4 hours</div>
+    <div class="stat">&#128279; Cross-contract ACL</div>
+    <div class="stat">&#127981; DeFi patterns</div>
+    <div class="stat">&#9989; 6-question quiz</div>
+  </div>
+</div>
+</section>
+
+<!-- HANDLE MODEL -->
+<h2 class="sec" id="handle-model">The Handle Model Revisited</h2>
+<p>
+  An FHEVM <strong>handle</strong> is a <code>uint256</code> that uniquely identifies a
+  ciphertext stored in the coprocessor. The handle itself is public — it's safe to pass
+  between contracts, store in mappings, and emit in events. The <em>ciphertext</em> behind
+  the handle is never on-chain.
+</p>
+<p>
+  The critical constraint: <strong>a contract can only operate on a handle if the ACL
+  has granted it permission</strong>. Passing a handle to a contract without granting
+  permission means the receiving contract cannot compute on it.
+</p>
+
+<h3 class="sub" id="passing-handles">Passing Handles Between Contracts</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">Concept — handle as uint256</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// Handles are just uint256 values — safe to pass anywhere</span>
+<span class="k">interface</span> IEncryptedVault {
+    <span class="c">// Returns the raw uint256 handle (NOT the ciphertext)</span>
+    <span class="k">function</span> <span class="f">getBalanceHandle</span>(address user) <span class="k">external view returns</span> (uint256);
+}
+
+<span class="k">contract</span> Router {
+    IEncryptedVault vault;
+
+    <span class="k">function</span> <span class="f">route</span>(address from, address to) <span class="k">external</span> {
+        <span class="c">// Get the handle for the sender's balance</span>
+        uint256 handle = vault.getBalanceHandle(from);
+
+        <span class="c">// Wrap back as euint64 to operate on it</span>
+        <span class="c">// ⚠️  This only works if vault has called allowTransient(handle, address(this))</span>
+        euint64 balance = euint64.wrap(handle);
+        <span class="c">// ...</span>
+    }
+}</pre>
+</div>
+
+<h3 class="sub" id="acl-cross">ACL in Cross-Contract Calls</h3>
+<p>
+  When Contract A calls Contract B and passes a handle, <strong>Contract B needs ACL
+  permission</strong> to compute on that handle. There are two ways to grant it:
+</p>
+<div class="tw">
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Scope</th><th>When to Use</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>TFHE.allowTransient(handle, addr)</code></td>
+        <td>Current transaction only — permission is not stored permanently</td>
+        <td>Composability within a single transaction (e.g., token router calling escrow in the same tx)</td>
+      </tr>
+      <tr>
+        <td><code>TFHE.allow(handle, addr)</code></td>
+        <td>Persistent — stored in ACL contract state permanently</td>
+        <td>Long-lived grants: a contract that needs to access a value across multiple transactions</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TRANSIENT VS PERSISTENT -->
+<h2 class="sec" id="transient-vs-persistent">Transient vs Persistent Permissions</h2>
+
+<h3 class="sub" id="transient-code">allowTransient — Single Transaction</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/ConfidentialERC20.sol (transfer)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">/**
+ * @dev Transfer with transient ACL grant to the recipient contract.
+ *      allowTransient grants permission only for the current tx.
+ *      The recipient (if a contract) can compute on the ciphertext
+ *      during the same call chain, but not in future transactions.
+ */</span>
+<span class="k">function</span> <span class="f">transfer</span>(
+    address to,
+    bytes32 encryptedAmount,
+    bytes calldata inputProof
+) <span class="k">external returns</span> (bool) {
+    euint64 amount = TFHE.asEuint64(encryptedAmount, inputProof);
+
+    euint64 newBalanceSender = TFHE.sub(_balances[msg.sender], amount);
+    euint64 newBalanceRecipient = TFHE.add(_balances[to], amount);
+
+    _balances[msg.sender] = newBalanceSender;
+    _balances[to]         = newBalanceRecipient;
+
+    <span class="c">// Persistent ACL: sender and recipient can always access their balance</span>
+    TFHE.allow(newBalanceSender,    msg.sender);
+    TFHE.allow(newBalanceRecipient, to);
+
+    <span class="c">// Allow THIS contract to access both balances (for future operations)</span>
+    TFHE.allow(newBalanceSender,    address(<span class="k">this</span>));
+    TFHE.allow(newBalanceRecipient, address(<span class="k">this</span>));
+
+    <span class="c">// Transient: if 'to' is a contract, it can use the handle in THIS tx only</span>
+    TFHE.allowTransient(newBalanceRecipient, to);
+
+    <span class="k">emit</span> Transfer(msg.sender, to);
+    <span class="k">return true</span>;
+}</pre>
+</div>
+
+<h3 class="sub" id="persistent-code">allow — Persistent Grant</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/Escrow.sol (accept deposit)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">/**
+ * @dev Escrow accepts a deposit. The deposited amount needs a
+ *      PERSISTENT allow so the escrow can access it in future txs
+ *      (e.g., when releasing funds to the beneficiary).
+ */</span>
+<span class="k">function</span> <span class="f">deposit</span>(
+    address beneficiary,
+    euint64 amount          <span class="c">// already ACL-allowed to this contract via allowTransient</span>
+) <span class="k">external</span> {
+    _deposits[msg.sender][beneficiary] = amount;
+
+    <span class="c">// Persistent: escrow needs to access this in future release() calls</span>
+    TFHE.allow(amount, address(<span class="k">this</span>));
+
+    <span class="c">// Optional: let beneficiary verify the deposit exists (cannot read value)</span>
+    TFHE.allow(amount, beneficiary);
+
+    <span class="k">emit</span> Deposited(msg.sender, beneficiary);
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-ico">&#9888;</div>
+  <div class="box-inner">
+    <div class="box-title">allowTransient Does Not Persist</div>
+    <div class="box-text">
+      If you use <code>allowTransient</code> and a later transaction needs access to the
+      same handle, it will fail with an ACL error. Use <code>allow</code> whenever the
+      receiving contract needs multi-transaction access.
+    </div>
+  </div>
+</div>
+
+<!-- TOKEN ROUTER PATTERN -->
+<h2 class="sec" id="pattern-router">Pattern: Encrypted Token Router</h2>
+<p>
+  A router accepts tokens from one contract and forwards them to another. The key
+  challenge: the router needs transient permission to read the incoming handle,
+  compute the routing logic, and then pass the resulting handle to the destination.
+</p>
+
+<h3 class="sub" id="router-code">Router Implementation</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/EncryptedRouter.sol</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// SPDX-License-Identifier: MIT</span>
+<span class="k">pragma solidity</span> ^0.8.24;
+
+<span class="k">import</span> <span class="s">"fhevm/lib/TFHE.sol"</span>;
+
+<span class="k">interface</span> IConfidentialToken {
+    <span class="k">function</span> <span class="f">transferFrom</span>(address from, address to, bytes32 handle, bytes calldata proof) <span class="k">external</span>;
+    <span class="k">function</span> <span class="f">getBalanceHandle</span>(address user) <span class="k">external view returns</span> (uint256);
+}
+
+<span class="k">interface</span> IEncryptedVault {
+    <span class="k">function</span> <span class="f">depositFrom</span>(address user, euint64 amount) <span class="k">external</span>;
+}
+
+<span class="k">contract</span> EncryptedRouter {
+    IConfidentialToken <span class="k">public immutable</span> token;
+    IEncryptedVault    <span class="k">public immutable</span> vault;
+
+    <span class="k">constructor</span>(address _token, address _vault) {
+        token = IConfidentialToken(_token);
+        vault = IEncryptedVault(_vault);
+    }
+
+    <span class="c">/**
+     * @dev Route: transfer tokens from user → router → vault in one tx.
+     *      Step 1: Token contract grants router transient permission.
+     *      Step 2: Router passes the handle to vault with allow().
+     */</span>
+    <span class="k">function</span> <span class="f">routeToVault</span>(
+        bytes32 encryptedAmount,
+        bytes calldata inputProof
+    ) <span class="k">external</span> {
+        <span class="c">// Step 1: Transfer tokens to this router contract (token grants allowTransient)</span>
+        token.transferFrom(msg.sender, address(<span class="k">this</span>), encryptedAmount, inputProof);
+
+        <span class="c">// Step 2: Get the handle this contract now owns</span>
+        uint256 handle = token.getBalanceHandle(address(<span class="k">this</span>));
+        euint64 routerBalance = euint64.wrap(handle);
+
+        <span class="c">// Step 3: Grant vault PERSISTENT access before calling it</span>
+        TFHE.allow(routerBalance, address(vault));
+
+        <span class="c">// Step 4: Deposit into vault</span>
+        vault.depositFrom(msg.sender, routerBalance);
+    }
+}</pre>
+</div>
+
+<!-- ENCRYPTED DEFI ESCROW -->
+<h2 class="sec" id="pattern-defi">Pattern: Encrypted DeFi Escrow</h2>
+<p>
+  An escrow holds encrypted funds until a condition is met (e.g., a service is delivered
+  and both parties confirm). The escrow must maintain persistent ACL access to the
+  deposited handles, and the release logic must be oblivious (using <code>TFHE.select</code>).
+</p>
+
+<h3 class="sub" id="escrow">Escrow Contract</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/EncryptedEscrow.sol</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="k">contract</span> EncryptedEscrow {
+    <span class="k">struct</span> Deal {
+        euint64  amount;
+        address  buyer;
+        address  seller;
+        ebool    buyerConfirmed;
+        ebool    sellerConfirmed;
+        bool     released;
+    }
+
+    mapping(uint256 => Deal) <span class="k">private</span> _deals;
+    uint256 <span class="k">private</span> _nextDealId;
+
+    <span class="k">function</span> <span class="f">createDeal</span>(address seller, euint64 amount) <span class="k">external returns</span> (uint256 dealId) {
+        dealId = _nextDealId++;
+        _deals[dealId] = Deal({
+            amount: amount,
+            buyer: msg.sender,
+            seller: seller,
+            buyerConfirmed: TFHE.asEbool(<span class="n">false</span>),
+            sellerConfirmed: TFHE.asEbool(<span class="n">false</span>),
+            released: <span class="n">false</span>
+        });
+        <span class="c">// Escrow must have persistent access to operate on amount later</span>
+        TFHE.allow(amount, address(<span class="k">this</span>));
+    }
+
+    <span class="k">function</span> <span class="f">confirm</span>(uint256 dealId) <span class="k">external</span> {
+        Deal <span class="k">storage</span> d = _deals[dealId];
+        <span class="k">require</span>(!d.released, <span class="s">"Already released"</span>);
+
+        <span class="k">if</span> (msg.sender == d.buyer) {
+            d.buyerConfirmed = TFHE.asEbool(<span class="n">true</span>);
+            TFHE.allow(d.buyerConfirmed, address(<span class="k">this</span>));
+        } <span class="k">else if</span> (msg.sender == d.seller) {
+            d.sellerConfirmed = TFHE.asEbool(<span class="n">true</span>);
+            TFHE.allow(d.sellerConfirmed, address(<span class="k">this</span>));
+        }
+    }
+
+    <span class="k">function</span> <span class="f">release</span>(uint256 dealId) <span class="k">external</span> {
+        Deal <span class="k">storage</span> d = _deals[dealId];
+        <span class="k">require</span>(!d.released);
+
+        <span class="c">// Compute: bothConfirmed = buyerConfirmed AND sellerConfirmed</span>
+        ebool bothConfirmed = TFHE.and(d.buyerConfirmed, d.sellerConfirmed);
+
+        <span class="c">// Oblivious release: amount goes to seller if both confirmed, else stays</span>
+        euint64 toSeller = TFHE.select(bothConfirmed, d.amount, TFHE.asEuint64(<span class="n">0</span>));
+        euint64 toBuyer  = TFHE.select(bothConfirmed, TFHE.asEuint64(<span class="n">0</span>), d.amount);
+
+        <span class="c">// Grant ACL to respective parties</span>
+        TFHE.allow(toSeller, d.seller);
+        TFHE.allow(toBuyer,  d.buyer);
+
+        d.released = <span class="n">true</span>;
+        <span class="c">// In a real contract: transfer tokens via the token contract here</span>
+    }
+}</pre>
+</div>
+
+<!-- DELEGATE VIEW -->
+<h2 class="sec" id="delegate-view">Delegate View Access</h2>
+<p>
+  Sometimes a third party (an auditor, a protocol) needs to <em>view</em> an encrypted
+  value, but not compute on it. You can grant read-only ACL access — they can call
+  <code>balanceOf</code> and re-encrypt, but cannot use the handle in arithmetic.
+</p>
+
+<h3 class="sub" id="delegate-code">Delegate View Implementation</h3>
+<div class="code">
+  <div class="code-top">
+    <div class="dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+    <div class="lang">Solidity</div>
+    <div class="fname">contracts/ConfidentialERC20.sol (delegate view)</div>
+    <button class="copy" onclick="copyCode(this)">COPY</button>
+  </div>
+  <pre><span class="c">// Mapping: owner => delegated viewer => approved</span>
+mapping(address => mapping(address => bool)) <span class="k">public</span> viewDelegates;
+
+<span class="k">function</span> <span class="f">grantViewAccess</span>(address viewer) <span class="k">external</span> {
+    viewDelegates[msg.sender][viewer] = <span class="n">true</span>;
+    <span class="c">// Grant persistent ACL so viewer can re-encrypt this balance</span>
+    TFHE.allow(_balances[msg.sender], viewer);
+    <span class="k">emit</span> ViewAccessGranted(msg.sender, viewer);
+}
+
+<span class="k">function</span> <span class="f">revokeViewAccess</span>(address viewer) <span class="k">external</span> {
+    viewDelegates[msg.sender][viewer] = <span class="n">false</span>;
+    <span class="c">// Note: ACL.allow() is NOT reversible — once granted, you cannot un-grant.</span>
+    <span class="c">// The viewer retains ACL access but the application layer records the revocation.</span>
+    <span class="c">// For true revocation, migrate to a new handle (e.g., re-mint or re-store).</span>
+    <span class="k">emit</span> ViewAccessRevoked(msg.sender, viewer);
+}
+
+<span class="k">function</span> <span class="f">balanceOf</span>(
+    address owner,
+    bytes32 publicKey,
+    bytes calldata signature
+) <span class="k">external view returns</span> (bytes <span class="k">memory</span>) {
+    <span class="c">// Allow owner OR a view delegate to call this function</span>
+    <span class="k">require</span>(
+        msg.sender == owner || viewDelegates[owner][msg.sender],
+        <span class="s">"Not authorized to view balance"</span>
+    );
+    <span class="k">return</span> TFHE.reencrypt(_balances[owner], publicKey, <span class="n">0</span>);
+}</pre>
+</div>
+
+<div class="box alert">
+  <div class="box-ico">&#128683;</div>
+  <div class="box-inner">
+    <div class="box-title">ACL Grants Are Irrevocable</div>
+    <div class="box-text">
+      <code>TFHE.allow(handle, addr)</code> writes to the on-chain ACL contract and cannot
+      be undone. If you need true revocation, the standard pattern is to <strong>replace the
+      handle</strong>: store the value in a new ciphertext and grant access to the new handle
+      only to the intended parties. The old handle remains accessible to previous grantees.
+    </div>
+  </div>
+</div>
+
+<!-- PITFALLS -->
+<h2 class="sec" id="pitfalls">Common Cross-Contract Pitfalls</h2>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; Bug — Forgot ACL before cross-call</div>
+    <pre><span class="c">// Contract A passes handle to Contract B
+// but never called allowTransient or allow</span>
+<span class="k">function</span> <span class="f">forward</span>(euint64 amt) <span class="k">external</span> {
+    <span class="c">// B cannot compute on amt — ACL rejects</span>
+    contractB.process(amt); <span class="c">// ← WILL FAIL</span>
+}</pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Fix — Grant permission before cross-call</div>
+    <pre><span class="c">// Grant transient permission to B first</span>
+<span class="k">function</span> <span class="f">forward</span>(euint64 amt) <span class="k">external</span> {
+    TFHE.allowTransient(amt, address(contractB));
+    contractB.process(amt); <span class="c">// ← Works!</span>
+}</pre>
+  </div>
+</div>
+
+<div class="diff">
+  <div class="diff-card">
+    <div class="diff-label bad">&#10008; Bug — Transient for multi-tx access</div>
+    <pre><span class="c">// Escrow uses transient — future txs will fail</span>
+TFHE.allowTransient(amount, address(escrow));
+escrow.deposit(amount);
+
+<span class="c">// Later transaction...</span>
+escrow.release(); <span class="c">// ← FAILS: no ACL access</span></pre>
+  </div>
+  <div class="diff-card">
+    <div class="diff-label good">&#10003; Fix — Persistent allow for escrow</div>
+    <pre><span class="c">// Escrow needs multi-tx access: use allow()</span>
+TFHE.allow(amount, address(escrow));
+TFHE.allowTransient(amount, address(escrow));
+escrow.deposit(amount);
+
+<span class="c">// Later transaction...</span>
+escrow.release(); <span class="c">// ← Works!</span></pre>
+  </div>
+</div>
+
+<!-- LAB -->
+<h2 class="sec" id="lab">Lab 3C — Multi-Contract Encrypted System</h2>
+<div class="box key">
+  <div class="box-ico">&#127981;</div>
+  <div class="box-inner">
+    <div class="box-title">Lab Objective</div>
+    <div class="box-text">
+      Build a 3-contract encrypted system: <strong>ConfidentialToken</strong> (token contract),
+      <strong>EncryptedEscrow</strong> (holds funds between buyer/seller), and
+      <strong>EscrowRouter</strong> (one-tx flow: take token → lock in escrow).
+      All encrypted value passing must use correct ACL grants.
+    </div>
+  </div>
+</div>
+<ul>
+  <li><code>contracts/ConfidentialToken.sol</code> — ConfidentialERC20 from Day 10 (or reuse it)</li>
+  <li><code>contracts/EncryptedEscrow.sol</code> — <code>createDeal</code>, <code>confirm</code>, <code>release</code> with oblivious release pattern</li>
+  <li><code>contracts/EscrowRouter.sol</code> — one-tx <code>lockFunds(seller, amount)</code>: transfers from token then locks in escrow</li>
+  <li><code>test/EscrowSystem.test.ts</code> — 5 required tests: create deal, buyer confirms, seller confirms, release transfers to seller, unconfirmed deal does not release</li>
+</ul>
+<p><strong>Extension:</strong> Add a dispute mechanism: owner can force-release to either party after 7 days. Use Gateway async decryption to reveal the disputed amount publicly when resolving.</p>
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz">
+  <div class="quiz-head">
+    <div class="quiz-head-icon">&#129504;</div>
+    <div>
+      <div class="quiz-title">Day 13 Quiz</div>
+      <div class="quiz-subtitle">6 questions · cross-contract encrypted passing</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 01 / 06</div>
+      <div class="q-q">Contract A passes a handle to Contract B in the same transaction. What must Contract A do so Contract B can compute on the handle?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — handles are public and any contract can use them</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call <code>TFHE.allowTransient(handle, address(contractB))</code> before the cross-contract call</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Decrypt the handle first, then pass the plaintext</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Register Contract B in the ACL admin contract</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> Handles are public identifiers, but operating on the ciphertext requires ACL permission. <code>allowTransient</code> grants permission scoped to the current transaction — sufficient for same-tx composability.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 02 / 06</div>
+      <div class="q-q">An escrow contract stores a deposit in one transaction and needs to release it in a later transaction. Which ACL call should the depositor use?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>TFHE.allowTransient(amount, address(escrow))</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>No ACL call needed — escrow owns the handle after transfer</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>TFHE.allowForDecryption(amount)</code></div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>TFHE.allow(amount, address(escrow))</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> <code>allow</code> writes a persistent ACL entry. The escrow needs to access the handle in its future <code>release()</code> transaction. <code>allowTransient</code> would expire at the end of the deposit transaction and the release would fail.</div>
+    </div>
+
+    <div class="q" data-ans="C">
+      <div class="q-n">QUESTION 03 / 06</div>
+      <div class="q-q">You call <code>TFHE.allow(handle, viewer)</code> to grant a viewer access, then later want to revoke it. What is the correct approach?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Call <code>TFHE.revoke(handle, viewer)</code></div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call <code>TFHE.allow(handle, address(0))</code> to override</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>ACL grants are irrevocable — store the value in a new ciphertext and grant access to the new handle only to authorized parties</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Delete the ACL mapping entry in the ACL contract directly</div>
+      </div>
+      <div class="q-exp"><strong>Correct — C.</strong> <code>TFHE.allow</code> is a one-way operation. There is no revoke function. The standard pattern for revocation is to "re-mint" the value: store it in a new ciphertext handle and grant access to that new handle only to the parties that should retain access.</div>
+    </div>
+
+    <div class="q" data-ans="A">
+      <div class="q-n">QUESTION 04 / 06</div>
+      <div class="q-q">In the oblivious escrow release pattern, why must you use <code>TFHE.select(bothConfirmed, amount, 0)</code> instead of <code>if (bothConfirmed) { transfer(amount) }</code>?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>bothConfirmed</code> is an <code>ebool</code> — Solidity cannot branch on encrypted values, so you must compute both outcomes and select between them obliviously</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>TFHE.select</code> is cheaper in gas</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The if-statement would revert the transaction if the condition is false</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway requires all transfers to use <code>TFHE.select</code></div>
+      </div>
+      <div class="q-exp"><strong>Correct — A.</strong> An <code>ebool</code> is a ciphertext — its value is unknown at EVM execution time. Solidity's <code>if</code> requires a plaintext boolean. You must use <code>TFHE.select</code> to produce both branches as ciphertexts and select between them homomorphically.</div>
+    </div>
+
+    <div class="q" data-ans="B">
+      <div class="q-n">QUESTION 05 / 06</div>
+      <div class="q-q">What is a handle in FHEVM and is it safe to emit in events?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A handle contains the encrypted ciphertext — emitting it reveals the data</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A handle is a <code>uint256</code> identifier for a ciphertext stored in the coprocessor — it is safe to emit publicly, as it reveals nothing about the underlying value</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A handle is a hash of the user's address and value — it could leak information</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Handles must never be shared — doing so grants compute access to anyone</div>
+      </div>
+      <div class="q-exp"><strong>Correct — B.</strong> A handle is simply a deterministic identifier (like an index). The ciphertext itself lives in the off-chain coprocessor. Anyone can see a handle in an event, but without ACL permission they cannot decrypt or compute on the underlying ciphertext.</div>
+    </div>
+
+    <div class="q" data-ans="D">
+      <div class="q-n">QUESTION 06 / 06</div>
+      <div class="q-q">Contract A calls Contract B which calls Contract C, all in the same transaction. A owns handle <code>h</code>. For C to compute on <code>h</code>, what must happen?</div>
+      <div class="q-opts">
+        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A must call <code>allowTransient(h, B)</code> only — B's permission automatically propagates to C</div>
+        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Nothing — all contracts in the same call stack share ACL access</div>
+        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>C must be registered as a trusted contract in the ACL admin</div>
+        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Either A must call <code>allowTransient(h, C)</code>, or B must call <code>allowTransient(h, C)</code> before calling C — transient permissions do not automatically propagate through call chains</div>
+      </div>
+      <div class="q-exp"><strong>Correct — D.</strong> ACL permissions are explicit and do not auto-propagate. Each contract in the chain needs its own grant. A can pre-grant C directly, or B can grant C when it receives the handle. The important thing is that the grant happens before the computation attempt.</div>
+    </div>
+
+  </div>
+  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
+  <div class="score" id="qscore">
+    <div class="score-num" id="snum">0/6</div>
+    <div class="score-right">
+      <div class="score-label">questions correct</div>
+      <div class="score-msg" id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pnav">
+  <a href="day12.html">&#8592; Day 12 — Gateway Async</a>
+  <a class="next" href="day14.html">Day 14 — Sealed-Bid Auction DApp &#8594;</a>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+const sbLinks = document.querySelectorAll('.sb-a[data-id]');
+const sectionIds = ['intro','handle-model','passing-handles','acl-cross','transient-vs-persistent',
+  'transient-code','persistent-code','pattern-router','router-code','pattern-defi',
+  'escrow','delegate-view','delegate-code','pitfalls','lab','quiz'];
+const anchors = [...document.querySelectorAll('[id]')].filter(el => sectionIds.includes(el.id));
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      sbLinks.forEach(l => l.classList.remove('on'));
+      const m = document.querySelector(`.sb-a[data-id="${e.target.id}"]`);
+      if (m) m.classList.add('on');
+    }
+  });
+}, { rootMargin: '-18% 0px -68% 0px' });
+anchors.forEach(a => io.observe(a));
+sbLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const TOTAL = 6;
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const q = opt.closest('.q');
+    if (q.dataset.done) return;
+    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
+    opt.classList.add('picked');
+    const done = document.querySelectorAll('.q-opt.picked').length;
+    document.getElementById('qsub').disabled = done < TOTAL;
+  });
+});
+function gradeQuiz() {
+  let correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    q.dataset.done = '1';
+    const picked = q.querySelector('.q-opt.picked');
+    const ans = q.dataset.ans;
+    q.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.v === ans) o.classList.add('right');
+      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+    });
+    if (picked && picked.dataset.v === ans) correct++;
+    const exp = q.querySelector('.q-exp');
+    if (exp) exp.classList.add('show');
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  document.getElementById('snum').textContent = correct + '/' + TOTAL;
+  document.getElementById('smsg').textContent =
+    pct === 100 ? 'Perfect! Ready for Day 14.' :
+    pct >= 83   ? 'Excellent!'                  :
+    pct >= 50   ? 'Review the ACL patterns.'    :
+                  'Re-read from the top.';
+  document.getElementById('qscore').classList.add('show');
+  document.getElementById('qsub').disabled = true;
+}
+function copyCode(btn) {
+  const pre = btn.closest('.code').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 1800);
+  });
+}
+</script>
+</body>
+</html>
