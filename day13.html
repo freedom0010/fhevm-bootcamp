@@ -147,6 +147,127 @@ td code { font-family: var(--mono); font-size: 11px; color: var(--violet); backg
 .pnav .next { background: rgba(191,90,242,.07); border-color: rgba(191,90,242,.22); color: var(--violet); }
 .pnav .next:hover { background: rgba(191,90,242,.14); }
 @media (max-width: 860px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 30px 18px 60px; } .diff { grid-template-columns: 1fr; } }
+
+/* ═══ QUIZ COMPONENT ═══════════════════════════════════════════ */
+.qz { background:#0d0d1a; border:1px solid #2a2a45; border-radius:14px;
+  margin:52px 0; overflow:hidden; }
+.qz-head { display:flex; align-items:center; gap:14px; padding:18px 24px;
+  background:rgba(255,179,0,.06); border-bottom:1px solid #2a2a45; }
+.qz-icon { font-size:22px; }
+.qz-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  color:#ffb300; letter-spacing:-.3px; }
+.qz-sub { font-family:'JetBrains Mono',monospace; font-size:10px;
+  color:#6b6b95; margin-top:2px; letter-spacing:.5px; }
+.qz-qs { padding:0 24px; display:flex; flex-direction:column; gap:0; }
+.qz-q { padding:28px 0; border-bottom:1px solid #1e1e36; }
+.qz-q:last-child { border-bottom:none; }
+.qz-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  letter-spacing:2px; margin-bottom:8px; }
+.qz-text { font-size:14px; color:#f0f0ff; line-height:1.65; margin-bottom:14px; }
+.qz-text code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.1); padding:1px 6px; border-radius:3px; }
+.qz-opts { display:flex; flex-direction:column; gap:8px; }
+.qz-opt { display:flex; align-items:flex-start; gap:10px; padding:11px 14px;
+  border-radius:8px; border:1px solid #2a2a45; cursor:pointer;
+  font-size:13px; color:#9898be; line-height:1.6;
+  transition:border-color .14s, background .14s, color .14s;
+  user-select:none; }
+.qz-opt:hover { border-color:#353560; background:rgba(255,255,255,.02); color:#c0c0e0; }
+.qz-opt.sel { border-color:#4a4a70; background:rgba(191,90,242,.07); color:#e0e0ff; }
+.qz-ltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1a1a30; color:#6b6b95; transition:all .14s; }
+.qz-opt.sel .qz-ltr { background:rgba(191,90,242,.2); color:#bf5af2; }
+.qz-opt code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-foot { padding:20px 24px; border-top:1px solid #2a2a45;
+  display:flex; align-items:center; justify-content:space-between; }
+.qz-prog { font-family:'JetBrains Mono',monospace; font-size:11px; color:#5a5a82;
+  letter-spacing:.5px; }
+.qz-btn { padding:11px 28px; border-radius:8px; border:1px solid rgba(255,179,0,.3);
+  background:rgba(255,179,0,.08); color:#ffb300;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  letter-spacing:1.5px; cursor:pointer; transition:all .14s; }
+.qz-btn:hover:not(:disabled) { background:rgba(255,179,0,.18); border-color:#ffb300; }
+.qz-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ─── Results overlay ─────────────────────────────────────────── */
+.qz-overlay { position:fixed; inset:0; z-index:9999; background:#070711;
+  overflow-y:auto; display:none; flex-direction:column;
+  font-family:'Instrument Sans',sans-serif; }
+.qz-overlay.open { display:flex; }
+.qz-ob { position:sticky; top:0; height:52px; display:flex;
+  align-items:center; gap:12px; padding:0 24px;
+  background:rgba(7,7,17,.97); border-bottom:1px solid #2a2a45;
+  backdrop-filter:blur(16px); z-index:10; }
+.qz-ob-back { padding:6px 16px; border-radius:6px; border:1px solid #2a2a45;
+  background:none; color:#6b6b95; font-family:'JetBrains Mono',monospace;
+  font-size:11px; cursor:pointer; letter-spacing:.5px; transition:all .14s; }
+.qz-ob-back:hover { border-color:#ffb300; color:#ffb300; }
+.qz-ob-pill { margin-left:auto; padding:4px 14px; border-radius:20px;
+  background:rgba(255,179,0,.08); border:1px solid rgba(255,179,0,.2);
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:#ffb300; }
+.qz-oh { display:flex; align-items:center; gap:32px;
+  padding:40px 48px 32px; border-bottom:1px solid #2a2a45; }
+.qz-ring { flex-shrink:0; }
+.qz-ht { flex:1; }
+.qz-score { font-family:'Syne',sans-serif; font-size:56px; font-weight:800;
+  color:#f0f0ff; letter-spacing:-3px; line-height:1; }
+.qz-score sup { font-size:28px; color:#ffb300; vertical-align:super; letter-spacing:0; }
+.qz-hmsg { font-family:'JetBrains Mono',monospace; font-size:12px; color:#9898be;
+  margin:10px 0 12px; letter-spacing:.3px; line-height:1.7; }
+.qz-badge { display:inline-block; padding:4px 14px; border-radius:4px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; }
+.b-s { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.25); }
+.b-a { background:rgba(0,229,255,.08); color:#00e5ff; border:1px solid rgba(0,229,255,.22); }
+.b-b { background:rgba(255,179,0,.1); color:#ffb300; border:1px solid rgba(255,179,0,.25); }
+.b-c { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.25); }
+.qz-cards { padding:32px 48px 80px; display:flex; flex-direction:column; gap:20px; }
+.qz-card { border:1px solid #2a2a45; border-radius:12px; overflow:hidden; }
+.qz-card.c-ok { border-left:3px solid #69ff47; }
+.qz-card.c-no { border-left:3px solid #ff4d6d; }
+.qz-ch { display:flex; align-items:flex-start; gap:12px; padding:14px 20px;
+  border-bottom:1px solid #1e1e36; background:#0d0d1a; }
+.qz-cnum { font-family:'JetBrains Mono',monospace; font-size:10px; color:#5a5a82;
+  flex-shrink:0; padding-top:2px; letter-spacing:1.5px; }
+.qz-cq { font-size:13px; color:#f0f0ff; flex:1; line-height:1.6; }
+.qz-cq code { font-family:'JetBrains Mono',monospace; font-size:12px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cv { flex-shrink:0; padding:3px 10px; border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; }
+.cv-ok { background:rgba(105,255,71,.1); color:#69ff47; border:1px solid rgba(105,255,71,.2); }
+.cv-no { background:rgba(255,77,109,.1); color:#ff4d6d; border:1px solid rgba(255,77,109,.2); }
+.qz-copts { padding:12px 20px; background:#111128; display:flex;
+  flex-direction:column; gap:7px; }
+.qz-co { display:flex; align-items:flex-start; gap:10px; padding:9px 12px;
+  border-radius:7px; font-size:13px; color:#6b6b95; border:1px solid transparent;
+  line-height:1.6; }
+.qz-co.o-right { border-color:rgba(105,255,71,.3); background:rgba(105,255,71,.05); color:#f0f0ff; }
+.qz-co.o-wrong { border-color:rgba(255,77,109,.3); background:rgba(255,77,109,.06);
+  color:#ff4d6d; text-decoration:line-through; opacity:.8; }
+.qz-co code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+.qz-cltr { width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+  background:#1e1e36; color:#5a5a82; }
+.qz-co.o-right .qz-cltr { background:rgba(105,255,71,.18); color:#69ff47; }
+.qz-co.o-wrong .qz-cltr { background:rgba(255,77,109,.14); color:#ff4d6d; }
+.qz-cexp { margin:0 20px 16px; padding:13px 16px; background:#0d0d1a;
+  border:1px solid #2a2a45; border-radius:8px;
+  font-size:13px; color:#9898be; line-height:1.75; }
+.qz-cexp strong { color:#ffb300; }
+.qz-cexp em { color:#c0c0e0; }
+.qz-cexp code { font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:#ffb300; background:rgba(255,179,0,.08); padding:1px 5px; border-radius:3px; }
+@media(max-width:720px){
+  .qz-oh{flex-direction:column;padding:28px 20px 24px;gap:20px;}
+  .qz-cards{padding:20px 16px 60px;}
+  .qz-score{font-size:44px;}
+}
+/* ═══════════════════════════════════════════════════════════════ */
+
 </style>
 </head>
 <body>
@@ -633,102 +754,86 @@ escrow.release(); <span class="c">// ← Works!</span></pre>
 <p><strong>Extension:</strong> Add a dispute mechanism: owner can force-release to either party after 7 days. Use Gateway async decryption to reveal the disputed amount publicly when resolving.</p>
 
 <!-- QUIZ -->
-<div class="quiz" id="quiz">
-  <div class="quiz-head">
-    <div class="quiz-head-icon">&#129504;</div>
+
+<div class="qz" id="quiz">
+  <div class="qz-head">
+    <span class="qz-icon">🧠</span>
     <div>
-      <div class="quiz-title">Day 13 Quiz</div>
-      <div class="quiz-subtitle">6 questions · cross-contract encrypted passing</div>
+      <div class="qz-title">Day 13 Quiz</div>
+      <div class="qz-sub">6 questions · cross-contract encrypted values</div>
     </div>
   </div>
-  <div class="quiz-body">
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 01 / 06</div>
-      <div class="q-q">Contract A passes a handle to Contract B in the same transaction. What must Contract A do so Contract B can compute on the handle?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Nothing — handles are public and any contract can use them</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call <code>TFHE.allowTransient(handle, address(contractB))</code> before the cross-contract call</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>Decrypt the handle first, then pass the plaintext</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Register Contract B in the ACL admin contract</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> Handles are public identifiers, but operating on the ciphertext requires ACL permission. <code>allowTransient</code> grants permission scoped to the current transaction — sufficient for same-tx composability.</div>
+  <div class="qz-qs">
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 01 / 06</div>
+      <div class="qz-text">Contract A passes a handle to Contract B in the same transaction. What must Contract A do so Contract B can compute on the handle?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Nothing — handles are public and any contract can use them</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Call <code>TFHE.allowTransient(handle, address(contractB))</code> before the cross-contract call</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>Decrypt the handle first, then pass the plaintext</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Register Contract B in the ACL admin contract</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> Handles are public identifiers, but operating on the ciphertext requires ACL permission. <code>allowTransient</code> grants permission scoped to the current transaction — sufficient for same-tx composability.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 02 / 06</div>
-      <div class="q-q">An escrow contract stores a deposit in one transaction and needs to release it in a later transaction. Which ACL call should the depositor use?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>TFHE.allowTransient(amount, address(escrow))</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>No ACL call needed — escrow owns the handle after transfer</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span><code>TFHE.allowForDecryption(amount)</code></div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span><code>TFHE.allow(amount, address(escrow))</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> <code>allow</code> writes a persistent ACL entry. The escrow needs to access the handle in its future <code>release()</code> transaction. <code>allowTransient</code> would expire at the end of the deposit transaction and the release would fail.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 02 / 06</div>
+      <div class="qz-text">An escrow contract stores a deposit in one transaction and needs to release it in a later transaction. Which ACL call should the depositor use?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>TFHE.allowTransient(amount, address(escrow))</code></div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>No ACL call needed — escrow owns the handle after transfer</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span><code>TFHE.allowForDecryption(amount)</code></div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span><code>TFHE.allow(amount, address(escrow))</code></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> <code>allow</code> writes a persistent ACL entry. The escrow needs to access the handle in its future <code>release()</code> transaction. <code>allowTransient</code> would expire at the end of the deposit transaction and the release would fail.</div>
     </div>
-
-    <div class="q" data-ans="C">
-      <div class="q-n">QUESTION 03 / 06</div>
-      <div class="q-q">You call <code>TFHE.allow(handle, viewer)</code> to grant a viewer access, then later want to revoke it. What is the correct approach?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>Call <code>TFHE.revoke(handle, viewer)</code></div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Call <code>TFHE.allow(handle, address(0))</code> to override</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>ACL grants are irrevocable — store the value in a new ciphertext and grant access to the new handle only to authorized parties</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Delete the ACL mapping entry in the ACL contract directly</div>
-      </div>
-      <div class="q-exp"><strong>Correct — C.</strong> <code>TFHE.allow</code> is a one-way operation. There is no revoke function. The standard pattern for revocation is to "re-mint" the value: store it in a new ciphertext handle and grant access to that new handle only to the parties that should retain access.</div>
+    <div class="qz-q" data-ans="C">
+      <div class="qz-num">QUESTION 03 / 06</div>
+      <div class="qz-text">You call <code>TFHE.allow(handle, viewer)</code> to grant a viewer access, then later want to revoke it. What is the correct approach?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>Call <code>TFHE.revoke(handle, viewer)</code></div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Call <code>TFHE.allow(handle, address(0))</code> to override</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>ACL grants are irrevocable — store the value in a new ciphertext and grant access to the new handle only to authorized parties</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Delete the ACL mapping entry in the ACL contract directly</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — C.</strong> <code>TFHE.allow</code> is a one-way operation. There is no revoke function. The standard pattern for revocation is to "re-mint" the value: store it in a new ciphertext handle and grant access to that new handle only to the parties that should retain access.</div>
     </div>
-
-    <div class="q" data-ans="A">
-      <div class="q-n">QUESTION 04 / 06</div>
-      <div class="q-q">In the oblivious escrow release pattern, why must you use <code>TFHE.select(bothConfirmed, amount, 0)</code> instead of <code>if (bothConfirmed) { transfer(amount) }</code>?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span><code>bothConfirmed</code> is an <code>ebool</code> — Solidity cannot branch on encrypted values, so you must compute both outcomes and select between them obliviously</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span><code>TFHE.select</code> is cheaper in gas</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>The if-statement would revert the transaction if the condition is false</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>The Gateway requires all transfers to use <code>TFHE.select</code></div>
-      </div>
-      <div class="q-exp"><strong>Correct — A.</strong> An <code>ebool</code> is a ciphertext — its value is unknown at EVM execution time. Solidity's <code>if</code> requires a plaintext boolean. You must use <code>TFHE.select</code> to produce both branches as ciphertexts and select between them homomorphically.</div>
+    <div class="qz-q" data-ans="A">
+      <div class="qz-num">QUESTION 04 / 06</div>
+      <div class="qz-text">In the oblivious escrow release pattern, why must you use <code>TFHE.select(bothConfirmed, amount, 0)</code> instead of <code>if (bothConfirmed) { transfer(amount) }</code>?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span><code>bothConfirmed</code> is an <code>ebool</code> — Solidity cannot branch on encrypted values, so you must compute both outcomes and select between them obliviously</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span><code>TFHE.select</code> is cheaper in gas</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>The if-statement would revert the transaction if the condition is false</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>The Gateway requires all transfers to use <code>TFHE.select</code></div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — A.</strong> An <code>ebool</code> is a ciphertext — its value is unknown at EVM execution time. Solidity's <code>if</code> requires a plaintext boolean. You must use <code>TFHE.select</code> to produce both branches as ciphertexts and select between them homomorphically.</div>
     </div>
-
-    <div class="q" data-ans="B">
-      <div class="q-n">QUESTION 05 / 06</div>
-      <div class="q-q">What is a handle in FHEVM and is it safe to emit in events?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A handle contains the encrypted ciphertext — emitting it reveals the data</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>A handle is a <code>uint256</code> identifier for a ciphertext stored in the coprocessor — it is safe to emit publicly, as it reveals nothing about the underlying value</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>A handle is a hash of the user's address and value — it could leak information</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Handles must never be shared — doing so grants compute access to anyone</div>
-      </div>
-      <div class="q-exp"><strong>Correct — B.</strong> A handle is simply a deterministic identifier (like an index). The ciphertext itself lives in the off-chain coprocessor. Anyone can see a handle in an event, but without ACL permission they cannot decrypt or compute on the underlying ciphertext.</div>
+    <div class="qz-q" data-ans="B">
+      <div class="qz-num">QUESTION 05 / 06</div>
+      <div class="qz-text">What is a handle in FHEVM and is it safe to emit in events?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>A handle contains the encrypted ciphertext — emitting it reveals the data</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>A handle is a <code>uint256</code> identifier for a ciphertext stored in the coprocessor — it is safe to emit publicly, as it reveals nothing about the underlying value</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>A handle is a hash of the user's address and value — it could leak information</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Handles must never be shared — doing so grants compute access to anyone</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — B.</strong> A handle is simply a deterministic identifier (like an index). The ciphertext itself lives in the off-chain coprocessor. Anyone can see a handle in an event, but without ACL permission they cannot decrypt or compute on the underlying ciphertext.</div>
     </div>
-
-    <div class="q" data-ans="D">
-      <div class="q-n">QUESTION 06 / 06</div>
-      <div class="q-q">Contract A calls Contract B which calls Contract C, all in the same transaction. A owns handle <code>h</code>. For C to compute on <code>h</code>, what must happen?</div>
-      <div class="q-opts">
-        <div class="q-opt" data-v="A"><span class="q-ltr">A</span>A must call <code>allowTransient(h, B)</code> only — B's permission automatically propagates to C</div>
-        <div class="q-opt" data-v="B"><span class="q-ltr">B</span>Nothing — all contracts in the same call stack share ACL access</div>
-        <div class="q-opt" data-v="C"><span class="q-ltr">C</span>C must be registered as a trusted contract in the ACL admin</div>
-        <div class="q-opt" data-v="D"><span class="q-ltr">D</span>Either A must call <code>allowTransient(h, C)</code>, or B must call <code>allowTransient(h, C)</code> before calling C — transient permissions do not automatically propagate through call chains</div>
-      </div>
-      <div class="q-exp"><strong>Correct — D.</strong> ACL permissions are explicit and do not auto-propagate. Each contract in the chain needs its own grant. A can pre-grant C directly, or B can grant C when it receives the handle. The important thing is that the grant happens before the computation attempt.</div>
+    <div class="qz-q" data-ans="D">
+      <div class="qz-num">QUESTION 06 / 06</div>
+      <div class="qz-text">Contract A calls Contract B which calls Contract C, all in the same transaction. A owns handle <code>h</code>. For C to compute on <code>h</code>, what must happen?</div>
+      <div class="qz-opts"><div class="qz-opt" data-v="A"><span class="qz-ltr">A</span>A must call <code>allowTransient(h, B)</code> only — B's permission automatically propagates to C</div>
+<div class="qz-opt" data-v="B"><span class="qz-ltr">B</span>Nothing — all contracts in the same call stack share ACL access</div>
+<div class="qz-opt" data-v="C"><span class="qz-ltr">C</span>C must be registered as a trusted contract in the ACL admin</div>
+<div class="qz-opt" data-v="D"><span class="qz-ltr">D</span>Either A must call <code>allowTransient(h, C)</code>, or B must call <code>allowTransient(h, C)</code> before calling C — transient permissions do not automatically propagate through call chains</div>
+</div>
+      <div class="qz-exp" style="display:none"><strong>Correct — D.</strong> ACL permissions are explicit and do not auto-propagate. Each contract in the chain needs its own grant. A can pre-grant C directly, or B can grant C when it receives the handle. The important thing is that the grant happens before the computation attempt.</div>
     </div>
-
   </div>
-  <button class="quiz-submit" id="qsub" onclick="gradeQuiz()" disabled>SUBMIT ANSWERS</button>
-  <div class="score" id="qscore">
-    <div class="score-num" id="snum">0/6</div>
-    <div class="score-right">
-      <div class="score-label">questions correct</div>
-      <div class="score-msg" id="smsg"></div>
-    </div>
+  <div class="qz-foot">
+    <span class="qz-prog" id="Day13-quiz-prog">0 / 6 answered</span>
+    <button class="qz-btn" id="Day13-quiz-btn" disabled>VIEW RESULTS →</button>
   </div>
 </div>
 
 <div class="pnav">
-  <a href="day12.html">&#8592; Day 12 — Gateway Async</a>
-  <a class="next" href="day14.html">Day 14 — Sealed-Bid Auction DApp &#8594;</a>
+  <a href="Day12.html">&#8592; Day 12 — Gateway Async</a>
+  <a class="next" href="Day14.html">Day 14 — Sealed-Bid Auction DApp &#8594;</a>
 </div>
 
 </main>
@@ -759,48 +864,169 @@ sbLinks.forEach(l => l.addEventListener('click', () => {
   const el = document.getElementById(l.dataset.id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }));
-const TOTAL = 6;
-document.querySelectorAll('.q-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const q = opt.closest('.q');
-    if (q.dataset.done) return;
-    q.querySelectorAll('.q-opt').forEach(o => o.classList.remove('picked'));
-    opt.classList.add('picked');
-    const done = document.querySelectorAll('.q-opt.picked').length;
-    document.getElementById('qsub').disabled = done < TOTAL;
+
+// ═══ Quiz: Day13 ════════════════════════════════════════════════
+(function() {
+  var QUIZ_ID = 'Day13-quiz';
+
+  // Wire up option clicks
+  var opts = document.querySelectorAll('.qz-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].addEventListener('click', handleOptClick);
+  }
+
+  function handleOptClick() {
+    var q = this.closest('.qz-q');
+    if (!q) return;
+    // deselect siblings
+    var siblings = q.querySelectorAll('.qz-opt');
+    for (var j = 0; j < siblings.length; j++) {
+      siblings[j].classList.remove('sel');
+      siblings[j].querySelector('.qz-ltr').style.background = '';
+      siblings[j].querySelector('.qz-ltr').style.color = '';
+    }
+    // select this one
+    this.classList.add('sel');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var total   = document.querySelectorAll('.qz-q').length;
+    var picked  = document.querySelectorAll('.qz-q .qz-opt.sel').length;
+    var btn     = document.getElementById(QUIZ_ID + '-btn');
+    var prog    = document.getElementById(QUIZ_ID + '-prog');
+    if (btn)  btn.disabled = (picked < total);
+    if (prog) prog.textContent = picked + ' / ' + total + ' answered';
+  }
+
+  // Submit
+  var btn = document.getElementById(QUIZ_ID + '-btn');
+  if (btn) btn.addEventListener('click', function() {
+    if (this.disabled) return;
+    showResults();
   });
-});
-function gradeQuiz() {
-  let correct = 0;
-  document.querySelectorAll('.q').forEach(q => {
-    q.dataset.done = '1';
-    const picked = q.querySelector('.q-opt.picked');
-    const ans = q.dataset.ans;
-    q.querySelectorAll('.q-opt').forEach(o => {
-      if (o.dataset.v === ans) o.classList.add('right');
-      else if (picked && o.dataset.v === picked.dataset.v) o.classList.add('wrong');
+
+  function showResults() {
+    var qs = document.querySelectorAll('.qz-q');
+    var correct = 0;
+    var cards = '';
+
+    for (var i = 0; i < qs.length; i++) {
+      var q       = qs[i];
+      var ans     = q.getAttribute('data-ans');
+      var sel     = q.querySelector('.qz-opt.sel');
+      var selV    = sel ? sel.getAttribute('data-v') : null;
+      var isRight = selV === ans;
+      if (isRight) correct++;
+
+      // question text
+      var qEl   = q.querySelector('.qz-text');
+      var qText = qEl ? qEl.innerHTML : '';
+
+      // explanation
+      var expEl = q.querySelector('.qz-exp');
+      var exp   = expEl ? expEl.innerHTML : '';
+
+      // build option rows
+      var optRows = '';
+      var optEls  = q.querySelectorAll('.qz-opt');
+      for (var j = 0; j < optEls.length; j++) {
+        var o    = optEls[j];
+        var v    = o.getAttribute('data-v');
+        var ltr  = o.querySelector('.qz-ltr');
+        var ltrT = ltr ? ltr.textContent : v;
+        // get option text (everything except the .qz-ltr span)
+        var oClone = o.cloneNode(true);
+        var ltrEl = oClone.querySelector('.qz-ltr');
+        if (ltrEl) ltrEl.parentNode.removeChild(ltrEl);
+        var oText = oClone.innerHTML.trim();
+
+        var cls = '';
+        if (v === ans) cls = 'o-right';
+        else if (v === selV) cls = 'o-wrong';
+
+        optRows += '<div class="qz-co ' + cls + '">'
+          + '<span class="qz-cltr">' + ltrT + '</span>'
+          + oText
+          + '</div>';
+      }
+
+      cards += '<div class="qz-card ' + (isRight ? 'c-ok' : 'c-no') + '">'
+        + '<div class="qz-ch">'
+        +   '<span class="qz-cnum">Q' + (i + 1) + '</span>'
+        +   '<div class="qz-cq">' + qText + '</div>'
+        +   '<span class="qz-cv ' + (isRight ? 'cv-ok' : 'cv-no') + '">' + (isRight ? '✓ Correct' : '✗ Wrong') + '</span>'
+        + '</div>'
+        + '<div class="qz-copts">' + optRows + '</div>'
+        + (exp ? '<div class="qz-cexp">' + exp + '</div>' : '')
+        + '</div>';
+    }
+
+    var total  = qs.length;
+    var pct    = Math.round(correct / total * 100);
+    var circ   = 251.3;
+    var offset = circ - (pct / 100) * circ;
+
+    var ringC = pct === 100 ? '#69ff47' : pct >= 80 ? '#00e5ff' : pct >= 60 ? '#ffb300' : '#ff4d6d';
+    var badge = pct === 100 ? '<span class="qz-badge b-s">🏆 Perfect Score</span>'
+              : pct >= 80   ? '<span class="qz-badge b-a">✓ Excellent</span>'
+              : pct >= 60   ? '<span class="qz-badge b-b">~ Needs Review</span>'
+              :               '<span class="qz-badge b-c">↺ Try Again</span>';
+    var hmsg  = pct === 100 ? 'Every concept nailed. Outstanding.'
+              : pct >= 80   ? 'Strong understanding. Check flagged questions.'
+              : pct >= 60   ? 'Good base. Re-read sections for wrong answers.'
+              :               'Review the day content before moving on.';
+
+    var ring = '<svg width="96" height="96" viewBox="0 0 100 100" class="qz-ring">'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="#1e1e36" stroke-width="7"/>'
+      + '<circle cx="50" cy="50" r="40" fill="none" stroke="' + ringC + '" stroke-width="7"'
+      +   ' stroke-linecap="round"'
+      +   ' stroke-dasharray="' + circ + '"'
+      +   ' stroke-dashoffset="' + offset + '"'
+      +   ' transform="rotate(-90 50 50)"'
+      +   ' style="transition:stroke-dashoffset 1s ease"/>'
+      + '</svg>';
+
+    var overlayHTML =
+        '<div class="qz-ob">'
+      +   '<button class="qz-ob-back" id="' + QUIZ_ID + '-close">← Back to Quiz</button>'
+      +   '<span class="qz-ob-pill">' + correct + '/' + total + ' correct &nbsp;·&nbsp; ' + pct + '%</span>'
+      + '</div>'
+      + '<div class="qz-oh">'
+      +   ring
+      +   '<div class="qz-ht">'
+      +     '<div class="qz-score">' + correct + '<sup>/' + total + '</sup></div>'
+      +     '<div class="qz-hmsg">' + hmsg + '</div>'
+      +     badge
+      +   '</div>'
+      + '</div>'
+      + '<div class="qz-cards">' + cards + '</div>';
+
+    var overlay = document.getElementById(QUIZ_ID + '-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = QUIZ_ID + '-overlay';
+      overlay.className = 'qz-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = overlayHTML;
+    overlay.classList.add('open');
+    overlay.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+
+    // wire close button
+    var closeBtn = document.getElementById(QUIZ_ID + '-close');
+    if (closeBtn) closeBtn.addEventListener('click', function() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      var qzEl = document.getElementById('quiz');
+      if (qzEl) qzEl.scrollIntoView({behavior:'smooth'});
     });
-    if (picked && picked.dataset.v === ans) correct++;
-    const exp = q.querySelector('.q-exp');
-    if (exp) exp.classList.add('show');
-  });
-  const pct = Math.round(correct / TOTAL * 100);
-  document.getElementById('snum').textContent = correct + '/' + TOTAL;
-  document.getElementById('smsg').textContent =
-    pct === 100 ? 'Perfect! Ready for Day 14.' :
-    pct >= 83   ? 'Excellent!'                  :
-    pct >= 50   ? 'Review the ACL patterns.'    :
-                  'Re-read from the top.';
-  document.getElementById('qscore').classList.add('show');
-  document.getElementById('qsub').disabled = true;
-}
-function copyCode(btn) {
-  const pre = btn.closest('.code').querySelector('pre');
-  navigator.clipboard.writeText(pre.innerText).then(() => {
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY', 1800);
-  });
-}
+  }
+
+  updateProgress();
+})();
+
 </script>
 </body>
 </html>
